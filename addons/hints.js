@@ -17,7 +17,7 @@
   const first = r => list(r ?? []).find(x => typeof x === "string" || (x && test(x.if)));
   const body = e => JSON.stringify(Object.fromEntries(Object.entries(e).filter(([k]) => !["if", "with", "fail", "hint"].includes(k))));
   const ideas = () => {
-    const reach = [...inv(), ...at(G.items)], seen = new Set(), found = [];
+    const reach = nested([...inv(), ...at(G.items)]), seen = new Set(), found = [];   // also what is in open boxes
     const add = (e, text) => { const b = body(e); if (!seen.has(b)) { seen.add(b); found.push(text); } };
     for (const r of G.recipes || []) if (r.with.every(id => reach.includes(id)) && test(r.if) && does(r)) add(r, r.hint || `combine the [${r.with[0]}] and the [${r.with[1]}]`);
     for (const id of [...reach, ...at(G.npcs)]) for (const v in thing(id).on || {}) if (!SENSES.includes(v)) {

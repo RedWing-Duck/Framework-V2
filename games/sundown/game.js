@@ -1,5 +1,6 @@
 // Game data reference: docs/AUTHORING.md
 // A countdown sample that uses every core feature and the craft, journal, endings, tags and hints add-ons.
+// Things to try: "open toolbox", "take all", "put nails in toolbox", "take coffee" (two things fit), "x radio" then "listen to it".
 const SUNSET = 30;
 const BOARD = { move: { plywood: null }, set: "boarded", log: "boarded", say: "You nail the [plywood] over the [window]. Solid." };   // shared by a recipe and a verb
 const G = {
@@ -23,7 +24,8 @@ const G = {
       desc: "Pine needles and long shadows. The cabin is north, the shed east.",
       on: { listen: { say: { random: ["Something big moves, far off in the trees.", "A branch cracks. Then nothing.", "Wind, and under it, breathing?"] } } } },
     shed: { name: "Tool Shed", exits: { west: "yard" },
-      desc: [{ if: { visited: "shed" }, text: "The shed, smelling of oil. The yard is west." }, "A lean-to shed that smells of oil and rust. Cobwebs in every corner. The yard is west."] }
+      desc: [{ if: { visited: "shed" }, text: "The shed, smelling of oil. A [toolbox] on the bench. The yard is west." },
+        "A lean-to shed that smells of oil and rust. Cobwebs in every corner, and a [toolbox] on the bench. The yard is west."] }
   },
 
   items: {
@@ -36,10 +38,13 @@ const G = {
     radio: { name: "radio", at: "cabin", fixed: true, kind: "fixture", desc: "A battered transistor radio.",
       on: { listen: { say: { rotate: ["\"...stay indoors after dark...\"", "Static, then a hymn.", "\"...repeat, stay indoors...\""] } } } },
     hammer: { name: "claw hammer", at: "shed", kind: "tool", desc: "Heavy, reliable." },
-    nails: { name: "box of nails", at: "shed", kind: "tool", aliases: ["nail"], desc: "A full box." },
+    toolbox: { name: "toolbox", at: "shed", fixed: true, holds: "in", closed: true, desc: "Red, dented, latched shut." },   // a container: open it to reach what's in it
+    nails: { name: "box of nails", at: "toolbox", kind: "tool", aliases: ["nail"], desc: "A full box." },
+    shelf: { name: "shelf", at: "cabin", fixed: true, hidden: true, holds: "on", desc: "A plank on two brackets." },        // a surface: what's on it is listed under the room
+    grounds: { name: "can of coffee grounds", at: "shelf", kind: "food", aliases: ["can"], desc: "Half full. Smells like mornings." },
     plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window." },
     crowbar: { name: "crowbar", kind: "tool", desc: "Cold iron. Better than nothing." },   // no "at": offstage until the rug is searched
-    coffee: { name: "mug of coffee", at: "cabin", kind: "food", aliases: ["mug"], desc: "Cold. This morning's.",
+    mug: { name: "mug of coffee", at: "shelf", kind: "food", desc: "Cold. This morning's.",
       on: { drink: [{ if: { not: { flag: "drank" } }, set: "drank", log: "coffee", say: "Cold, bitter, heroic." }, "The mug is empty."] } }
   },
 

@@ -32,9 +32,9 @@
       css.textContent = `:root{--key:#8a5a00;--use:#6b4c9a;--flavor:#6b7178}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--key:#e0a84a;--use:#c3a6ff;--flavor:#8d949c}}
 :root[data-theme="dark"]{--key:#e0a84a;--use:#c3a6ff;--flavor:#8d949c}
-.item.key{color:var(--key);text-decoration-style:double}
-.item.use{color:var(--use);text-decoration-style:dotted}
-.item.flavor{color:var(--flavor);text-decoration:none}`;
+.item.key{color:var(--key);border-bottom:3px double var(--key)}
+.item.use{color:var(--use);border-bottom:1px dotted var(--use)}
+.item.flavor{color:var(--flavor);font-weight:400}`;
       document.head?.append(css);
     },
     validate(need) { for (const id in G.items) need(!G.items[id].tag || TAGS.includes(G.items[id].tag), `items.${id}.tag`, `tag must be one of ${TAGS.join(", ")}`); }

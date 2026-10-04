@@ -171,7 +171,7 @@ events: [
 
 - Break-test every game before it ships: paste a few thousand words, type `[some_id]`, `constructor` and `__proto__`, reload mid-game, and tamper with localStorage. The engine handles all of these; the test suite checks them for the samples.
 - Playtest like a stranger: "look at X", "pick up X", "go outside", "call 911", "kick door". The engine handles the phrasing; your data should hold the replies, and `kinds` make the refusals personal.
-- Watch for shared words in names. "coffee" matches both "mug of coffee" and "can of coffee grounds". Rename one, and keep the old phrase as an alias.
+- Watch for shared words in names. "coffee" fits both "mug of coffee" and "can of coffee grounds", so the engine asks "Which do you mean?". That's correct, but it costs the player a step: give each thing a word of its own ("mug", "can") so most commands never need to ask.
 - `[id]` prints the full name, so `a braided [rug]` reads "a braided braided rug" when the name is "braided rug". Write `a [rug]`, or name it "rug".
 - `{it}` prints "[id]", so `the {it}` needs a name that reads well after "the" ("half-eaten sandwich", not "half a sandwich").
 - `hints.js` suggests any action that changes state, including ones the player can't take back. Warn with `hint: "push the [chest] against the door (seals you in)"`, and mark gags `secret: true`.

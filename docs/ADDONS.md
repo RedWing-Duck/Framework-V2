@@ -60,8 +60,10 @@ addon({
 ```
 
 Engine helpers add-ons may use: `G`, `S`, `print(text, cls)`, `msg(id, vars)`, `txt(TEXT, vars)`, `test(COND)`,
-`run(EFFECT)`, `reply(REPLY)`, `exec(verb, arg)`, `named(text, ids)`, `find(text, ids)`, `thing(id)`, `at(table, room)`,
-`inv()`, `reach()`, `names(ids)`, `list(v)`, `own(obj, key)`, `notHere(msgId)` (prints it, costs no turn),
+`run(EFFECT)`, `reply(REPLY)`, `exec(verb, arg)`, `named(text, ids)`, `find(text, ids)`, `thing(id)`, `at(table, place)`,
+`inv()`, `reach()` (everything the player can touch, through open holders), `nested(ids)` (those and what's visible in them),
+`where(id)` (the room, or "player", around a thing), `holder(id)` ("in", "on" or undefined), `contents(ids)` (prints what's in them),
+`names(ids)`, `list(v)`, `own(obj, key)`, `notHere(msgId)` (prints it, costs no turn), `MULTI` (verbs that take "all"),
 `store(key, value)` / `load(key)` (browser storage, namespaced by the game's title), `rand(n)` (a whole number
 from 0 to n-1, from the seeded generator in `S`: use it, never `Math.random`, so undo and saves stay honest), `$`, `out`.
 Reusing a name that's already taken is reported as a problem on the start menu.

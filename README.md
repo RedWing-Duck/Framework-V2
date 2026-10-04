@@ -7,7 +7,19 @@ A tiny, dependency-free framework for text adventures, and a blueprint for new t
 - **Small.** No dependencies. Building and testing need only Node 18+.
 - **One file.** Each finished game is a single HTML file that runs anywhere, including offline.
 
-v2 folds what the first games kept rebuilding into the engine: verbs and replies on anything, a real parser, kinds, rotating text, named conditions, rewordable messages, undo/again/restart and saves that survive a reload. It also adds hooks, so add-ons never patch the engine. See [`docs/REVIEW.md`](docs/REVIEW.md) for what changed and why, and how to port a v1 game.
+v2 folds what the first games kept rebuilding into the engine: verbs and replies on anything, a command reader (verb + things, with "Which do you mean?", pronouns, `all`), containers and surfaces, ask/tell topics, kinds, rotating and random text, named conditions, rewordable messages, undo/again/restart and saves that survive a reload. It also adds hooks, so add-ons never patch the engine. See [`docs/REVIEW.md`](docs/REVIEW.md) for what changed and why, and how to port a v1 game.
+
+## What it is, and what it isn't
+
+**It is** a blueprint for short-to-medium authored parser games in one HTML file: exploration, puzzles, people to talk to, a clock, a story that remembers what you did. `games/` has three: a tutorial (damp-cell), a countdown (sundown), and *This Place Has a Big Footprint*, a full commercial-length scene with a guided tour, checkpoints, strikes and five endings.
+
+**It isn't**, out of the box:
+- a natural-language parser. It reads a verb and the things you name; [`docs/AUTHORING.md`](docs/AUTHORING.md#how-a-command-is-read) lists exactly what it does and doesn't understand.
+- a systems engine. There is no combat, economy, NPC schedule, spatial model beyond rooms and in/on, or skill check. Counters, `rand`, `status` and hooks are the parts you build those from, as an add-on, and none of them is written yet.
+
+## Review package
+
+The source is the review artifact, not only the compiled games: `engine/`, `addons/`, `games/`, `tools/build.js` and `tests/run.js` are all here. `node tests/run.js` runs every test headless against the built files, including a check that each `dist/` file matches what `tools/build.js` produces from source.
 
 ## Play
 
@@ -45,7 +57,7 @@ docs/        AUTHORING.md, ADDONS.md, PATTERNS.md, REVIEW.md
 dist/        built, playable single-file games
 ```
 
-The page loads the IBM Plex Mono font from Google Fonts. Offline, it falls back to the system monospace font.
+The page uses the system's monospace font and makes no network requests.
 
 ## License
 

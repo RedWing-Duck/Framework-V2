@@ -29,6 +29,10 @@ const G = {
       { if: { flag: "fed" }, text: "Crumbs on his chin. He looks almost friendly." },
       { if: { has: "bread" }, text: "Bored and clearly hungry. He keeps eyeing your [bread]." },
       "Bored and clearly hungry." ],
+      topics: {   // "ask guard about the gate"; "*" answers anything else
+        "gate|door": [{ if: { flag: "gate_open" }, say: "\"What gate? I never saw a gate.\"" }, "\"Stays locked. Orders.\""],
+        "key|keys": "He pats his belt. \"Mine.\"",
+        "*": "He shrugs. \"Don't know, don't care.\"" },
       dialogue: {
         start: { text: [{ if: { flag: "fed" }, text: "Thanks for the bread. Now scram." },
           { if: { min: { annoyed: 2 } }, text: "You again? Ask me that once more, I dare you." }, "What do you want, prisoner?"], options: [

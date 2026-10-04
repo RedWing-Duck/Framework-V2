@@ -98,9 +98,8 @@ This pass doesn't port big-footprint. Its 796-line test suite pins exact wording
 
 ## Open questions for the next pass
 
-- **Scenery in many rooms.** An item lives in one place. Big-footprint's `at: "any"` nouns (floor, walls, ceiling) suggest `at: ["foyer", "landing"]` or `at: "*"`. It's a small engine change, but it touches `S.loc`, `move` and saves, so it waits for a second game that needs it.
-- **Ask/tell topics.** Common in IF and used by big-footprint. A shared `topics.js` add-on is the likely shape.
-- **Containers and surfaces** ("put coin in box"). No game has needed them yet.
+- **Scenery in many rooms.** An item lives in one place. Big-footprint's `at: "any"` nouns (floor, walls, ceiling) suggest `at: ["foyer", "landing"]` or `at: "*"`. It touches `S.loc`, `move` and saves, so it waits for a second game that needs it.
+- Ask/tell topics and containers were open questions here; the third pass added both to the core.
 
 ## Second pass: a cold read of v2
 
@@ -117,10 +116,32 @@ A review of v2 on its own terms: is the logic sound, is the syntax right, is the
 - The one-line `{name}` expansion in TEXT is now a small `fill()` function, and name matching (`named()`) builds each thing's phrases once per call, with comments on the matching rules.
 - Every piece of engine state (`S`, `SAVE`, `UNDO`, `LAST`, `VERBS`, `VER`, `LINE`, `TURN`) and every validator table is explained where it's declared.
 
-**For any genre**
-The engine already covered rooms, things, people, conversation, time and story state. The cold read found three gaps that almost every genre outside the classic adventure hits:
-- **Randomness** (combat, loot, encounters, weather): a seeded `rand(n)` for add-ons, TEXT `{ random: [...] }` and condition `chance: n`. The seed lives in `S`, so saves, undo and `again` can't re-roll a result, and `G.seed` makes tests exact.
-- **A status line** (health, score, gold, a clock): `G.status`, a TEXT refreshed after every command.
-- **Room-entry scripts** (random encounters, traps, room-by-room AI): an `enter(room)` hook for add-ons.
+**Gaps found for other kinds of game**
+The cold read found three small gaps that games outside the classic adventure hit early, and added them:
+- **Randomness**: a seeded `rand(n)` for add-ons, TEXT `{ random: [...] }` and condition `chance: n`. The seed lives in `S`, so saves, undo and `again` can't re-roll a result, and `G.seed` makes tests exact.
+- **A status line**: `G.status`, a TEXT refreshed after every command (score, health, a clock).
+- **Room-entry scripts**: an `enter(room)` hook for add-ons.
 
-Genres and the core they rest on: adventure and puzzle games (rooms, things, replies, recipes); horror and survival (countdowns, `every`, `chance`, `status`); RPG (counters as stats, `kinds` as classes of foes, `rand` in a combat add-on, `status`); mystery (`seen`, `said`, journal); choice-driven stories (dialogue nodes and `goto`); sims and management (counters, `every`, `status`, an `afterTurn` add-on).
+These are building blocks, not genres. The third pass (below) corrects how this section first described them.
+
+## Third pass: answering an outside review
+
+An outside reviewer read the package (docs and the two compiled games). Their verdict: the hook-and-table design is right and the samples prove it can carry a real scene, but the package overclaimed. "A real parser" was a verb-plus-remainder tokenizer, "any genre" mapped vocabulary onto systems that don't exist, and the review zip had no source or tests. They asked for a containment model and disambiguation before anything else. Each point, and what changed:
+
+| Review point | Change |
+|---|---|
+| "A real parser" is not accurate | The docs now call it a command reader, say how it reads a line, and list what it doesn't understand (AUTHORING.md, "How a command is read"). |
+| No `put X in Y` / `on Y`; "put plywood on window" drops the plywood | **Containers and surfaces in the core**: `holds: "in"/"on"`, `closed`, built-in `put`, `open`, `close`, contents shown in look, examine and inventory, `has`/`here` see through holders, new `inside`/`open` conditions and `open`/`close` effects. `put X on Y` on a non-holder means `use X on Y`, so sundown's plywood now goes on the window. |
+| No disambiguation | **"Which do you mean: the can of coffee grounds or the mug of coffee?"**, free, answered by a word that picks one; `take` and `drop` rule out the obvious wrong one first. Sundown has the coffee clash on purpose. |
+| No pronouns | `it`, `them`, `him`, `her` mean the last thing acted on. |
+| No `all`, no multiple objects | `take all`, `drop all`, `take X and Y`: one turn for the lot. `all` skips fixed and hidden things and closed boxes. |
+| Conversation is only a numbered menu | **Topics in the core**: `ask/tell X about Y`, `npcs.X.topics: { "gate\|door": REPLY, "*": REPLY }`. A dialogue option can also be picked by its words ("let me out"). |
+| "Stretches to any genre" | Withdrawn. README.md now says what the framework is for and what it isn't; the genre list is gone. Combat, economies, schedules and spatial models are named as things you'd build as add-ons, none of which exist yet. |
+| Item names look like links | No underline; items are colored and bold. The tags add-on marks its classes with a border instead of underline styles. |
+| `chance` rolls every time it's tested | One roll per condition per command: testing the same `if` twice in a turn gives one answer. |
+| `go back` is one room, unstated | The help line says it: "or back (one step: the room you just left)". |
+| Save identity ignores text and flags | Documented as a choice (fix wording without wiping saves), and `G.version` ends old runs when a content patch should. |
+| Offline page requests a web font | The font link is gone; the page makes no network requests. |
+| The zip has no source or tests | The review package now ships the whole repository: source, tools, tests and built games. |
+
+Then, as the reviewer suggested proving it on a real scene, *This Place Has a Big Footprint* was rebuilt on the framework (see `games/big-footprint/`).

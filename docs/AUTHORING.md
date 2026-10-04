@@ -7,10 +7,11 @@ Start from `template/game.js`. For complete examples, see `games/damp-cell/game.
 ## Quick reference
 
 ```
-title, intro:TEXT, start (room id), status:TEXT (the line above the input), seed (fixed random rolls)
+title, intro:TEXT, start (room id), status:TEXT (the line above the input), seed (fixed random rolls), version (ends old saves)
 rooms:  { id: { name, desc:TEXT, on:REPLIES, exits:{ dir: "roomId" | { to, if:COND, fail:TEXT, hidden:true } } } }
-items:  { id: { name, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES } }
-npcs:   { id: { name, desc:TEXT, at, aliases:[], kind, on:REPLIES,
+items:  { id: { name, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES,
+          holds:"in" | "on" (a container or a surface), closed:true | false (can be opened and closed) } }
+npcs:   { id: { name, desc:TEXT, at, aliases:[], kind, on:REPLIES, topics:{ "a|b": REPLY, "*": REPLY },
           dialogue:{ nodeId:{ text:TEXT, options:[{ text, next, if:COND, ...EFFECT }] } } } }
 self:   { name, aliases:[], kind, on:REPLIES }   the player as a target: "smell me", "think"
 on:     REPLIES   the game's own replies, tried after the room's
@@ -27,10 +28,10 @@ TEXT:   a string, or a list of variants: [ { if:COND, text:TEXT }, ..., "fallbac
         { rotate:[TEXT, ...] } shows the next line each time and loops; { ladder:[...] } stays on the last;
         { random:[TEXT, ...] } picks one at random.
         [id] shows a thing's name, styled. {counter} shows a counter. {it} is the thing being acted on.
-COND:   { has, here, in, flag, is, seen, visited, not:COND, any:[COND], all:[COND],
+COND:   { has, here, in, flag, is, seen, visited, open, inside:{ item:"holder" }, not:COND, any:[COND], all:[COND],
           min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, since:{ mark:n }, said:"a|b", chance:n }
         has/here/flag/is/seen/visited take one name or a list (all must pass); in takes a room or a list (any).
-EFFECT: { say:TEXT, set, unset, give, take (one or a list), move:{ id: where }, add:{ counter:n },
+EFFECT: { say:TEXT, set, unset, give, take, open, close (one or a list), move:{ id: where }, add:{ counter:n },
           mark, free:true, do:"command", goto:"roomId", end:TEXT }
 ```
 
@@ -45,6 +46,7 @@ The sections below explain each part.
 | `start` | Id of the room the player starts in. |
 | `status` | Optional TEXT shown in a line above the input, refreshed after every command: `` `Turn {turns} of ${SUNSET}` ``, `"HP {hp} · Gold {gold}"`. Hidden when it's empty. |
 | `seed` | Optional number. Leave it out so every game rolls differently; set it to make every game roll the same (for tests). |
+| `version` | Optional. Change it to stop saved games from continuing (see Turns, saving, undo). |
 | `rooms`, `items`, `npcs` | Objects keyed by id. Item and NPC ids must be unique across both. |
 | `self` | Optional. The player, as something verbs can target. |
 | `on`, `kinds`, `verbs`, `aliases`, `phrasal` | Verbs and replies (see Verbs and replies). |
@@ -77,11 +79,33 @@ key: { name: "iron key", desc: TEXT, at: "cell", aliases: ["rusty"], kind: "tool
   on: { use: [ { if: COND, ...EFFECT }, ... ] } }
 ```
 
-- `at` is where the thing starts: a room id, `"player"` (carried) or left out (offstage, until something `give`s or `move`s it).
+- `at` is where the thing starts: a room id, `"player"` (carried), a holder's id (in or on it, see below) or left out (offstage, until something `give`s or `move`s it).
 - `fixed: true`: it can't be taken. `hidden: true`: it isn't listed in "You see:" (scenery mentioned by its aliases in the text).
 - `kind` groups things that share replies (see `kinds`).
 - The player names a thing by its id, its full name, an alias (multi-word aliases work) or any single word of its name. The longest phrase wins, so "iron key" beats "key" when both exist.
 - `examine` shows `desc`, and afterwards `seen: "id"` is true.
+- When a word fits several things equally ("coffee" for the mug of coffee and the can of coffee grounds), the engine asks
+  "Which do you mean: the can of coffee grounds or the mug of coffee?" (free) and the next words that pick one finish the command.
+  `take` first rules out what's already carried, and `drop` what isn't. Give things distinct words and the question never comes up.
+- `it`, `them`, `him` and `her` mean the last thing acted on: "x radio", then "listen to it".
+
+## Containers and surfaces
+
+```js
+toolbox: { name: "toolbox", at: "shed", fixed: true, holds: "in", closed: true, desc: "Red, dented, latched shut." },
+nails:   { name: "box of nails", at: "toolbox" },
+shelf:   { name: "shelf", at: "cabin", fixed: true, hidden: true, holds: "on" },
+mug:     { name: "mug of coffee", at: "shelf" }
+```
+
+- `holds: "in"` makes an item a container, `holds: "on"` a surface. Things start in or on it with `at: "<holder id>"`, and `move` can put them there.
+- `closed: true` or `false` makes it openable: `open` and `close` are built-in commands, and the `open`/`close` effects and the `open` condition work on it. What's in a closed holder can't be seen or reached.
+- Looking at a room, examining a holder, opening it and `inventory` all show what's in or on it: "On the shelf: mug of coffee."
+- `put X in Y` / `put X on Y` places a carried thing (the holder decides "in" or "on"). `drop X in Y` does the same. `put X down` drops it.
+  On something that isn't a holder, `put X on Y` means `use X on Y`, so recipes and replies answer ("put the plywood on the window").
+- `take X` reaches into open holders; `take X from Y` works too. A carried box carries what's in it.
+- `has` and `here` see through holders: a coin in a box you carry is `has: "coin"`. `inside: { coin: "box" }` tests one holder exactly.
+- A lock is data: `on: { open: [{ if: { not: { has: "key" } }, say: "Locked." }] }`. When no entry passes, the built-in `open` runs.
 
 ## NPCs and dialogue
 
@@ -95,9 +119,22 @@ guard: { name: "Guard", at: "corridor", desc: TEXT,
 ```
 
 - `talk <npc>` (or `talk` alone when an NPC is present) opens the `start` node. An NPC with `on.talk` answers with that reply instead.
-- Only options whose `if` passes are shown. The player types the number.
+- Only options whose `if` passes are shown. The player types the number, or words from exactly one option ("offer bread").
 - An option runs its effects, then goes to `next`. No `next`, or a node with no options, ends the conversation.
-- Typing anything else ends the conversation and runs that command. A whole conversation costs one turn, and events wait until it ends.
+- Typing a command ends the conversation and runs it. A whole conversation costs one turn, and events wait until it ends.
+
+### Topics: ask and tell
+
+```js
+guard: { ..., topics: {
+  "gate|door": [{ if: { flag: "gate_open" }, say: "\"What gate?\"" }, "\"Stays locked. Orders.\""],
+  "key|keys": "He pats his belt. \"Mine.\"",
+  "*": "He shrugs." } }
+```
+
+- `ask guard about the gate`, `tell him about the key`, or `ask about the gate` (the person here who has topics).
+- The first key whose phrases (`|` between them) appear in the words after "about" answers, with a REPLY. `"*"` answers anything else, and with no `"*"` the player sees `noTopic`.
+- Topics and the numbered menu work side by side: a menu for set pieces, topics for questions the player thinks of.
 
 ## Verbs and replies
 
@@ -175,7 +212,9 @@ All keys in an `if` must pass. `if: "NAME"` is short for `if: { is: "NAME" }`.
 | `min` / `max` / `eq: { counter: n }` | counter ≥ / ≤ / = n |
 | `since: { mark: n }` | at least n turns since the mark was set |
 | `said: "a\|b"` | the typed words contain one of the phrases |
-| `chance: n` | a random roll passes, n times in 100 (rolled each time it's checked) |
+| `open: "box"` | that holder is open |
+| `inside: { coin: "box" }` | that thing is directly in or on that holder |
+| `chance: n` | a random roll passes, n times in 100. Rolled once per condition per command, so checking the same `if` twice in one turn gives the same answer |
 
 Add-ons add more, such as `dark` (light), `logged` (journal).
 
@@ -187,7 +226,8 @@ These run in table order, except `say`, `do`, `goto` and `end`, which always run
 |---|---|
 | `set` / `unset: "flag"` or a list | turns flags on or off |
 | `give` / `take: "item"` or a list | moves items into or out of the inventory, with a "(Received: …)" or "(Lost: …)" line |
-| `move: { id: where }` | where is a room, `"player"`, `null` (offstage), or a list (a route: the next room in it, looping) |
+| `move: { id: where }` | where is a room, `"player"`, a holder, `null` (offstage), or a list (a route: the next room in it, looping) |
+| `open` / `close: "box"` or a list | opens or closes a holder, silently |
 | `add: { counter: n }` | adds n (negative subtracts) |
 | `mark: "name"` | stamps the current turn, for `since` |
 | `free: true` | this command costs no turn |
@@ -210,36 +250,54 @@ messages: { huh: { rotate: ["Huh?", "Say that again?"] }, cantGo: "No way throug
 |---|---|
 | `huh` | I don't understand that. Type 'help'. |
 | `over` | The game is over. Type 'restart', 'undo' or 'menu'. |
-| `help` | Commands: {cmds}. Directions: n, s, e, w, u, d.\nFree actions: {free}. |
+| `help` | Commands: {cmds}.\nDirections: n, s, e, w, u, d, or back (one step: the room you just left).\nFree actions: {free}. |
 | `cantGo`, `blocked`, `goWhere` | You can't go that way. / Something blocks the way. / Go where? |
 | `notHere`, `notHave` | You don't see that here. / You don't have that. |
 | `what`, `cant` | {Verb} what? / You can't {verb} that. |
 | `taken`, `have`, `fixed`, `dropped` | Taken: {it} / You already have that. / You can't take that. / Dropped: {it} |
 | `carry`, `carryNone` | You carry: {list} / You carry nothing. |
 | `nothing`, `plain` | Nothing happens. / You see nothing special. |
-| `noOne`, `silent`, `choose` | No one by that name is here. / {it} doesn't respond. / Choose a number from the list. |
+| `noOne`, `silent`, `choose`, `noTopic` | No one by that name is here. / No response. / Choose a number from the list. / No answer about that. |
 | `wait` | Time passes. |
 | `see`, `people`, `exits` | You see: {list} / Here: {list} / Exits: {list} |
 | `received`, `lost` | (Received: {it}) / (Lost: {it}) |
 | `noAgain`, `noUndo`, `undone` | There's nothing to do again yet. / There's nothing to undo. / Undone. |
+| `which`, `nothingAll` | Which do you mean: {list}? / There's nothing here to {verb}. |
+| `putIn`, `putOn`, `cantPut`, `isShut` | You put the {it} in the {to}. / You put the {it} on the {to}. / You can't put something inside itself. / The {it} is closed. |
+| `inIt`, `onIt` | In the {it}: {list}. / On the {it}: {list}. |
+| `opened`, `closed`, `alreadyOpen`, `alreadyClosed` | You open the {it}. / You close the {it}. / It's already open. / It's already closed. |
 
 Add-ons add their own ids (light: `dark`, `darkFalls`; craft: `combineWhat`, `combineNo`, `combineFail`; and so on).
 
 ## Player commands
 
-`look (l)`, `go <dir>` or just the direction, `take (get, grab, pick up)`, `drop (put down)`, `inventory (i)`,
-`examine (x, look at)`, `use`, `talk (speak)`, `wait (z)`, `again (g)`, `undo`, `restart`, `help (h, ?)` and `menu (q, quit)`,
-plus every verb the game gives replies to.
+`look (l)`, `go <dir>` or just the direction, `take (get, grab, pick up)`, `drop (put down)`, `put (place, insert)`,
+`open`, `close (shut)`, `inventory (i)`, `examine (x, look at)`, `use`, `talk (speak)`, `ask`, `tell`, `wait (z)`,
+`again (g)`, `undo`, `restart`, `help (h, ?)` and `menu (q, quit)`, plus every verb the game gives replies to.
 
+### How a command is read
+
+The engine reads a **verb followed by the things it names**. It is a command reader, not a grammar parser:
+- The first word (or a two-word phrasal verb like "pick up") is the verb, after aliases. A direction alone means `go`.
 - Punctuation is ignored, so `north.` and `hello!` work. Input is capped at 200 characters.
 - Filler words (`a an the to at with on`) are dropped. Particles at either end of the object (`up down around under out off...`) are dropped too: "feel around", "put the hammer down".
+- The rest is scanned for things in reach, longest name first. Other words are kept for `said:` but otherwise ignored, so "use the key on the door" and "use key door" read the same.
+- `take` and `drop` accept `all` and `X and Y`. Pronouns stand for the last thing acted on. A name that fits several things asks "Which do you mean?".
 - `look under/behind/in X` runs `search X` when the game has a `search` verb, and otherwise examines X.
 - The echo of what the player typed is printed as typed: `[key]` stays `[key]`.
+
+What it does **not** do (write a reply with `said:`, or an add-on with the `input` hook, if a game needs it):
+- several commands on one line ("take key then go north", "take key. go north");
+- `all except X`, or `all` for verbs other than `take` and `drop`;
+- prepositions as meaning: "put X under Y" and "put X behind Y" are not places, only `in` and `on` holders are;
+- adjectives as filters beyond names and aliases ("the red one" works only if "red" is in a name or alias);
+- questions to people outside `ask/tell X about Y` and dialogue menus.
 
 ## Turns, saving, undo
 
 - `turns` goes up by one for every command, except free ones: `help`, `menu`, `inventory`, `again`, `undo`, `restart`, free verbs and add-on free commands. A reply with `free: true` refunds its turn, and naming something that isn't here costs nothing.
-- **Continue** restores a snapshot taken after every command. It's also kept in the browser's localStorage, so it survives a reload. A finished game, or a save from a different version of the game (different rooms, items, NPCs or events), can't be continued.
+- **Continue** restores a snapshot taken after every command. It's also kept in the browser's localStorage, so it survives a reload. A finished game can't be continued.
+- A save belongs to one shape of the game: its room, item and NPC ids, its number of events, and `G.version`. Change any of those and old saves are ignored. Editing text, replies or conditions keeps them, so you can fix wording without wiping players' progress. When a content patch should end runs in progress (a puzzle's solution changed, say), bump `version`.
 - `undo` steps back one turn-costing command, even after an ending. `again` repeats the last command.
 
 ## Validator
@@ -252,7 +310,8 @@ When the page loads, `validate()` checks the data. Every problem is listed on th
 - missing dialogue nodes, and dialogue with no `start` node;
 - ids used by both an item and an NPC, and things with no name;
 - flags, marks and counters that are checked but never set;
-- verb aliases that clash with another command;
+- verb aliases that clash with another command, and `aliases` / `phrasal` entries that lead to no command;
+- containers: `holds` must be `"in"` or `"on"`, `at` chains must end in a room, `open`/`close`/`inside` need openable holders;
 - add-on checks, such as a dark room with no light, or a `log` with no journal entry.
 
 A clean build prints `Validator: no problems`.

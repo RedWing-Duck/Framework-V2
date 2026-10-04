@@ -9,7 +9,7 @@ const CELL = dist("damp-cell");
 const SUN = dist("sundown").replace('title: "Sundown",', 'title: "Sundown", seed: 1,');   // seeded: the owl and the yard's sounds roll the same every run
 const newGame = (h = CELL, opts) => { const g = load(h, opts).boot(); g.click("bs"); return g; };
 const TO_KEY = ["d", "u", "e", "take lantern", "w", "d", "take bread", "u", "e", "talk guard", "1", "use key"];
-const TO_BOARD = ["s", "e", "take hammer", "take nails", "take plywood", "w", "n", "use plywood on window"];
+const TO_BOARD = ["s", "e", "open toolbox", "take hammer", "take nails", "take plywood", "w", "n", "use plywood on window"];
 
 for (const name of ["damp-cell", "sundown"])
   test(`dist/${name}.html is up to date with the sources`, () => assert.equal(dist(name), build(`games/${name}`), `run: node tools/build.js ${name}`));
@@ -148,7 +148,7 @@ test("sundown: replies, kinds, self, rotate, free verbs and named conditions", (
   g.type("listen to the radio", "listen to radio", "listen radio", "listen radio");
   assert.deepEqual(g.lines().filter((l, i, L) => L[i - 1]?.startsWith("> listen")).slice(-4),
     ["\"...stay indoors after dark...\"", "Static, then a hymn.", "\"...repeat, stay indoors...\"", "\"...stay indoors after dark...\""]);
-  g.type("s", "e", "eat hammer", "eat nails");
+  g.type("s", "e", "open toolbox", "eat hammer", "eat nails");
   assert.deepEqual(g.lines().slice(-3).filter(l => !l.startsWith(">")), ["You consider eating the claw hammer. Your dentist sits bolt upright in bed.", "The box of nails is not food. You checked. With your teeth."]);
   g.type("take window");
   assert.equal(g.last(), "You don't see that here.");
@@ -178,7 +178,7 @@ test("validator: both samples are clean", () => {
 
 test("validator: reports broken references, typos in effects and unknown names", () => {
   const broken = CELL.replace('east: "corridor", down', 'east: "corridr", down')
-    .replace('if: { in: "yard" }', 'if: { in: "yard", inside: "yard" }')
+    .replace('if: { in: "yard" }', 'if: { in: "yard", inn: "yard" }')
     .replace('say: "The key turns', 'sey: "The key turns')
     .replace('title: "The Damp Cell",', 'title: "The Damp Cell", messages: { nope: "x" }, conds: { A: { flog: "x" } },');
   const g = load(broken).boot();
@@ -187,7 +187,7 @@ test("validator: reports broken references, typos in effects and unknown names",
     'items.key.on.use[0].sey: unknown effect "sey"',
     'conds.A.flog: unknown condition "flog"',
     'messages.nope: no engine message "nope"',
-    'events[3].if.inside: unknown condition "inside"'
+    'events[3].if.inn: unknown condition "inn"'
   ]);
   assert.equal(g.errors.length, 1, "problems are also logged to the console");
 });
@@ -274,5 +274,92 @@ test("validator: aliases and phrasal verbs must lead somewhere; named conditions
     'aliases.press: no command "pushh"',
     'events[3].if.not: no condition "NOPE" in conds',
     'events[3].if.any[0]: no condition "NOPE2" in conds'
+  ]);
+});
+
+test("containers and surfaces: closed toolbox, put in, contents listed, take all, take X and Y", () => {
+  const g = newGame(SUN);
+  assert.ok(g.lines().includes("On the shelf: can of coffee grounds, mug of coffee."), "a surface's things are listed with the room");
+  g.type("s", "e", "take nails");
+  assert.equal(g.last(), "You don't see that here.", "nothing in a closed box can be reached");
+  g.type("open toolbox");
+  assert.deepEqual(g.lines().slice(-2), ["You open the toolbox.", "In the toolbox: box of nails."]);
+  const t = g.get("S.count.turns");
+  g.type("take all");
+  assert.deepEqual(g.lines().slice(-3), ["Taken: claw hammer", "Taken: box of nails", "Taken: plywood"]);
+  assert.equal(g.get("S.count.turns"), t + 1, "take all is one turn");
+  g.type("put nails in toolbox", "close toolbox");
+  assert.deepEqual(g.lines().slice(-3), ["You put the box of nails in the toolbox.", "> close toolbox", "You close the toolbox."]);
+  g.type("put hammer in toolbox");
+  assert.equal(g.last(), "The toolbox is closed.");
+  g.type("drop hammer and plywood");
+  assert.deepEqual(g.lines().slice(-2), ["Dropped: claw hammer", "Dropped: plywood"]);
+  g.type("take all");
+  assert.equal(g.get("S.loc.nails"), "toolbox", "take all doesn't reach into a closed box");
+});
+
+test("put X on Y: a holder takes it; anything else is use X on Y (recipes answer)", () => {
+  const g = newGame(SUN);
+  g.type("s", "e", "open toolbox", "take all", "w", "n", "put mug on shelf");
+  assert.equal(g.last(), "You don't have that.");
+  g.type("put plywood on window");
+  assert.equal(g.last(), "You nail the plywood over the window. Solid.");
+});
+
+test("disambiguation: Which do you mean? (free), then a word that picks one; take prefers what you don't carry", () => {
+  const g = newGame(SUN);
+  g.type("take coffee");
+  assert.equal(g.last(), "Which do you mean: the can of coffee grounds or the mug of coffee?");
+  assert.equal(g.get("S.count.turns"), 0);
+  g.type("mug");
+  assert.equal(g.last(), "Taken: mug of coffee");
+  assert.equal(g.get("S.count.turns"), 1);
+  g.type("take coffee");
+  assert.equal(g.last(), "Taken: can of coffee grounds", "the one not carried");
+  g.type("eat coffee", "s");
+  assert.equal(g.get("S.room"), "yard", "a new command instead of an answer just runs");
+});
+
+test("pronouns: it is the last thing acted on", () => {
+  const g = newGame(SUN);
+  g.type("x radio", "listen to it");
+  assert.equal(g.last(), "\"...stay indoors after dark...\"");
+  g.type("x rug", "look under it");
+  assert.equal(g.last(), "Under the rug: a crowbar.");
+});
+
+test("topics: ask/tell about; dialogue options can be picked by their words", () => {
+  const g = newGame();
+  g.type("e", "ask guard about the gate", "ask about keys", "tell him about the weather");
+  assert.deepEqual(g.lines().filter(l => l.startsWith("\"") || l.startsWith("He")).slice(-3),
+    ["\"Stays locked. Orders.\"", "He pats his belt. \"Mine.\"", "He shrugs. \"Don't know, don't care.\""]);
+  g.type("talk guard", "let me out");
+  assert.equal(g.lines().find((l, i, L) => L[i - 1] === "> let me out"), "Guard: \"Ha! Not a chance.\"");
+});
+
+test("chance: one roll per condition per command", () => {
+  const g = newGame(SUN);
+  assert.equal(g.run("[...Array(40)].every(() => { ROLLS.clear(); const c = { chance: 50 }; return test(c) === test(c); })"), true);
+  assert.equal(g.run("ROLLS.clear(); [...Array(200)].map(() => test({ chance: 50 })).filter(Boolean).length > 60"), true, "fresh conditions still roll");
+});
+
+test("save version: G.version changes end runs in progress", () => {
+  const st = storage(), g = newGame(CELL, { storage: st });
+  g.type("e");
+  assert.equal(load(CELL, { storage: st }).boot().$("bc").hidden, false);
+  const v2 = CELL.replace('title: "The Damp Cell",', 'title: "The Damp Cell", version: 2,');
+  assert.equal(load(v2, { storage: st }).boot().$("bc").hidden, true);
+});
+
+test("validator: holders, at chains and open/close/inside targets", () => {
+  const bad = SUN.replace('holds: "in", closed: true', 'holds: "inside", closed: true')
+    .replace('grounds: { name: "can of coffee grounds", at: "shelf"', 'grounds: { name: "can of coffee grounds", at: "plywood"')
+    .replace('set: "lifted",', 'set: "lifted", open: "rug", inside: { crowbar: "rug" },');
+  assert.deepEqual(load(bad).boot().problems(), [
+    'items.grounds.at: no room or holder "plywood"',
+    'items.toolbox.holds: must be "in" or "on"',
+    'items.rug.on.search[0].inside: unknown effect "inside"',
+    'items.rug.on.search[0].open: "rug" can\'t open or close (give it closed:true or false)',
+    'items.rug.on.search[0].inside: "crowbar" in "rug": needs an item and a holder'
   ]);
 });
