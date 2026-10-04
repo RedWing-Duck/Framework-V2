@@ -1,0 +1,8 @@
+# dist/ is committed on purpose: it holds the playable single-file games.
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+*.swp
