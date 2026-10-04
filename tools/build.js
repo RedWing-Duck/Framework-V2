@@ -1,6 +1,7 @@
 // Build a game into one self-contained HTML file.
 //   node tools/build.js <game>   reads games/<game>/, writes dist/<game>.html, prints validator output
 // Order: css, game, engine, then the add-ons listed in build.json (each in its own <script>).
+// game.js is wrapped in a function scope that returns G, so only G is global.
 // An add-on name starting with "./" is the game's own: "./tour" is games/<game>/tour.js.
 const fs = require("node:fs"), path = require("node:path");
 const root = path.join(__dirname, "..");
@@ -11,9 +12,11 @@ function build(dir) {
   const { addons = [] } = JSON.parse(read(`${dir}/build.json`));
   const files = addons.map(a => a.startsWith("./") ? `${dir}/${a.slice(2)}.js` : `addons/${a}.js`);
   for (const f of files) if (!fs.existsSync(path.join(root, f))) throw new Error(`${dir}/build.json: no add-on "${f}"`);
-  const scripts = [`${dir}/game.js`, "engine/engine.js", ...files].map(f => {
-    const code = read(f);
+  const scripts = [`${dir}/game.js`, "engine/engine.js", ...files].map((f, i) => {
+    let code = read(f);
     if (/<\/script/i.test(code)) throw new Error(`${f}: contains "</script", which would end its script block early`);
+    // game.js runs in its own scope, so its helpers can have any name (even one the engine uses); only G is shared
+    if (i === 0) code = `const G = (() => {\n${code}\nreturn G;\n})();`;
     return `<script>\n${code}\n</script>`;
   }).join("\n\n");
   // function replacers, so "$" in the code is never read as a replace pattern

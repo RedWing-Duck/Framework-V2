@@ -54,7 +54,7 @@ The sections below explain each part.
 | `messages` | Rewording for the engine's own lines. |
 | `events` | A list of world rules. |
 
-`game.js` is plain JavaScript, so declare shared replies, conditions and numbers as `const`s above `G` and reuse them.
+`game.js` is plain JavaScript, so declare shared replies, conditions and numbers as `const`s above `G` and reuse them. It runs in its own scope (the build wraps it and keeps only `G`), so helpers can have any name without clashing with the engine's.
 
 ## Rooms
 

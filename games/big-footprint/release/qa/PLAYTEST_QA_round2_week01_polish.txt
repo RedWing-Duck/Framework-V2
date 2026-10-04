@@ -1,0 +1,142 @@
+PLAYTEST QA, ROUND 2 — Week 01 Polish Build: THIS PLACE HAS A BIG FOOTPRINT
+Build tested: big-footprint.html (updated; validate(): 0 problems)
+Method: scripted playthroughs on the real engine, headless.
+Personalities: a speedrunner (rushes, tries sequence breaks), a
+roleplayer (talks in character), and a cautious player (leans on
+help, hints and meta commands).
+
+VERIFIED FIXED: all 15 round-1 bugs (PT-01 to PT-15). Bare listen and
+smell work everywhere, show routes like give, drop-in routes like use,
+nouns from other rooms get the free not-here line, "x stairs" works
+on the landing, the line budget caps room add-ons at two, and the
+word, state and wording fixes are all in.
+Regression: W1 and W2 routes win; all five endings trigger; no
+sequence break found (the tour gate held against "u" from R1 and
+early answers).
+"TOUR 1-16" = steps 1-16 of the verified walkthrough.
+
+==============================================================
+P2
+==============================================================
+
+ID: NB-01
+Severity: P2 (a one-word typo ends the game)
+Location: guard checkpoint, bare "say"
+Steps to reproduce: TOUR 1-16, south, south, south, say
+Expected: the same as the tour questions (rev 2 BR-03): no words means
+Nando repeats his question, free, and the checkpoint stays open.
+Actual:
+  CAUGHT
+  Nando doesn't wait for you to finish.
+Suggested fix: a bare "say" at a checkpoint uses [N2.repeat] and costs
+nothing (the same treatment as GDD 12.1 D3).
+
+ID: NB-02
+Severity: P2
+Location: R5 Q1, small talk while the question is pending
+Steps to reproduce: north, west, east, east, west, north,
+say this smells amazing
+Expected: roleplay isn't punished; only an attempt at an answer
+counts as an answer.
+Actual: "You'd choose? In this house?" His smile tightens... and
+strikes go 0 -> 1. The player never chose anything.
+Suggested fix: count a "say" as a Q1 answer only if it contains an
+answer word: pozole, gravy, soup, sauce, mother, mama, nonna,
+grandmother, both, either, neither, one, choose, pick. Anything else
+gets a redirect, no strike:
+The Don smiles. "Compliments later, Walter. Pozole or gravy?"
+(Q2 can stay as is. Any "say" there is plausibly a name, so a wrong
+one is a fair strike.)
+
+ID: NB-03
+Severity: P2
+Location: guard checkpoint, natural alibi phrasing
+Steps to reproduce: TOUR 1-16, open giraffe gate, south, south,
+south, tell nando the giraffe is loose  (then: shout giraffe)
+Expected: both give the GIRAFFE alibi.
+Actual: "tell nando..." gets the free repeat line ("I asked you a
+question."). "shout jaguar" gets a confused line. A player who
+roleplays the alibi can't give it.
+Suggested fix:
+- shout, yell, scream, holler -> say.
+- "tell <npc> <text>" and "tell <npc> about <text>" at a checkpoint ->
+say <text> (the alibi rules then apply as usual).
+
+ID: NB-04
+Severity: P2
+Location: meta commands (the cautious player's toolkit)
+Steps to reproduce: where am i / exits / map / what now / save / undo
+/ back
+Expected: in-voice replies (a known intent should never get the
+confused line). These are the commands anxious players reach for
+first.
+Actual: a confused line for each.
+Suggested fix (all free):
+where am i, where -> the room name, then its short revisit line
+(TOUR REVISIT or ESCAPE REVISIT).
+exits, directions, ways out -> TOUR: the room's Exits line.
+ESCAPE: "No signs, no arrows. Just landmarks." then the room's
+ESCAPE REVISIT line.
+map -> TOUR: "The Don is the map tonight. Follow him." ESCAPE: "No
+map. The tour was the map."
+what now, what do i do, stuck, help me -> the next hint (the same as
+"hint").
+save, load, undo, restore -> "No saves, no do-overs. Tonight counts."
+back, go back, return -> TOUR: "The Don is going the other way." (the
+tour block line) ESCAPE: "Back which way? Name a direction, or a
+landmark."
+(At a checkpoint, "go back" stays a MOVE and means CAUGHT, as now. You
+tried to leave.)
+
+==============================================================
+P3
+==============================================================
+
+ID: NB-05
+Severity: P3
+Location: "say <words>" with no question or checkpoint pending
+Steps to reproduce: north, say hello, don chava  (also: say both in
+the foyer)
+Actual: "You try that. The universe gives you a look..."
+Suggested fix: with the Don in the room, "say X" = "talk to don"
+(the per-stop talk line, or the ask topic if X names one). With nobody
+there: "You say it out loud. The house doesn't answer." (free)
+
+ID: NB-06
+Severity: P3
+Location: hint ladder, TOUR QUESTION
+Steps to reproduce: at R5 type hint three times, answer, go to R9,
+type hint
+Actual: R9's first hint is step 3 ("Read your card: the bookstore has
+a name."). Q1 and Q2 share one ladder.
+Suggested fix: give Q1 and Q2 separate ladder positions (GDD 12.7:
+"each ladder keeps its own place").
+
+ID: NB-07
+Severity: P3
+Location: R2 ESCAPE, "push 13" / "push thirteen"
+Actual: "Nothing like that around here."
+Suggested fix: add "13" and "thirteen" (alone, in R2) to X.R2.step
+WORDS.
+
+ID: NB-08
+Severity: P3
+Location: compound commands
+Steps to reproduce: TOUR 1-16, open giraffe gate and jaguar gate
+Actual: opens the giraffe gate; the second half is silently dropped.
+Suggested fix: when "and" joins a second object, do the first and add:
+"One thing at a time, detective."
+
+ID: NB-09
+Severity: P3
+Location: "tell don <compliment>"
+Steps to reproduce: north, tell don i love the marble
+Actual: "Ask me something interesting, Walter." (the unknown-topic
+line)
+Suggested fix: "tell don" with love, like, beautiful, amazing, great,
+nice -> the flatter line. Add a "house / marble / palace" ask topic,
+S0: "Every stone, I picked. Every stone, I paid for. Mostly." S1: "It's
+a house."
+
+COUNT
+P1: 0, P2: 4, P3: 5

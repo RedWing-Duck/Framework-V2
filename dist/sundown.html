@@ -41,6 +41,7 @@ body.playing #menu,body:not(.playing) #out,body:not(.playing) #st,body:not(.play
 <form id="f"><span class="title">&gt;</span><input id="in" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" aria-label="Command" autofocus></form>
 
 <script>
+const G = (() => {
 // Game data reference: docs/AUTHORING.md
 // A countdown sample that uses every core feature and the craft, journal, endings, tags and hints add-ons.
 // Things to try: "open toolbox", "take all", "put nails in toolbox", "take coffee" (two things fit), "x radio" then "listen to it".
@@ -124,6 +125,8 @@ const G = {
     { if: "SUNDOWN", ending: "overrun", end: "You should have listened to the radio. THE END: Overrun. (Endings found: {found} of 3.)" }
   ]
 };
+return G;
+})();
 </script>
 
 <script>
@@ -161,6 +164,7 @@ const PARTICLES = ["up", "down", "around", "under", "out", "off", "over", "throu
 const FREE = ["help", "menu", "restart", "again", "undo", "inventory"];   // commands that don't cost a turn
 const MULTI = ["take", "drop"];                         // commands that take "all" or "X and Y" (one turn for the lot)
 const PRONOUNS = ["it", "them", "him", "her"];          // stand for the last thing acted on
+const NOOBJ = ["inventory", "wait", "help", "again", "undo", "restart", "menu", "go"];   // never ask "Which do you mean?" for these
 const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [] };
 // validator tables: REFS = add-on checks per data key; META = keys allowed next to effects;
 // MAPS = keys whose own keys are names ("def": each value is a definition, "data": each value is data, "map": a map of maps)
@@ -230,7 +234,7 @@ const inv = () => at(G.items, "player");
 const holder = id => own(G.items, id)?.holds;                               // "in", "on", or undefined
 const inside = id => holder(id) && !S.shut[id] ? at(G.items, id) : [];      // what can be seen in or on it
 const nested = ids => ids.flatMap(id => [id, ...nested(inside(id))]);       // these, and everything visible in or on them
-const where = id => { let p = S.loc[id]; for (let n = 0; own(G.items, p) && n < 50; n++) p = S.loc[p]; return p; };   // the room (or "player") around it
+const where = id => { let p = S.loc[id]; for (let n = 0; holder(p) && n < 50; n++) p = S.loc[p]; return p; };   // the room (or "player") around it
 const reach = () => [...nested([...inv(), ...at(G.items)]), ...at(G.npcs), ...(G.self ? ["self"] : [])];
 // "In the [box]: ..." / "On the [table]: ..." for each holder among ids that has something visible
 const contents = ids => nested(ids).filter(id => inside(id).length)
@@ -463,8 +467,8 @@ const CMDS = tbl({
     print(txt(thing(id).desc) || msg("plain")); contents([id]);
   },
   use() { LINE.it ? print(msg("nothing")) : notHere(); },
-  talk(a) {
-    const n = a ? LINE.it : at(G.npcs)[0];
+  talk(a, ids) {
+    const n = a ? ids.find(id => own(G.npcs, id)) : at(G.npcs)[0];   // people only: "talk to the coin" finds no one
     if (!n) return notHere("noOne");
     own(G.npcs, n)?.dialogue ? node(n, "start") : print(msg("silent", { it: `[${n}]` }));
   },
@@ -493,18 +497,19 @@ function respond(v, ids) {
   return reply(own(G.rooms[S.room].on, v)) || (!ids.length && reply(own(G.self?.on, v))) || reply(own(G.on, v));
 }
 
-// ---- exec: run verb v on the text a: pronouns, "Which do you mean?", hooks, then replies, then the
-// command itself, then the verb's fail line
+// ---- exec: run verb v on the text a: pronouns, "before" hooks, "Which do you mean?", then replies,
+// then the command itself, then the verb's fail line. Hooks come before the question, so an add-on
+// with its own idea of what a word means (or darkness) answers first.
 function exec(v, a = "", said = a) {
-  if (S.it && thing(S.it)) {   // "it" is the last thing acted on: the id for matching, its name for said:
-    a = words(a).map(x => PRONOUNS.includes(x) ? S.it : x).join(" ");
-    said = words(said).map(x => PRONOUNS.includes(x) ? words(thing(S.it).name).join(" ") : x).join(" ");
+  if (S.it && thing(S.it) && words(a).some(x => PRONOUNS.includes(x))) {   // "it" is the last thing acted on: its id for
+    a = words(a).map(x => PRONOUNS.includes(x) ? S.it : x).join(" ");        // matching; said: keeps the words typed and
+    said = `${said} ${thing(S.it).name}`;                                     // adds the name ("play her song" still matches)
   }
   const keep = { ...LINE }, ids = named(a, reach());
-  if (ids.amb && !settle(v, a, said, ids.amb)) return;
   Object.assign(LINE, { verb: v, said: words(said).join(" "), it: ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null });
   try {
     if (HOOKS.before.some(h => h(v, a, ids))) return;
+    if (ids.amb && !NOOBJ.includes(v) && !settle(v, a, said, ids.amb)) return;   // messages.which can read said:
     if (respond(v, ids)) return;
     LINE.it = ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null;
     if (own(CMDS, v)) return CMDS[v](a, ids);
@@ -520,8 +525,8 @@ function exec(v, a = "", said = a) {
 // use it (true). Otherwise ask "Which do you mean?", keep the command in S.ask, and refund the turn (false).
 function settle(v, a, said, amb) {
   const c = v === "take" ? amb.ids.filter(id => S.loc[id] !== "player") : v === "drop" ? amb.ids.filter(id => S.loc[id] === "player") : amb.ids;
-  if (c.length === 1) return exec(v, swap(a, amb.phrase, c[0]), said), false;
-  S.ask = { v, a, said, phrase: amb.phrase, ids: amb.ids };
+  if (c.length === 1) return exec(v, swap(a, amb.phrase, c[0]), swap(words(said).join(" "), amb.phrase, words(thing(c[0]).name).join(" "))), false;
+  S.ask = { v, a, said: words(said).join(" "), phrase: amb.phrase, ids: amb.ids };
   EFFECT.free(true); print(msg("which", { list: either(amb.ids) }));
   return false;
 }
@@ -541,7 +546,7 @@ function act(w) {
   }
   if (S.ask) {   // the answer to "Which do you mean?": words that name one of the choices finish the waiting command
     const q = S.ask, c = named(w.join(" "), q.ids); S.ask = null;
-    if (c.length === 1 && !c.amb && !known(w[0])) { turn(q.v, swap(q.a, q.phrase, c[0]), q.said); return; }
+    if (c.length === 1 && !c.amb && !known(w[0])) { turn(q.v, swap(q.a, q.phrase, c[0]), swap(q.said, q.phrase, words(thing(c[0]).name).join(" "))); return; }   // said: names the choice
   }
   const two = w.slice(0, 2).join(" "), ph = own(G.phrasal, two) || own(PHRASAL, two);
   if (ph) w = [...words(ph), ...w.slice(2)];
@@ -550,14 +555,14 @@ function act(w) {
   let [v, ...r] = w; v = own(ALIAS, v) || v;
   if (isDir(v)) { r = [v]; v = "go"; }
   if (v === "go" && r.length === 1) r = [own(DIRS, r[0]) || r[0]];   // "d" is "down", for said: too
-  if (v === "look" && ["under", "behind", "beneath", "in", "inside"].includes(r[0]) && VERBS.has("search")) v = "search";   // "look under the rug"
+  if (v === "look" && ["under", "behind", "beneath", "in", "inside"].includes(r[0]) && (VERBS.has("search") || own(CMDS, "search"))) v = "search";   // "look under the rug"
   if (["menu", "restart", "undo"].includes(v)) return CMDS[v](), "meta";   // no turn, no events
   if (S.over) return print(msg("over"));
   if (!own(CMDS, v) && !VERBS.has(v)) return print(msg("huh"));
   if (v !== "again" && v !== "undo") LAST = w;
   while (v !== "go" && r.length > 1 && PARTICLES.includes(r[0])) r.shift();   // "feel around the wall", "look under the rug"
   while (v !== "go" && r.length && PARTICLES.includes(r.at(-1))) r.pop();      // "put the hammer down", "feel around"
-  turn(v, r.join(" "), w.slice(1).join(" "));
+  turn(v, r.join(" "), v === "go" ? r.join(" ") : w.slice(1).join(" "));   // said: for go is the direction, spelled out
 }
 // one command, one turn (unless it's free): "take all" and "take X and Y" run it for each thing, still one turn
 function turn(v, a, said) {
@@ -666,8 +671,9 @@ function validate() {
     need(typeof G[T][id].name === "string", `${T}.${id}.name`, "needs a name"); }
   for (const id in G.items) need(!own(G.npcs, id), `items.${id}`, "same id as an NPC");
   for (const id in G.items) { const h = G.items[id].holds; need(h == null || h === "in" || h === "on", `items.${id}.holds`, 'must be "in" or "on"'); }
-  for (const id in G.items) { let p = id, n = 0; while (own(G.items, p) && n++ < 50) p = G.items[p].at;   // at: chains must end in a room
-    need(n < 50, `items.${id}.at`, "holders hold each other in a loop"); }
+  for (const id in G.items) { let p = G.items[id].at, n = 0; while (holder(p) && n++ < 50) p = G.items[p].at;   // at: chains must end in a room
+    need(n < 50, `items.${id}.at`, "holders hold each other in a loop");
+    need(!holder(id) || !room(id), `items.${id}`, "a holder can't share its id with a room"); }
   for (const n in G.npcs) { const D = G.npcs[n].dialogue; if (!D) continue;
     need(D.start, `npcs.${n}.dialogue`, `no "start" node`);
     for (const id in D) (D[id].options || []).forEach((o, i) => { const p = `npcs.${n}.dialogue.${id}.options[${i}]`;

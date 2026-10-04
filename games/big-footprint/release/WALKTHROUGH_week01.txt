@@ -1,0 +1,50 @@
+VERIFIED WALKTHROUGH — Week 01: THIS PLACE HAS A BIG FOOTPRINT
+Source: Critical Path QA, re-verified on the final build.
+Automated as a regression test: node tests/run.js
+  ("regression: verified walkthrough ..." and "regression: W2 branch ...").
+The test checks, after every step: the clock value, the key text,
+no strikes, and that the game hasn't ended early.
+[n] = Bigfoot clock after the step.
+
+TOUR
+1.  north
+2.  west
+3.  east
+4.  east
+5.  west
+6.  north                    Don asks Q1
+7.  say both                 Q1 passed, 0 strikes
+8.  south
+9.  up
+10. east                     Don asks Q2
+11. say dog-eared page       "He flips you a GOLD COIN."
+12. west
+13. west
+14. north
+15. north
+16. north                    ESCAPE begins [18]
+
+ESCAPE
+17. open giraffe gate        [17] alibi GIRAFFE
+18. south                    [16]
+19. south                    [15]
+20. use gold coin on hippo   [14] SHIPPING MANIFEST, "Secrets: 1 of 3."
+21. south                    [13] Nando stops you
+22. run                      [12]
+23. east                     [11]
+24. down                     [10] Nando stops you
+25. say giraffe              [9]
+26. push thirteenth step     [8]  DEAL PHOTOS, "Secrets: 2 of 3."
+27. south                    [7]
+28. down                     CLEAN GETAWAY, Secrets recovered: 2/3
+
+W2 BRANCH (Clean Sweep), after step 26:
+26a. east                    [7]
+26b. play cielito lindo      [6]  LEDGER, "Secrets: 3 of 3.", 6-turn warning
+26c. west                    [5]
+27.  south                   [4]
+28.  down                    CLEAN SWEEP, 3/3. Perfect run.
+
+Final result on the release build: both routes win; no step differs
+from the Critical Path QA run except the reworded text from the fixes
+(the "(Received: ...)" lines are hidden by ED-11).

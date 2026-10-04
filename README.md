@@ -11,7 +11,7 @@ v2 folds what the first games kept rebuilding into the engine: verbs and replies
 
 ## What it is, and what it isn't
 
-**It is** a blueprint for short-to-medium authored parser games in one HTML file: exploration, puzzles, people to talk to, a clock, a story that remembers what you did. `games/` has three: a tutorial (damp-cell), a countdown (sundown), and *This Place Has a Big Footprint*, a full commercial-length scene with a guided tour, checkpoints, strikes and five endings.
+**It is** a blueprint for short-to-medium authored parser games in one HTML file: exploration, puzzles, people to talk to, a clock, a story that remembers what you did. `games/` has three: a tutorial (damp-cell), a countdown (sundown), and *This Place Has a Big Footprint*, the largest game built on v1 (a guided tour, guard checkpoints, strikes, a clock and five endings), rebuilt on v2 with the engine untouched ([`games/big-footprint/PORT.md`](games/big-footprint/PORT.md)).
 
 **It isn't**, out of the box:
 - a natural-language parser. It reads a verb and the things you name; [`docs/AUTHORING.md`](docs/AUTHORING.md#how-a-command-is-read) lists exactly what it does and doesn't understand.
@@ -23,13 +23,14 @@ The source is the review artifact, not only the compiled games: `engine/`, `addo
 
 ## Play
 
-Download [`dist/damp-cell.html`](dist/damp-cell.html) or [`dist/sundown.html`](dist/sundown.html) and open it in a browser. Type `help` for the list of commands.
+Download [`dist/damp-cell.html`](dist/damp-cell.html), [`dist/sundown.html`](dist/sundown.html) or [`dist/big-footprint.html`](dist/big-footprint.html) and open it in a browser. Type `help` for the list of commands.
 
 ## Build and test
 
 ```sh
 node tools/build.js damp-cell   # → dist/damp-cell.html, plus the validator report
 node tools/build.js sundown
+node tools/build.js big-footprint
 node tests/run.js               # headless tests against the built files
 ```
 

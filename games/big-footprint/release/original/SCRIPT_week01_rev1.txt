@@ -1,0 +1,558 @@
+SCRIPT — Week 01: THIS PLACE HAS A BIG FOOTPRINT
+Retroment Gaming | Narrative Writer pass
+Source of truth: GDD Week 01. IDs below map 1:1 to GDD IDs.
+Voice: second person, present tense. TOUR = quippy noir.
+ESCAPE = tense thriller.
+Room text keys: FIRST (first TOUR visit), REVISIT (later TOUR
+visits), ESCAPE (every visit once ESCAPE has begun; exits named
+by landmark only, per GDD section 7).
+
+==============================================================
+ROOMS
+==============================================================
+
+[R1] Private Elevator
+FIRST:
+The elevator doors open on a box of mirrored gold, and you
+see six versions of Walter Pryce, bookstore investor, all of
+them sweating a little. Don Chava's man hits the button and
+steps back out. The only way is north, into the foyer, where
+a voice is already saying your name like it's a deal.
+REVISIT:
+Mirrored gold, and your reflection trying hard to look like
+it belongs here. The foyer is north.
+ESCAPE:
+The gold box hums, waiting. One button, one way down. Behind
+you, the double staircase and every problem you left on it.
+
+[R2] Grand Foyer
+FIRST:
+White marble floors, gold banisters, and two staircases that
+curve up to the same landing like arms around a hug you
+didn't ask for. The left staircase is wide and carpeted; the
+right is narrower, polished to a shine. The trophy room
+glitters west, a piano waits in the salon east, a long table
+stretches north in the dining hall, the stairs lead up, and
+the elevator is south.
+REVISIT:
+The twin staircases, left for family and right for business,
+still curling up toward the landing. West to the trophies,
+east to the piano, north to dinner, up the stairs, or south
+to the elevator.
+ESCAPE:
+The foyer lights flicker. Somewhere above, glass breaks. The
+two staircases rise into the dark; the right one gleams, its
+thirteenth step catching the emergency light. The gold
+elevator waits behind you. The trophy cases glitter off to
+one side, the piano salon to the other, the long dinner table
+straight ahead.
+
+[R3] Trophy Room
+FIRST:
+Glass cases line the walls, lit like jewelry counters. Inside:
+a GOLD RIFLE engraved with roses, a pistol studded with enough
+diamonds to buy a small town, and a framed newspaper headline
+someone has carefully cut the name out of. The foyer is back
+east.
+REVISIT:
+The glass cases, the GOLD RIFLE, the diamonds, the headline
+with the missing name. East to the foyer.
+ESCAPE:
+The cases rattle each time something heavy hits a floor above.
+The GOLD RIFLE stares back at you, useless. The only way out
+is back toward the staircases.
+
+[R4] Music Salon
+FIRST:
+A white grand PIANO sits in the middle of the room like the
+only guest who got a chair. Its lid is a sheet of mirror, and
+it shows you the chandelier, the ceiling fresco, and your own
+nervous smile. The foyer is west.
+REVISIT:
+The mirrored PIANO, reflecting the chandelier and your
+nerves. West to the foyer.
+ESCAPE:
+The PIANO waits in the half-light, its mirrored lid reflecting
+flashing alarm lights. Mama's piano. Mama's song. The way out
+is back toward the staircases.
+
+[R5] Dining Hall
+FIRST:
+A table long enough to seat a jury, set for twenty. Two
+portraits face each other across it: a stern woman in a
+rebozo and a sterner woman holding a wooden spoon. Chili,
+garlic, and slow-cooked tomato hang in the air. The foyer is
+south.
+REVISIT:
+The endless table, the two grandmothers watching each other
+like rival dons. South to the foyer.
+ESCAPE:
+Chairs knocked over, a lemur on the table eating grapes out
+of a silver bowl. It doesn't care about you. The way out is
+back toward the staircases.
+
+[R6] Upper Landing
+FIRST:
+Both staircases meet here at a balcony that looks down on the
+foyer. A gallery of portraits stretches west, and a heavy
+office door stands open to the east, leaking cigar smoke. The
+stairs lead back down.
+REVISIT:
+The balcony where the two staircases meet. West to the
+portraits, east to the office, down to the foyer.
+ESCAPE:
+The balcony shakes under a distant thud. Cigar smoke still
+drifts from the office. The hall of portraits stretches one
+way; the staircases drop down to the foyer.
+
+[R7] Gallery Hall
+FIRST:
+A long hall of oil portraits, all of them the Don: the Don on
+a horse, the Don with a lion, the Don as a saint. The
+wallpaper is peacock feathers. A guard passes by and nods.
+The atrium is north, the landing east.
+REVISIT:
+A hundred painted Don Chavas watch you walk. North to the
+atrium, east to the landing.
+ESCAPE:
+The painted Dons glare down, and one portrait is hanging
+crooked, torn by claws. Chlorine drifts in from the fountain
+behind you. Ahead, the balcony at the top of the stairs.
+
+[R8] Atrium
+FIRST:
+A glass roof, tropical plants, and in the center a bronze
+HIPPO fountain spouting water from its nostrils with great
+dignity. Its mouth is closed tight. The gallery is south and
+a chorus of shrieking birds comes from the north.
+REVISIT:
+The bronze HIPPO spouts water, mouth shut. South to the
+gallery, north to the birds.
+ESCAPE:
+Water sloshes over the fountain's edge. Lemurs chatter in the
+palms, pelting the floor with fruit. The bronze HIPPO waits,
+mouth shut. The screaming aviary is behind you; ahead, the
+hall of portraits.
+
+[R9] The Don's Office
+FIRST:
+Leather, mahogany, a humidor the size of a coffin, and a
+window that looks down on a city he probably owns part of.
+A framed sign on the desk reads "LEGITIMATE BUSINESS." The
+landing is west.
+REVISIT:
+The leather, the cigars, the sign that protests too much.
+West to the landing.
+ESCAPE:
+Papers everywhere, a chair knocked over, the humidor open and
+empty. Whatever mattered in here, the Don took it. The only
+way out is back to the balcony.
+
+[R10] Aviary
+FIRST:
+A glass room full of peacocks that scream like car alarms
+with feelings. The AVIARY door has a keypad lock, glowing
+red. The atrium is south, and fresh night air blows in from
+the terrace north.
+REVISIT:
+The peacocks, the screaming, the red keypad on the AVIARY
+door. South to the atrium, north to the terrace.
+ESCAPE:
+The AVIARY keypad is smashed, its door rattling. The peacocks
+are screaming louder than ever. The fresh air of the terrace
+is behind you; the chlorine smell of the fountain is ahead.
+
+[R11] Zoo Terrace
+FIRST (this is the moment ESCAPE begins):
+A rooftop garden with a view of the whole city. In a tall yard
+a giraffe chews thoughtfully; beside it, a black jaguar paces
+behind the JAGUAR GATE. Then the alarms start. Lemurs pour out
+of the dark, a roar shakes the glass, and the Don goes pale:
+"The accountant. He opened the big one." He's gone south with
+his guards in three seconds flat. You are alone, holding a
+plaque proposal, with something enormous waking up to the
+east.
+REVISIT (ESCAPE only):
+Wind, alarms, and the giraffe peering over the GIRAFFE GATE.
+The jaguar paces behind the JAGUAR GATE. The broken enclosure
+gapes to the east; the screaming aviary is behind you.
+
+[R12] Broken Enclosure
+ESCAPE (only reachable in ESCAPE):
+Steel bars bent outward like someone opened a bag of chips.
+A brass sign reads "BIG TONY — DO NOT FEED." Footprints the
+size of snow shovels lead back past you. The only way out is
+the terrace.
+
+==============================================================
+ITEMS
+==============================================================
+
+[I1] BRIEFING CARD
+LOOK: Your cover, in your own handwriting. Name: Walter Pryce.
+Business: The Dog-Eared Page, a bookstore planned for the
+empty lot next door. Offer: a brass plaque reading "The
+Bellandi-Reyes Reading Room." At the bottom: "Smile. Don't
+touch anything."
+TAKE: You already have it. It's the only thing keeping you
+from being a very short story.
+USE (success): Not needed; the card is for reading. (Engine:
+there is no use-on target for I1.)
+USE (wrong target): That won't help. The card is for reading,
+not for handing to anyone.
+
+[I2] GOLD COIN
+LOOK: A heavy gold coin with an eagle on one side and a winged
+figure on the other. The Don called it your "first dividend."
+TAKE: You pocket the coin. It's warm from his hand, which
+somehow makes it worse.
+USE on HIPPO (success): see P2 SOLVED.
+USE (wrong target): You hold out the coin. Nothing here
+wants it. You put it back before you lose it.
+
+[I3] LEDGER
+LOOK: A fat notebook held shut with rubber bands, full of
+initials, dates, and payments in neat columns. Two pages list
+nothing but rubber band purchases. Someone had a lot of cash
+to wrap.
+TAKE: You tuck the ledger inside your jacket. Secret one.
+USE (success): Not needed. It's evidence; just get it out.
+USE (wrong target): Tempting, but this is evidence, not a
+tool. Keep it safe.
+
+[I4] SHIPPING MANIFEST
+LOOK: A waterproof tube holding a shipping schedule: dates,
+ports, and thousands of cans of "premium chiles" that clearly
+have never been near a chile.
+TAKE: The manifest goes into your jacket. Secret two.
+USE (success): Not needed. It's evidence; just get it out.
+USE (wrong target): Tempting, but this is evidence, not a
+tool. Keep it safe.
+
+[I5] DEAL PHOTOS
+LOOK: A stack of photos: the Don shaking hands on a yacht with
+men whose faces would end careers. Someone wrote a date on
+the back of each one.
+TAKE: You slide the photos into your jacket. Secret three.
+USE (success): Not needed. It's evidence; just get it out.
+USE (wrong target): Tempting, but this is evidence, not a
+tool. Keep it safe.
+
+==============================================================
+NPCs
+==============================================================
+
+[N1] DON CHAVA (Salvatore Bellandi-Reyes)
+GREETING (on entering R2, first visit):
+"Mr. Pryce! Welcome. Salvatore Bellandi-Reyes, but friends
+call me Chava, and you're a friend until you're not." He
+grips your hand like he's weighing it.
+
+MAIN DIALOGUE, by tour stop (plays on entering; the final line
+of each stop names the direction of the next one):
+
+R2 (foyer):
+"Two staircases, two families. My mother's people came from
+the mountains of the west coast, my father's from Palermo. In
+this house we never choose between family." He taps the left
+banister. "Left stairs, twelve steps, for family. Right
+stairs, thirteen, for business. Never trust the thirteenth
+step, amigo." He winks. "Come, the trophy room. West."
+
+R3 (trophy room):
+"My collection. Every piece has a story, and I tell none of
+them." He nods at the GOLD RIFLE. "Admire. Don't touch. Back
+east, then the salon."
+
+R4 (music salon):
+"My mother's piano. Only one song is ever played on her: my
+mother's song. Anything else is disrespect." He watches your
+hands. "Now, dinner. Back west, then north."
+
+R5 (dining hall):
+"Mama Rosa sang 'Cielito Lindo' every Sunday at this table.
+Every Sunday. My nonna banged her spoon on the table to keep
+time." Then he leans in. (Q1 follows; see Q1 below.)
+After Q1 is answered correctly: "Good answer. Now upstairs,
+to talk business. South, then up, then east."
+
+R9 (office):
+He drops into a leather chair. "A reading room. With my name
+on it. You know what that does for a man's reputation?" He
+smiles. (Q2 follows; see Q2 below.)
+After Q2 is answered correctly: He flips you a GOLD COIN.
+"Your first dividend, partner. Now let me show you my real
+investments. West, west, then north."
+
+R7 (gallery):
+"Me, by the finest painters money can scare." A guard hurries
+past. "My boys know the rule: the animals come first. Anything
+gets loose, they drop everything and chase it. North, to my
+girl."
+
+R8 (atrium):
+"Pepita." He flicks a gold coin into the HIPPO's mouth, and the
+bronze jaw swings open, then snaps shut. "She only opens up for
+gold. Like my accountants. North, the birds."
+
+R10 (aviary):
+"My peacocks. Loud, beautiful, and they don't know how to
+lie. North. Time you met the family."
+
+AFTER TASK (not applicable after ESCAPE begins; the Don is
+gone): "Talk business later, Walter. Keep walking."
+TALK DURING TOUR (repeat): "Questions later, Walter. Keep up."
+
+[N2] NANDO (head guard)
+GREETING (checkpoint trigger, first ESCAPE entry to R7 or R2):
+A flashlight hits your face. Nando, the size of a vending
+machine, blocks the way. "Hey. Guests don't wander. Why are
+you up here?"
+MAIN DIALOGUE: see SYSTEM > GUARD CHECKPOINTS.
+AFTER TASK (checkpoint already resolved): Nando is gone,
+shouting somewhere far away.
+
+[N3] BIG TONY (Bigfoot)
+GREETING: none; Big Tony is heard, never met, until L3.
+MAIN DIALOGUE: see SYSTEM > BIGFOOT CLOCK.
+AFTER TASK: n/a
+
+==============================================================
+PUZZLES
+==============================================================
+
+[P1] Mama's Song (R4)
+SETUP: (in R4 FIRST and ESCAPE text) The mirrored PIANO.
+HINT: He told you whose song this piano keeps. He told you
+the title over dinner.
+SOLVED (play CIELITO LINDO, ESCAPE):
+You play the first bars of "Cielito Lindo," badly but with
+feeling. Something clicks. The mirrored lid rises on its own,
+and a hidden tray slides out holding a LEDGER bound in rubber
+bands. Secret one.
+WRONG ATTEMPT (play PIANO, or any other song, ESCAPE):
+You bang out a few notes. The piano does nothing, but you're
+pretty sure Mama Rosa is disappointed. Which song does this
+piano keep?
+TOUR ATTEMPT: see SYSTEM > TOUR STRIKES.
+
+[P2] Pepita's Price (R8)
+SETUP: (in R8 text) The bronze HIPPO, mouth shut.
+HINT: The hippo has expensive taste. So did the Don's
+handshake.
+SOLVED (use GOLD COIN on HIPPO, ESCAPE):
+You flick the coin into Pepita's mouth. The bronze jaw swings
+open, and a waterproof tube tumbles out into the water. You
+fish out the SHIPPING MANIFEST. Secret two.
+WRONG ATTEMPT (open HIPPO, push HIPPO, etc., ESCAPE):
+You pull at the bronze jaw. Pepita's got a grip like a bank
+vault. She only opens up for one thing.
+TOUR ATTEMPT: see SYSTEM > TOUR STRIKES.
+
+[P3] The Thirteenth Step (R2)
+SETUP: (in R2 text) The right staircase, polished, one step
+catching the light.
+HINT: Business has one more step than family.
+SOLVED (push THIRTEENTH STEP, ESCAPE):
+You press the thirteenth step. It sinks with a click, and a
+panel in the staircase slides open, releasing cold air from a
+narrow passage. Just inside, a shoebox holds the DEAL PHOTOS.
+Secret three.
+WRONG ATTEMPT (push other steps, push STAIRCASE, etc., ESCAPE):
+You press a step. It's just a step. The Don said which one
+you can't trust.
+TOUR ATTEMPT: see SYSTEM > TOUR STRIKES.
+
+==============================================================
+SYSTEM
+==============================================================
+
+INTRO SCREEN:
+THIS PLACE HAS A BIG FOOTPRINT
+A Retroment Gaming production.
+
+Your client wants three secrets from Don Chava's penthouse. Your
+cover: Walter Pryce, bookstore investor, carrying a plaque proposal
+and a smile. The Don will give you the grand tour himself.
+Listen to everything. Touch nothing. Get out with at least two.
+
+Type HELP for commands.
+
+HELP TEXT:
+Move: north, south, east, west, up, down (or n, s, e, w, u, d).
+Look around: look. Look at something: examine [thing] (or x).
+Take, drop, use [item] on [thing], open, push, play, read.
+Talk: talk to [person]. Answer: say [words].
+Other: inventory (i), status, hint, quit.
+On the tour, free actions: look, examine, inventory, status,
+help, hint. Once the chaos starts, every other command costs
+time.
+
+STATUS:
+TOUR: "Tour in progress. Strikes: [x]/3."
+ESCAPE: "Bigfoot clock: [x] turns. Secrets: [y]/3. Run: [ready /
+used]. Alibis: [list of released, unused animals, or none]."
+
+HINT (general, no puzzle in room):
+TOUR: "Listen to the Don. Every brag is a clue."
+ESCAPE: "Walk the tour backward. Grab what you can. The guards
+chase animals first."
+
+"I DON'T UNDERSTAND THAT" (3 variations, rotate):
+1. "You try that. The universe gives you a look usually
+   reserved for bad checks."
+2. "That doesn't make sense, even for a guy pitching a
+   bookstore to a kingpin."
+3. "Nice try, detective. Say it plain."
+
+TOUR BLOCK (exit not on the tour):
+"The Don puts a hand on your shoulder. 'Private, amigo. This
+way.'"
+
+--- TOUR QUESTIONS ---
+Q1 (R5) PROMPT:
+"So tell me, Walter. Sunday dinner: my mother's pozole or my
+nonna's Sunday gravy?"
+Q1 CORRECT (say BOTH):
+He laughs and slaps the table. "Both! Now you sound like
+family."
+Q1 WRONG: (adds a strike; he asks again)
+"You'd choose? In this house?" He asks again, slower.
+
+Q2 (R9) PROMPT:
+"Remind me, what's your bookstore called again?"
+Q2 CORRECT (say DOG-EARED PAGE):
+"The Dog-Eared Page. Cute. I like cute." See N1 R9 after Q2.
+Q2 WRONG: (adds a strike; he asks again)
+"That's not what you told my people." He asks again, not
+smiling.
+
+--- TOUR STRIKES ---
+(Strike objects: GOLD RIFLE, PIANO, THIRTEENTH STEP / STAIRCASE,
+HIPPO. Examine is free and safe.)
+STRIKE 1:
+The Don's smile tightens. "Hands to yourself, Walter. That's a
+collector's piece."
+STRIKE 2:
+The smile is gone. "Twice now. I don't like three."
+STRIKE 3: -> ending L1.
+
+GATES DURING TOUR (open AVIARY / GIRAFFE GATE / JAGUAR GATE):
+"The keypad blinks red. Locked tight, and the Don is watching."
+(Not a strike.)
+
+--- ESCAPE: ALIBI PREP ---
+open AVIARY (R10):
+You punch the smashed keypad. The door swings open and peacocks
+explode into the palace, screaming like the world is ending. Perfect alibi:
+PEACOCKS.
+open GIRAFFE GATE (R11):
+You lift the latch. The giraffe ducks out and ambles off toward
+the stairs, curious about everything. Perfect alibi: GIRAFFE.
+open JAGUAR GATE (R11):
+You swing the gate open and flatten yourself against the wall.
+The jaguar pours past like smoke and disappears downstairs.
+Perfect alibi: JAGUAR.
+Already open: "It's already open. That animal's somebody else's
+problem now."
+
+--- ESCAPE: GUARD CHECKPOINTS ---
+TRIGGER: see N2 GREETING.
+RUN (first time):
+You bolt. Nando grabs for you, and a lemur lands on his head.
+By the time he pulls it off, you're long gone.
+say PEACOCKS (released, unused):
+"The Don wants the peacocks rounded up! Do you hear them?"
+Nando does. He sprints toward the screaming.
+say GIRAFFE (released, unused):
+"The giraffe's loose on the staircase! Boss said animals
+first!" Nando swears and runs.
+say JAGUAR (released, unused):
+"The JAGUAR is out. It went that way." Nando goes very pale
+and very fast.
+ANYTHING ELSE (including a second run, an unreleased animal, or
+an alibi already used): -> ending L2.
+
+--- ESCAPE: BIGFOOT CLOCK ---
+6 TURNS LEFT:
+Somewhere behind you, a thud rattles the chandeliers.
+3 TURNS LEFT:
+A roar, closer now. Something is sniffing its way through the
+palace.
+1 TURN LEFT:
+The floor shakes. You smell wet dog and bad decisions. Move.
+0: -> ending L3.
+
+--- ELEVATOR (R1, ESCAPE) ---
+"down" with fewer than 2 secrets:
+Your thumb hovers over the button. Two secrets minimum, or this
+was all for nothing. You're not leaving empty-handed.
+"down" during TOUR:
+"Leaving before dessert?" The Don steers you back out.
+
+==============================================================
+ENDINGS
+==============================================================
+
+[W1] CLEAN GETAWAY (2 secrets)
+The elevator doors slide shut on the roaring, screaming,
+honking chaos above. Floors tick by. You pat your jacket: two
+secrets, safe. One is still up there, but tonight, two was
+plenty. The doors open onto the street, the city, and the
+empty lot next door. It would make a great bookstore.
+THE END. Secrets recovered: 2/3.
+
+[W2] CLEAN SWEEP (3 secrets)
+The doors shut. Your jacket is so heavy with evidence it
+practically has a credit rating. Ledger, manifest, photos.
+Every secret the Don had, and he gave you the tour himself.
+Somewhere upstairs, a giraffe is eating the plaque proposal.
+THE END. Secrets recovered: 3/3. Perfect run.
+
+[L1] COVER BLOWN (3 strikes)
+The Don goes very still. "Walter. If that's your name." He
+snaps his fingers, and two guards appear. "Show our friend the
+wine cellar. He likes to touch things. Let him touch the door
+from the inside."
+GAME OVER.
+
+[L2] CAUGHT (wrong answer at a checkpoint)
+Nando doesn't buy it. A heavy hand, a plastic zip tie, and a
+long walk back to the Don. "An investor," the Don says. "I'm
+so disappointed."
+GAME OVER.
+
+[L3] BIG FOOTPRINT (clock hits 0)
+A shadow the size of a vending machine fills the hall. A hand
+like a catcher's mitt lifts you off your feet, gently, the way
+you'd pick up a kitten, and carries you back to the broken
+enclosure to keep him company. Big Tony is lonely. Big Tony is
+also very, very strong.
+GAME OVER.
+
+GAME-OVER PROMPT (after any L ending):
+"Type RESTART to try again, or QUIT to walk away."
+
+AFTER THE GAME ENDS (any input except RESTART/QUIT):
+"The story's over, detective. RESTART or QUIT."
+
+==============================================================
+SUGGESTIONS FOR DESIGNER
+(not written into the game; for review before build)
+==============================================================
+1. P1 input: accept "play cielito lindo" only, or also "play
+   mama's song"? Recommend the former plus the wrong-attempt
+   nudge; confirm.
+2. The GDD makes R11's FIRST visit trigger ESCAPE. Does the
+   entry move into R11 cost a clock turn? The Script assumes
+   the clock starts at 18 AFTER that text is shown.
+3. R7 is the only route from R8 to R6, so both checkpoints
+   always fire on the way out. Confirm that's intended (the
+   Script is written assuming two confrontations every run).
+4. Examine on strike objects is free and safe during TOUR (the
+   Script assumes this, matching "Examine is free" in HELP).
+   Confirm.
+5. Q1 answer "BOTH": should "both of them" or "neither" be
+   accepted or struck? The Script treats only BOTH as correct.
+6. The R5 ESCAPE lemur-and-grapes line is flavor only; no GRAPES
+   item exists. Confirm that's fine or cut the line.

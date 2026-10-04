@@ -1,0 +1,184 @@
+PLAYTEST QA — Week 01 Polish Build: THIS PLACE HAS A BIG FOOTPRINT
+Build tested: big-footprint.html (polish build, validate(): 0 problems)
+Method: three scripted playthroughs run headless on the real engine:
+a first-time player, a chaos player, and a detail-oriented player
+pushing the parser. Regression holds: both win routes and all five
+endings work, and the clock values match the walkthrough.
+"TOUR 1-16" = steps 1-16 of the verified walkthrough.
+
+==============================================================
+P2
+==============================================================
+
+ID: PT-01
+Severity: P2
+Location: "listen" with no noun, TOUR, R1 (and R2, R3)
+Steps to reproduce: listen   (first command of the game)
+Expected: an in-voice sound line (GDD 12.3: a known verb never gets
+the confused line).
+Actual: "You try that. The universe gives you a look usually reserved
+for bad checks."
+Cause: Script C2 says bare LISTEN uses the room's LISTEN line, and in
+TOUR has no fallback. R1-R3 only have LISTEN lines on nouns.
+Suggested fix: promote these noun lines to room lines, and add a TOUR
+fallback.
+R1 LISTEN: use X.R1.elevator LISTEN (TOUR / ESCAPE).
+R2 LISTEN: use X.R2.marble LISTEN (TOUR / ESCAPE).
+R3 LISTEN: use X.R3.cases LISTEN (TOUR / ESCAPE).
+Global LISTEN fallback (TOUR): "Violins somewhere, footsteps on
+marble, and the Don breathing through his nose."
+
+ID: PT-02
+Severity: P2
+Location: "show <item> to don"
+Steps to reproduce: TOUR through step 11, show coin to don
+Expected: the D3 social line (the same as give for card, coin, plaque).
+Actual: "There's nobody here to try that on." The Don is standing
+right there.
+Suggested fix: route "show X to NPC" through the same replies as
+"give X to NPC".
+
+ID: PT-03
+Severity: P2
+Location: R8 Atrium, "drop coin in fountain" during TOUR
+Steps to reproduce: TOUR through step 14, drop coin in fountain
+Expected: a strike (the fountain counts as the HIPPO on the tour).
+Actual: "You're not carrying that." You are. The same command works
+in ESCAPE (it solves P2 as GDD 12.6 says), so only the tour path is
+broken.
+Suggested fix: route "drop X in/into Y" through "use X on Y" in both
+phases.
+
+ID: PT-04
+Severity: P2
+Location: R12 Broken Enclosure, nouns from another room
+Steps to reproduce: TOUR 1-16, east, open jaguar gate
+Expected: "Nothing like that around here." (free), since the gate is
+in R11.
+Actual: "It doesn't open. Not everything in this house is a secret."
+plus turn feedback, and a clock turn is spent. The category default
+fires for a noun that isn't in the room.
+Suggested fix: resolve the noun to the current room first. If it isn't
+here, the reply is the free not-here line and the category ladder
+never runs.
+
+ID: PT-05
+Severity: P2
+Location: ESCAPE, all rooms (readability)
+Steps to reproduce: critical path steps 17-21, reading every reply
+Expected: tension lines that land one at a time.
+Actual: extra lines stack up. Entering R8 prints the room plus three
+extra lines (checkpoint foreshadow, giraffe mark, clock band). A
+wasted turn at the 6-turn mark prints three add-ons (turn feedback,
+one-time warning, band line). On a stream overlay, the room text
+scrolls away.
+Suggested fix (rule, no new text):
+- At most two extra lines per room print, in this priority: NPC or
+checkpoint lines, then state marks (animals, Nando traces), then the
+clock band line.
+- On a turn where a one-time clock warning (6/3/1) prints, skip the
+band line.
+- Skip turn feedback when a warning or an ending prints the same turn.
+
+ID: PT-06
+Severity: P2
+Location: R6 Upper Landing, "x stairs"
+Steps to reproduce: TOUR through step 9, x stairs
+Expected: X.R6.stairs text. "x staircases" works.
+Actual: "Nothing like that around here."
+Suggested fix: "examine stairs" examines here; a bare "stairs" or
+"go stairs" still moves you (rev 2 BR-06).
+
+==============================================================
+P3
+==============================================================
+
+ID: PT-07
+Severity: P3
+Location: "smell" with no noun, R1 and R3
+Actual: the generic "Money, polish, and tension." The nouns there have
+better lines.
+Suggested fix: R1 SMELL = X.R1.elevator SMELL; R3 SMELL = "Glass
+cleaner and gun oil."; R2 SMELL = X.R2.marble SMELL.
+
+ID: PT-08
+Severity: P3
+Location: R5, "x cards"
+Actual: "Nothing like that around here."
+Suggested fix: add "cards" to X.R5.placecards WORDS. The BRIEFING CARD
+keeps "card" (singular).
+
+ID: PT-09
+Severity: P3
+Location: R2, "x family photos" / "x photo"
+Actual: "Nothing like that around here." Players say "photos" for the
+family frames.
+Suggested fix: add "family photos" and "family photo" to X.R2.frames
+WORDS. Leave plain "photos" to the DEAL PHOTOS item.
+
+ID: PT-10
+Severity: P3
+Location: BRIEFING CARD after Q2
+Steps to reproduce: TOUR through step 11, x card
+Actual: rev 2's card text. The Script batch 3 IF Q2 line is missing.
+Suggested fix: add it: "Smile. Don't touch anything." You smiled. He
+liked the name. So far, so good.
+
+ID: PT-11
+Severity: P3
+Location: R8 TOUR, "take coins" (strike)
+Actual: "Hands to yourself, Walter. That's a collector's piece." Odd
+for coins in a fountain.
+Suggested fix, strike line when the object is the HIPPO or fountain:
+The Don's smile tightens. "Those are Pepita's, Walter. Hands to
+yourself."
+
+ID: PT-12
+Severity: P3
+Location: "eat" on non-FOOD nouns
+Steps to reproduce: TOUR 1-16, east, eat banana peels
+Actual: the engine's "Nothing happens. The penthouse is unimpressed."
+(and you're on the roof).
+Suggested fix: add EAT to the FIXTURE, FURNITURE and ART defaults:
+"You're hungry, not desperate."
+
+ID: PT-13
+Severity: P3
+Location: R2 ESCAPE revisit
+Steps to reproduce: W2 route, after the piano, west
+Actual: "You see: staircases" prints under the revisit text (lowercase,
+engine item list).
+Suggested fix: put the [staircase] tag in the R2 escape revisit text:
+"The foyer again: the elevator behind you, the [staircase] rising into
+the dark, ..."
+
+ID: PT-14
+Severity: P3
+Location: R1 ESCAPE, "down" / "press button" with 1 secret
+Actual: "...You're not leaving empty-handed." You have one secret.
+Suggested fix, SECRETS=1 version: Your thumb hovers over the button.
+One secret isn't a case. It's a rumor. Go get another.
+
+ID: PT-15
+Severity: P3
+Location: IF lines on nouns (for example X.R11.garden with OUT_JAGUAR)
+Actual: the IF line replaces the whole description, so the garden
+loses its hedges and initials once the jaguar is out.
+Suggested fix: for "mark" lines (animal traces), print the base line,
+then the IF line. Keep full replacement for solved states.
+
+==============================================================
+ROOT CAUSE FOR THE TEST SUITE
+==============================================================
+PT-01, 02, 03, 04 and 06 all passed the Milestone A coverage test,
+because that test only checks <verb> + <noun present in the room>.
+Extend it to cover:
+1. Every info and Tier 1 verb with NO noun, in every room, both phases.
+2. Every Tier 2 verb (show, give, ask, tell) on every NPC present,
+with and without an item.
+3. Prepositional forms: "drop X in Y", "put X in Y", "look under X".
+4. Nouns from OTHER rooms (must get the free not-here line).
+5. Plurals and two-word phrases of every WORDS entry.
+
+COUNT
+P1: 0, P2: 6, P3: 9

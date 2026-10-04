@@ -3,13 +3,14 @@
 const vm = require("node:vm");
 
 class El {
-  constructor() { this.children = []; this.hidden = false; this.className = ""; this.value = ""; this.scrollTop = 0; this.scrollHeight = 0; }
-  append(...xs) { for (const x of xs) { if (x instanceof El) x.parent = this; this.children.push(x); } }
+  constructor() { this.children = []; this.log = []; this.hidden = false; this.className = ""; this.value = ""; this.scrollTop = 0; this.scrollHeight = 0; }
+  // log: everything ever appended (until innerHTML is cleared), so tests can read past the engine's 500-paragraph screen limit
+  append(...xs) { for (const x of xs) { if (x instanceof El) x.parent = this; this.children.push(x); this.log.push(x); } }
   remove() { const c = this.parent?.children, i = c ? c.indexOf(this) : -1; if (i >= 0) c.splice(i, 1); }
   get firstElementChild() { return this.children.find(c => c instanceof El) || null; }
   get textContent() { return this.children.map(c => typeof c === "string" ? c : c.textContent).join(""); }
   set textContent(t) { this.children = [String(t)]; }
-  set innerHTML(h) { this.children = h ? [String(h)] : []; }
+  set innerHTML(h) { this.children = h ? [String(h)] : []; this.log = [...this.children]; }
   focus() {}
 }
 
@@ -40,7 +41,7 @@ function load(html, opts = {}) {
     boot() { ready.forEach(f => f()); return game; },
     click(id) { els[id].onclick(); },
     type(...cmds) { for (const c of cmds) { els.in.value = c; els.f.onsubmit({ preventDefault() {} }); } },
-    lines: () => els.out.children.map(p => p.textContent),
+    lines: () => els.out.log.map(p => p.textContent),   // the whole transcript, not just what's still on screen
     last: () => game.lines().at(-1),
     playing: () => cls.has("playing"),
     problems: () => els.err.hidden ? [] : els.err.textContent.split("\n").slice(1)

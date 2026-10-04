@@ -1,0 +1,217 @@
+PLAYTEST QA, ROUND 3 (BARTLE GRAPH) — Week 01 Polish Build: THIS PLACE HAS A BIG FOOTPRINT
+Build tested: big-footprint.html (newest; validate(): 0 problems)
+Method: six scripted playthroughs on the real engine, headless, one
+per corner of the Bartle player-type graph plus the center and a
+breaker:
+  Achiever (acting on the world): perfect-run optimizer
+  Explorer (interacting with the world): every noun, every sense
+  Socializer (interacting with characters): talks to everyone
+  Killer (acting on characters): hostile to everyone
+  Center: a balanced casual player
+  Breaker: exploits, stalls, duplicates, abuses sequence
+
+VERIFIED FIXED: all 9 round-2 bugs (NB-01 to NB-09).
+Robustness: no crash, softlock, sequence break, duplication, or clock
+stall found. Both win routes and all five endings work.
+"TOUR 1-16" = steps 1-16 of the verified walkthrough.
+
+==============================================================
+P2
+==============================================================
+
+ID: BG-01  (Achiever)
+Severity: P2 (the game's top reward can't be earned)
+Location: run report, W2 tease line
+Steps to reproduce: any W2 route that examines everything.
+Expected: "Every secret, every corner. The Don never stood a chance."
+is reachable.
+Actual: "Things examined" counts 106 things, and 6 of them can only be
+examined during ESCAPE in rooms off the W2 route: R5.lemur (dining,
+2 turns), R9.papers (office, 2 turns), and R12's 4 nouns (enclosure,
+2 turns). The fastest W2 leaves 4 turns to spare, so at most one
+detour fits. Tested: W2 plus two detours hits 0 and ends in L3 with
+105 of 106 examined. The best possible W2 is 104 of 106, and the
+line never prints.
+Suggested fix (no rule or clock change): count only nouns reachable
+on a W2 route toward the main total. Report the other six as bonus
+finds, which Achievers enjoy chasing across runs:
+  Things examined: <x> of <y>
+  Bonus finds: <n> of 6
+The "every corner" tease then checks the main total only.
+
+ID: BG-02  (Explorer)
+Severity: P2 (GDD 12.2: a readable noun with no description)
+Location: nouns that appear inside examine and dialogue lines
+Steps to reproduce (each gets "Nothing like that around here."):
+  R1: x speaker, x violins (and "listen to music": confused line)
+  R2: x envelope
+  R3: x plate, read plate, x handcuffs
+  R4: x sheet music
+  R5: x bread, x flame
+  R7 (tour): x radio, x villagers, x sword, x mane
+  R8: x name plate, x lightning
+  R9: x blotter, x cedar, x rain
+  R10: x reina, x band, (escape) x wires
+  R11: x initials, x reading glasses
+  R12: x chain, x toes
+Expected: every noun a player reads can be examined.
+Suggested fix, quick version (aliases to the entry that mentions
+them, so the player gets a real line):
+  speaker, violins, music -> X.R1.elevator
+  envelope -> X.R2.frames
+  plate, brass plate -> X.R3.rifle; handcuffs -> X.R3.headline
+  sheet music -> X.R4.picture
+  bread, flame, flames, burner -> X.R5.pots
+  radio -> X.R7.guard (tour) / X.ANY.nando (escape); villagers ->
+  X.R7.saint; sword -> X.R7.horse; mane -> X.R7.lion
+  name plate -> X.R8.hippo; lightning -> X.R8.roof
+  blotter -> X.R9.desk; cedar -> X.R9.humidor; rain -> X.R9.window
+  reina, duquesa, lola, bianca, band -> X.R10.peacocks; wires ->
+  X.R10.door
+  initials -> X.R11.garden; reading glasses, glasses -> X.R11.lemurs
+  chain -> X.R12.floor; toes -> X.R12.footprints
+Better version, for a later pass: bespoke one-liners for each.
+Process fix: the Editor's noun audit must read examine and dialogue
+text too, not only room text. Build the coverage test's noun list
+by pulling capitalized and common nouns out of every text string.
+
+ID: BG-03  (Socializer)
+Severity: P2
+Location: talking to animals
+Steps to reproduce: TOUR through step 14, talk to pepita (also: talk
+to peacocks in R10; talk to giraffe / jaguar / lemurs in R11)
+Expected: an in-voice reply. The animal is right there.
+Actual: "Nobody by that name around."
+Suggested fix: ANIMAL category TALK default, plus these specific
+lines (free, no strike):
+  Pepita: Pepita maintains a dignified bronze silence. (TOUR, the
+  Don adds: "She likes you. Maybe.")
+  peacocks: You say hello. Nine peacocks scream back, in harmony.
+  giraffe: She lowers her head, listens politely, and eats a hedge.
+  jaguar: The jaguar listens to every word, and you get the strong
+  feeling it's taking notes.
+  lemurs: The lemurs chatter back. It sounds like they're arguing
+  about you.
+  default: It doesn't answer. It doesn't have to.
+
+ID: BG-04  (Socializer)
+Severity: P2 (text contradicts the scene)
+Location: guard checkpoint, the lemurs or Big Tony as an alibi
+Steps to reproduce: TOUR 1-16, south, south, south, tell nando about
+the lemurs
+Expected: still CAUGHT (they aren't GDD alibis), but with an honest
+opener.
+Actual: "Nando glances past you. No animal. No noise. Nothing." Lemurs
+are visibly everywhere.
+Suggested fix, CAUGHT openers by the word said (rule unchanged):
+  lemurs: "The lemurs?" Nando snorts. "The lemurs are always loose,
+  friend."
+  big tony / bigfoot: "Everybody knows about Tony. That's why I'm
+  standing here."
+  hippo / pepita: Nando glances at the bronze hippo. "She's not going
+  anywhere. Neither are you."
+
+ID: BG-05  (Killer)
+Severity: P2 (a whole play style gets the confused line)
+Location: hostile verbs
+Steps to reproduce (each gets a confused line): threaten don, insult
+don, kill don, trip don, pickpocket don, spit on marble, smash case,
+slam piano lid, burn sign, tear portrait, kill jaguar
+Expected: in-voice replies, with the strike rules applied
+consistently. Today "kick hippo" is a strike but "slam piano lid"
+isn't even recognized.
+Suggested fix:
+  Map: kill, murder, strangle, stab -> attack. smash, slam, tear,
+  burn, wreck, destroy, rip -> break. trip, shove -> push. pickpocket,
+  rob, swipe -> steal. The existing replies then apply, including
+  D1 strikes on strike objects. None of the replies use the word
+  "kill" (GDD avoid list).
+  New verb "provoke" (threaten, insult, mock, spit, curse at, sneer)
+  on the Don, no strike:
+    S0: He laughs, but his eyes don't. "Walter. We were getting
+    along so well."
+    S1: "Careful."
+    S2: He says nothing at all. That's worse.
+  On Nando at a checkpoint: a turn-costing move -> CAUGHT, opener
+  OTHER.
+  Elsewhere: You glare at nothing in particular. It helps a little.
+  "throw <food> at <person>": "Throw Mama's pozole? You'd be out of
+  the house before it landed."
+
+ID: BG-06  (Breaker)
+Severity: P2 (misleading state text, and it costs a turn)
+Location: R8, "use coin on hippo" after P2 is solved
+Steps to reproduce: critical path through step 20, use coin on hippo
+Actual: "You pull at the bronze jaw. Pepita's got a grip like a bank
+vault. She only opens up for one thing." Her jaw is hanging open.
+Suggested fix: IF P2, any use/open/push on the hippo: "Pepita's
+already open, and already empty." (free)
+
+==============================================================
+P3
+==============================================================
+
+ID: BG-07  (Center)
+Location: R8 and R10 escape revisits
+Actual: "You see: HIPPO" / "You see: AVIARY" print under the revisit
+text (the same class as PT-13).
+Suggested fix: put the [hippo] and [aviary] tags in those revisit
+lines: "Pepita again, jaw hanging open..." -> "[hippo] again...",
+"The screaming [aviary] again..."
+
+ID: BG-08  (Center)
+Location: R2 ESCAPE, "x step"
+Actual: the room's staircase sentence (rev 2's staircase alias for
+"step"), not X.R2.step's escape line.
+Suggested fix: "step" alone in R2 goes to X.R2.step.
+
+ID: BG-09  (Breaker)
+Location: tour strike line on the thirteenth step and the piano
+Actual: "Hands to yourself, Walter. That's a collector's piece."
+Suggested fix, strike 1 lines per object (as PT-11 did for the hippo):
+  step: The Don's smile tightens. "Mind your feet, Walter. Those
+  stairs are older than you."
+  piano: The Don's smile tightens. "Hands off Mama's piano, Walter."
+
+ID: BG-10  (Socializer)
+Location: Don ask-about topics
+Actual: "Ask me something interesting, Walter." for reina, pozole,
+food, dinner, empty chair, wife, kids, elevator.
+Suggested fix: aliases reina -> peacocks; empty chair -> accountant;
+elevator -> house. New topics:
+  dinner / food / pozole / gravy: before Q1: "Patience. Business
+  first, then the table." After Q1: "Mama's pozole, Nonna's gravy,
+  same flame, every Sunday. That's the whole philosophy, Walter."
+  wife / kids / children: "Family is not for strangers, Walter. Not
+  yet."
+
+ID: BG-11  (Explorer)
+Location: "listen to <unknown>", bare "swim"
+Actual: confused lines.
+Suggested fix: listen / smell with an unknown noun -> the room's line.
+swim: R8: "The only water here is Pepita's pool, and she doesn't
+share." Elsewhere: "No pool. Not even for you."
+
+ID: BG-12  (Breaker)
+Location: take all / drop all
+Actual: "Nothing like that around here." / "You're not carrying that."
+Suggested fix: "One thing at a time, detective." (matches NB-08)
+
+ID: BG-13  (Explorer)
+Location: R1, "x don" before you've met him
+Actual: "Nothing like that around here."
+Suggested fix: "You'll meet him in a second. You can already hear
+him."
+
+==============================================================
+CORNER SCORES
+==============================================================
+Achiever   9.5  (flawless run; top reward unreachable, BG-01)
+Explorer   9.3  (first-level nouns perfect; ~25 second-level misses)
+Socializer 9.7  (the Don is superb; animals and a few topics silent)
+Killer     9.2  (half its vocabulary gets the confused line)
+Center     10   (fair, tense, recoverable; the best run of the six)
+Breaker    10   (no exploit found)
+
+COUNT
+P1: 0, P2: 6, P3: 7

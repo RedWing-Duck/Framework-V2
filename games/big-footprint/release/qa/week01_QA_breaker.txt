@@ -1,0 +1,141 @@
+BREAKER QA — Week 01: THIS PLACE HAS A BIG FOOTPRINT
+Build tested: big-footprint.html
+Method: every command below was typed into the actual build
+(headless, same engine code). Failures only.
+"TOUR 1-16" = steps 1-16 of the Critical Path verified
+walkthrough (ends on arrival at R11, ESCAPE begins).
+Bugs already logged as CP-01 to CP-03 are not repeated here.
+
+==============================================================
+P1
+==============================================================
+
+ID: BR-01
+Severity: P1 (a correct answer ends the game; chat will hit this
+constantly)
+Location: all "said" matching (verbs add-on) and command parsing
+Steps to reproduce:
+  TOUR 1-16, open giraffe gate, south, south, south, say giraffe!
+Expected: Nando accepts the GIRAFFE alibi (GDD 7).
+Actual:
+  "You try that. The universe gives you a look usually reserved
+  for bad checks."
+  CAUGHT ... GAME OVER.
+Root cause: punctuation isn't stripped from typed input, so
+"giraffe!" never matches "giraffe". The same cause produces:
+  - Q1 (R5): say both.  /  say "both"  -> counted wrong, +1 strike
+  - P3 (R2, ESCAPE): push 13th step.  -> "It's just a step." and
+    a clock turn lost
+  - P1 (R4, ESCAPE): play cielito lindo.  -> wrong-song text and
+    a clock turn lost
+  - Movement: north.  -> "I don't understand"
+(Q2 only survives because "dog eared" alone also matches.)
+Suggested fix: in parse(), replace everything except letters,
+digits, spaces, hyphens and apostrophes with spaces before
+splitting. One change fixes all five symptoms.
+
+==============================================================
+P2
+==============================================================
+
+ID: BR-02
+Severity: P2
+Location: take, on items already in inventory (coin, ledger,
+manifest, photos)
+Steps to reproduce:
+  TOUR 1-16, open giraffe gate, south, south,
+  use coin on hippo, take manifest
+Expected: "You already have that." (the BRIEFING CARD already
+does this correctly).
+Actual: "The manifest goes into your jacket. Secret two."
+It reads like a duplicate pickup and a new secret. It also costs
+a clock turn. Same for "take coin" after receiving the coin:
+"You pocket the coin. It's warm from his hand..."
+
+==============================================================
+P3
+==============================================================
+
+ID: BR-03
+Severity: P3
+Location: R5 / R9 tour questions, command "say" with no words
+Steps to reproduce: north, west, east, east, west, north, say
+Expected: a nudge to say something (no strike).
+Actual: "You'd choose? In this house?" He asks again... and
+strikes go 0 -> 1. An accidental Enter costs a strike.
+
+ID: BR-04
+Severity: P3
+Location: R5 Q1 matching
+Steps to reproduce: north, west, east, east, west, north,
+say definitely not both
+Expected: a wrong answer.
+Actual: "He laughs and slaps the table. 'Both! Now you sound like
+family.'" Any sentence containing "both" passes.
+
+ID: BR-05
+Severity: P3
+Location: command "look [thing]"
+Steps to reproduce: north, look at staircase
+Expected: the staircase's examine text (look/examine/x are
+synonyms in most text games).
+Actual: prints the whole room description again. Same for
+"look piano", "look hippo".
+
+ID: BR-06
+Severity: P3
+Location: R2 foyer and R6 landing, stair movement words
+Steps to reproduce: north, climb stairs / go upstairs / upstairs
+Expected: move up (or at least a nudge to type "up").
+Actual: "climb stairs" and "upstairs" get "I don't understand";
+"go upstairs" gets "You can't go that way." and costs a turn
+(a clock turn during ESCAPE).
+
+ID: BR-07
+Severity: P3
+Location: scenery named in room text but not examinable
+Steps to reproduce: TOUR 1-16, x lemurs, south, x peacocks
+Expected: a line about each thing the text describes.
+Actual: "You don't see that." Also affects portraits (R7), the
+sign (R9, R12), the elevator button (R1), the table (R5).
+
+ID: BR-08
+Severity: P3
+Location: command "run" outside a guard checkpoint
+Steps to reproduce: TOUR 1-16, open giraffe gate, south, south,
+south, say giraffe, east, run
+Expected: a short "Nothing to run from yet" line (and ideally
+free, or at least not the confused line).
+Actual: "You try that. The universe gives you a look..." and a
+clock turn is spent. The run itself is not used up (correct).
+
+ID: BR-09
+Severity: P3
+Location: N1 Don Chava, "talk to don" while a tour question is
+pending
+Steps to reproduce: north, west, east, east, west, north,
+talk to don
+Expected: the Don repeats his question.
+Actual: 'Don Chava: "Questions later, Walter. Keep up."' He's the
+one asking a question, so the line contradicts the moment.
+
+ID: BR-10
+Severity: P3
+Location: verb "give"
+Steps to reproduce: (TOUR through step 11) give coin to don
+Expected: the same response as "use coin on don".
+Actual: "I don't understand" line. "give" is a common verb players
+will reach for, especially with a coin and NPCs around.
+
+ID: BR-11
+Severity: P3
+Location: command echo
+Steps to reproduce: type  [don] [coin]
+Expected: the echo shows exactly what was typed.
+Actual: "> Don Chava GOLD COIN" (the echo line is run through the
+[id] renderer). Harmless, but visible on stream if chat tries it.
+
+==============================================================
+COUNT
+==============================================================
+P1: 1, P2: 1, P3: 9

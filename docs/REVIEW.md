@@ -84,17 +84,9 @@ Also new in the core:
 | `move` as an alias of `go` | removed (it was a gotcha: "move the chair"); `put` is now `drop` |
 | saves: in memory (or save.js) | in localStorage by default |
 
-## Porting big-footprint: the plan for pass two
+## Porting big-footprint
 
-This pass doesn't port big-footprint. Its 796-line test suite pins exact wording from four QA rounds, and porting it is a project of its own. The mapping:
-
-1. **Mechanical changes**: lowercase `Take`/`Say`/`Give`; `messages` keyed by id; `add: { turns: -1 }` → `free: true`; `{ min, max }` pairs → `eq`; `not: { not: }` → lists or `all`.
-2. **`verbs.js` and `messages.js` are no longer needed.** `bare`, `oneAtATime` and `ways` are about 15 lines between them and can go in a game-local `./input.js` using the `input` hook. `only:` can become a core condition if a second game wants it.
-3. **`nouns.js` splits:**
-   - into the core: `keys` → `conds`; `rotate`/`ladder`/`note` (`note` becomes counters or flags); `categories` → `kinds`; `firstLook` → a `desc` variant on `not: { seen }`; `anywhere`/`alone` → `G.on`.
-   - into a game-local `./tour.js`: TOUR/ESCAPE strikes, tails, bands, feedback, the checkpoint (`caught`), the run report.
-   - candidates for new shared add-ons, if a second game wants them: `topics` (ask/tell about), `lookCloser` (examine a word from the room's text), and scenery nouns that are in several rooms at once (`at: "any"`).
-4. Port the tests to the new message ids and run them as the regression suite.
+Done in the third pass: see `games/big-footprint/PORT.md`. The game kept its Script data formats. The core replaced `restart`, `messages` and most of `verbs`, and the game's own mechanics went into two game-local add-ons that use only hooks. The original 43 tests pass, and a differential test checks every command's output and state against the original build.
 
 ## Open questions for the next pass
 
@@ -144,4 +136,4 @@ An outside reviewer read the package (docs and the two compiled games). Their ve
 | Offline page requests a web font | The font link is gone; the page makes no network requests. |
 | The zip has no source or tests | The review package now ships the whole repository: source, tools, tests and built games. |
 
-Then, as the reviewer suggested proving it on a real scene, *This Place Has a Big Footprint* was rebuilt on the framework (see `games/big-footprint/`).
+Then *This Place Has a Big Footprint*, the largest game made with v1, was rebuilt on the framework: see `games/big-footprint/PORT.md`. The port found eight general engine problems, all fixed for every game (listed there). The biggest: `game.js` and the engine shared one scope, so a game's helper could collide with an engine function. The build now gives each `game.js` its own scope.

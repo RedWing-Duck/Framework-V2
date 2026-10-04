@@ -1,0 +1,127 @@
+CRITICAL PATH QA — Week 01: THIS PLACE HAS A BIG FOOTPRINT
+Build tested: big-footprint.html (engine validate(): 0 problems)
+Method: every command below was run against the actual build
+(headless, same engine code), not read off the GDD.
+
+==============================================================
+A) VERIFIED WALKTHROUGH (regression test)
+==============================================================
+Expected state is shown in brackets after key steps.
+
+TOUR
+1.  north
+2.  west
+3.  east
+4.  east
+5.  west
+6.  north                    [Don asks Q1]
+7.  say both                 [Q1 passed, 0 strikes]
+8.  south
+9.  up
+10. east                     [Don asks Q2]
+11. say dog-eared page       [(Received: GOLD COIN)]
+12. west
+13. west
+14. north
+15. north
+16. north                    [ESCAPE begins; status shows clock 18]
+ESCAPE
+17. open giraffe gate        [clock 17, alibi GIRAFFE]
+18. south                    [16]
+19. south                    [15]
+20. use gold coin on hippo   [14, (Received: SHIPPING MANIFEST)]
+21. south                    [13, Nando stops you]
+22. run                      [12]
+23. east                     [11]
+24. down                     [10, Nando stops you]
+25. say giraffe              [9]
+26. push thirteenth step     [8, (Received: DEAL PHOTOS)]
+27. south                    [7]
+28. down                     [ending: CLEAN GETAWAY, 2/3]
+
+W2 BRANCH (Clean Sweep), after step 26:
+26a. east
+26b. play cielito lindo      [(Received: LEDGER), clock 6 warning]
+26c. west
+then 27. south, 28. down     [ending: CLEAN SWEEP, 3/3, clock 4]
+
+==============================================================
+B) BUG LIST
+==============================================================
+No P1 bugs found. No softlocks found.
+
+ID: CP-01
+Severity: P3
+Location: guard checkpoint (R7 / R2), commands "run" and "say"
+Steps to reproduce: steps 1-16, south, south, south, run, east,
+down, say giraffe  (giraffe never released)
+Expected: CAUGHT ending (GDD 7: anything else = L2).
+Actual: the ending fires correctly, but first prints an unrelated
+"I don't understand" line:
+  "You try that. The universe gives you a look usually reserved
+  for bad checks."
+  CAUGHT ...
+Same for a second "run". Suggest a short guard-specific line
+(e.g. Nando: "Nice story.") or no line before CAUGHT.
+
+ID: CP-02
+Severity: P3
+Location: R11 Zoo Terrace, command "open gate"
+Steps to reproduce: steps 1-16, open gate
+Expected: a nudge to name which gate (giraffe or jaguar).
+Actual: "You try that. The universe gives you a look usually
+reserved for bad checks." and it costs a clock turn (18 -> 17).
+Not blocking: "open giraffe gate" / "open jaguar gate" work.
+
+ID: CP-03
+Severity: P3
+Location: R4 Music Salon, "play" after P1 is solved
+Steps to reproduce: W2 branch, then play cielito lindo again
+Expected: something like "You already found what she was hiding."
+Actual: "You try that. The universe gives you a look..." and it
+costs a turn. (Pushing the 13th step again correctly shows the
+P3 wrong-attempt line, so this is only the piano.)
+
+==============================================================
+CHECKS RUN (all passed)
+==============================================================
+- Critical path (GDD 9) wins, 7 turns to spare.
+- W2 route wins, 4 to spare.
+- Alibi-only route (jaguar + peacocks, no run) wins.
+- Alternate order: coin used on hippo DURING the tour gives a
+  strike and the coin is kept; it still works in ESCAPE.
+- Coin dropped in the office during the tour (unrecoverable
+  without backtracking): still winnable via piano + staircase.
+- Secrets can't be dropped (evidence line blocks it).
+- Tour can't be left early (elevator "down" blocked; off-route
+  exits blocked; Q1/Q2 rooms won't release you unanswered).
+- Free actions at a checkpoint (look, status, i, hint, examine)
+  don't trigger CAUGHT; typos don't either.
+- Every room reachable (R12 in ESCAPE). Every ending reachable:
+  W1, W2, L1 (wrong answers or touching objects), L2, L3.
+- Elevator with 1 secret refuses and does not end the game.
+- After any ending, input shows the over line; RESTART works.
+
+NOTES FOR DESIGNER (not bugs)
+- Clock: arrival in R11 doesn't cost a turn, so the critical path
+  ends with 7 left, not the 6 in GDD 9. That answers Script
+  suggestion #2; update GDD 9's annotations to match.
+- A player who uses "run" at R7 without releasing any animal
+  walks into a guaranteed CAUGHT at R2. That's per the GDD, and
+  the Don's R7 line hints at it, but consider one more nudge
+  (e.g. Nando's R7 greeting mentioning "the giraffe's loose
+  somewhere").
+
+HANDOFF TO EDITOR (outside Critical Path scope, spotted in passing)
+- R11 first-visit text names the JAGUAR GATE but not the GIRAFFE
+  GATE; the engine appends "You see: GIRAFFE GATE".
+- Secret numbering: the first secret found says "Secret two" or
+  "Secret three" depending on route.
+- "examine thirteenth step" shows the generic staircase text.
+
+==============================================================
+C) VERDICT
+==============================================================
+WINNABLE. The GDD critical path completes as written, both win
+endings trigger and end cleanly, and no softlock was found in
+any order tested.

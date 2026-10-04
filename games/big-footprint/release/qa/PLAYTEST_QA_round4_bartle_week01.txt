@@ -1,0 +1,125 @@
+PLAYTEST QA, ROUND 4 (BARTLE GRAPH, FRESH PHRASINGS) — Week 01 Polish Build
+Build tested: big-footprint.html (newest; validate(): 0 problems)
+Method: last round's six scripts rerun as regression, then six NEW
+scripts with different commands and phrasings per personality, so
+passing can't come from fixes that only match the old test commands.
+
+VERIFIED FIXED: all 13 round-3 bugs (BG-01 to BG-13). The old six
+scripts now produce zero confused lines. The top reward is reachable:
+tested all three secrets plus 100 of 100 examined, which prints "Every
+secret, every corner. The Don never stood a chance." with 4 turns to
+spare. Bonus finds (6) fit a two-secret run.
+Robustness: no crash, softlock, clock stall, duplication, or sequence
+break (30 free looks, hint spam, menu mid-checkpoint, 500-character
+input, emoji, repeated alibis, double answers).
+"TOUR 1-16" = steps 1-16 of the verified walkthrough.
+
+==============================================================
+P2
+==============================================================
+
+ID: F-01  (Explorer)
+Severity: P2 (class of bug; round 3's aliases fixed the instances)
+Location: nouns one level deeper: inside examine, smell and listen
+lines
+Steps to reproduce (each: "Nothing like that around here."):
+  R1 cologne; R2 lilies, tuxedo, torches; R3 scissors; R4 pencil;
+  R5 linen; R6 stairwell; R7 shelf, frames, canvas, crowd; R8 tags;
+  R9 pen, frame, brandy, sirens; R10 tails, gowns, birdseed;
+  R11 roses; R10 escape sparks; R8 escape peel; R2 after P3 concrete
+Expected: a reply for any noun the player has just read.
+Why it keeps coming back: every description adds new nouns, so lists
+can't finish the job.
+Suggested fix (closes the class):
+  CONTEXT FALLBACK. When "examine X" finds nothing, search the text
+  this room can print in the current phase (the room description,
+  plus every examine, smell and listen line of nouns in this room).
+  If X appears there, reply with the sentence that contains it,
+  prefixed "You look closer. " and count it as free. Only if X
+  appears nowhere does "Nothing like that around here." print.
+  Example: x pencil (R4 tour) -> You look closer. Someone wrote on
+  the frame in pencil: "Los domingos."
+Test: the coverage test extracts every word from every text string
+per room and phase, and asserts none returns the not-here line.
+
+ID: F-02  (Socializer)
+Severity: P2
+Location: social verbs
+Steps to reproduce (each gets a confused line): greet the don, chat
+with don, introduce myself, greet nando, whisper giraffe (at a
+checkpoint with the giraffe released)
+Expected: greet, chat, introduce -> talk. whisper, mutter, reply,
+answer, respond -> say. At a checkpoint, "whisper giraffe" is the
+alibi.
+Suggested fix: aliases as above. "introduce myself" with the Don
+present: He smiles. "I know who you are, Walter. I checked."
+
+ID: F-03  (Killer)
+Severity: P2
+Location: hostile verbs, second wave
+Steps to reproduce (each gets a confused line): slap don, headbutt
+don, bite don, poison the pozole, set fire to humidor, vandalize
+portraits
+Also: "knock over vase" -> "A solid, expensive sound." (read as knock
+on), and "knock over pots" -> the engine's "Nothing happens."
+Suggested fix:
+  slap, headbutt, bite, elbow, choke -> attack
+  vandalize, deface, trash, knock over -> break
+  poison -> FOOD: "You didn't bring anything but a plaque proposal
+  and bad intentions. Mostly the plaque."
+  set fire, burn, ignite, light -> break, plus a FIXTURE/FURNITURE
+  line: "No matches, no lighter, and no plan for what happens after."
+  scream at, yell at <person> -> provoke (today "scream at don"
+  returns a friendly chat line)
+
+==============================================================
+P3
+==============================================================
+
+ID: F-04  Location: the Don, "say thank you" / "say you have a
+beautiful home"
+Actual: matches the "you / me" topic: "You? You're a bookstore man who
+sweats in elevators..."
+Suggested fix: check intent words first (thank -> thank line; love,
+beautiful, amazing -> flatter). Only "about me / about you" asks go to
+the you topic.
+
+ID: F-05  Location: Don topics
+Actual: "Ask me something interesting" for father, god, photos, lion,
+horse, and plurals (hippos).
+Suggested fix: aliases father -> palermo; god, church -> saint;
+photos, pictures -> family; lion, horse, paintings -> portraits;
+strip a trailing "s" before topic lookup.
+
+ID: F-06  Location: R8 TOUR, "pet pepita" (a correct strike)
+Actual: "Those are Pepita's, Walter. Hands to yourself." (the coins
+wording)
+Suggested fix: when the target is the hippo itself: The Don's smile
+tightens. "Pepita doesn't like strangers, Walter. Hands to yourself."
+
+ID: F-07  Location: R1, "ask don" / "talk to don" before meeting him
+Actual: "Nothing like that around here." / "There's nobody here..."
+Suggested fix: reuse BG-13: "You'll meet him in a second. You can
+already hear him."
+
+ID: F-08  Location: bare "show" / "give"
+Actual: "You're not carrying that."
+Suggested fix: "Show what, to whom?" / "Give what, to whom?" (free)
+
+ID: F-09  Location: a checkpoint, "x flashlight" while Nando holds it
+Actual: "Nothing like that around here."
+Suggested fix: alias to Nando's examine, or: The beam is pointed
+straight at your face. That's the point of it.
+
+==============================================================
+CORNER SCORES
+==============================================================
+Achiever   10   (flawless run and the top reward both reachable)
+Explorer   9.5  (second-level fixed; third level is F-01's class)
+Socializer 9.8  (animals now answer; a few social verbs missing)
+Killer     9.6  (first wave fixed; second-wave synonyms missing)
+Center     10   (a clean win on natural, wordy commands)
+Breaker    10   (no exploit found)
+
+COUNT
+P1: 0, P2: 3, P3: 6

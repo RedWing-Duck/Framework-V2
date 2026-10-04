@@ -1,0 +1,298 @@
+EDITOR QA — Week 01: THIS PLACE HAS A BIG FOOTPRINT
+Inputs: GDD Week 01, Script, big-footprint.html (text read from the
+T object and checked in play, headless, same engine code).
+Script vs. game: no Script text was dropped, mangled, or attached
+to the wrong ID. No placeholders or TODOs. No words from the GDD
+avoid list. The bugs below are text that misleads, contradicts the
+game state, or reads rough. Several are Script-side errors (mine as
+Narrative Writer); they're logged the same way.
+Bugs already logged as CP-xx or BR-xx are not repeated.
+"TOUR 1-16" = steps 1-16 of the verified walkthrough.
+
+==============================================================
+P2 — MISLEADING OR MISSING TEXT
+==============================================================
+
+ID: ED-01
+Severity: P2
+Location: R5 Q1 and R9 Q2, wrong answers
+Steps to reproduce: north, west, east, east, west, north,
+say pozole, say gravy, say neither
+Expected: the player learns each wrong answer is a strike, with the
+same escalating warnings as touching objects (GDD 7).
+Actual: the same "You'd choose? In this house?" line all three
+times, then COVER BLOWN with no warning. The strike lines never
+show for quiz answers.
+Suggested fix (pick the line by strike count, like STRIKE does):
+Q1, strike 1:
+"You'd choose? In this house?" His smile tightens. He asks again,
+slower. "Sunday dinner. Pozole or gravy?"
+Q1, strike 2:
+The smile is gone. "Twice now, Walter. I don't like three." He
+asks one more time. "Sunday dinner. Pozole or gravy?"
+Q2, strike 1:
+"That's not what you told my people." His smile tightens.
+"What's the bookstore called?"
+Q2, strike 2:
+The smile is gone. "Twice now, Walter. I don't like three. The
+bookstore. Its name."
+
+ID: ED-02
+Severity: P2
+Location: R11 Zoo Terrace, R10 Aviary, GIRAFFE GATE / JAGUAR GATE
+examine text, after releasing animals
+Steps to reproduce: TOUR 1-16, open giraffe gate, look
+Expected: the room shows the giraffe is gone.
+Actual: "Wind, alarms, and the giraffe peering over the GIRAFFE
+GATE." Same for the jaguar, and the aviary still has "its door
+rattling" after the peacocks are out. "x giraffe" after opening
+prints "It's already open...", which is the open reply, not a
+description. Before opening, "x giraffe gate" is a fragment: "The
+giraffe peering over the GIRAFFE GATE."
+Suggested fix, R11 revisit, built from three parts:
+  Opening: "Wind and alarms."
+  Giraffe penned: "The giraffe peers over the GIRAFFE GATE."
+  Giraffe out:    "The GIRAFFE GATE hangs open, the yard empty."
+  Jaguar penned:  "The jaguar paces behind the JAGUAR GATE."
+  Jaguar out:     "The JAGUAR GATE swings in the wind."
+  Closing: "The broken enclosure gapes past the gates. The
+  screaming aviary leads back inside."
+R10 escape, peacocks out:
+"The AVIARY door hangs open, the keypad smashed. Feathers
+everywhere, and the peacocks are screaming their way through the
+palace. One doorway breathes fresh night air; the other smells of
+chlorine."
+Examine GIRAFFE GATE: penned "A tall iron gate. The giraffe leans
+over it, chewing, curious about you." / open "The GIRAFFE GATE hangs
+open. The giraffe is somebody else's problem now."
+Examine JAGUAR GATE: penned "A steel-barred gate. Behind it, the
+jaguar paces and watches you with yellow eyes." / open "The JAGUAR
+GATE hangs open. You're very glad you're not the one chasing it."
+
+ID: ED-03
+Severity: P2
+Location: R8 Atrium, R2 Foyer, R4 Salon, after each puzzle is solved
+Steps to reproduce: TOUR 1-16, open giraffe gate, south, south,
+use coin on hippo, look, x hippo
+Expected: the hippo's jaw is open (P2 solved text says so).
+Actual: "The bronze HIPPO waits, mouth shut." and "Its mouth is
+closed tight."
+Suggested fix (use after the puzzle's flag is set):
+R8 escape: "Water sloshes over the fountain's edge. Lemurs chatter
+in the palms, pelting the floor with fruit. The bronze HIPPO gapes,
+jaw hanging open, very pleased with itself. One way, the peacocks
+scream; the other, the hall of portraits."
+Examine HIPPO: "Pepita's jaw hangs open. Whatever she was guarding,
+you've got it."
+R2 escape (after P3), replace the staircase sentence with: "The two
+staircases rise into the dark; a panel in the right one stands open
+at the thirteenth step, breathing cold air."
+R4 escape (after P1): "The PIANO's mirrored lid stands open, the
+hidden tray empty. Mama's piano kept her secret as long as she
+could. The way out is back toward the staircases."
+
+ID: ED-04
+Severity: P2
+Location: R11 Zoo Terrace, first visit
+Steps to reproduce: TOUR 1-16
+Expected: both gates named in the text (GDD: every room mentions
+visible items).
+Actual: the text names only the JAGUAR GATE; the engine patches
+it with "You see: GIRAFFE GATE" underneath.
+Suggested fix, first sentence of R11 first:
+"A rooftop garden with a view of the whole city. Behind the
+GIRAFFE GATE a giraffe chews thoughtfully; beside it, a black jaguar
+paces behind the JAGUAR GATE."
+(rest of the text unchanged)
+
+ID: ED-05
+Severity: P2
+Location: P1, P2, P3 solved text
+Steps to reproduce: critical path, step 20 (use gold coin on hippo)
+Expected: the first secret found says it's the first.
+Actual: "Secret two." on the first secret. On the W2 route the
+last secret found says "Secret one."
+Suggested fix: replace "Secret one." / "Secret two." / "Secret
+three." with:
+"Secrets: {secrets} of 3."
+(the counter is added before the text prints, so it shows the new
+total)
+Also in the take text for I3-I5, remove "Secret one/two/three."
+
+ID: ED-06
+Severity: P2
+Location: ESCAPE text for R7, R8, R10, R11
+Steps to reproduce: TOUR 1-16, open giraffe gate, south, south,
+south, run, north
+Expected: landmark exits that hold whichever way you walk.
+Actual: R8 says "The screaming aviary is behind you; ahead, the
+hall of portraits." You just came from the portraits. Every
+"behind you / ahead" assumes you're walking outward.
+Suggested fix:
+R7: "The painted Dons glare down, and one portrait is hanging
+crooked, torn by claws. One end of the hall smells of chlorine;
+the other opens onto the balcony above the stairs."
+R8: "Water sloshes over the fountain's edge. Lemurs chatter in the
+palms, pelting the floor with fruit. The bronze HIPPO waits, mouth
+shut. One way, the peacocks scream; the other, the hall of
+portraits."
+R10 (peacocks penned): "The AVIARY keypad is smashed, its door
+rattling. The peacocks are screaming louder than ever. One doorway
+breathes fresh night air; the other smells of chlorine."
+R11: see ED-02.
+
+ID: ED-07
+Severity: P2
+Location: guard checkpoint, verb "run"
+Steps to reproduce: TOUR 1-16, then read every text the game shows
+before the first checkpoint
+Expected: the player can find out "run" is an option (GDD: puzzles
+must be fair, no guessing).
+Actual: "run" appears only in the status line; help, hints and
+Nando's greeting never mention it.
+Suggested fix, Nando greeting:
+A flashlight hits your face. Nando, the size of a vending machine,
+blocks the way. "Hey. Guests don't wander. Why are you up here?"
+Your legs vote to run. Your brain votes for a good story.
+Help text, add a line: "In a tight spot: run (works once)."
+
+ID: ED-08
+Severity: P2
+Location: R2 Foyer ESCAPE, staircase examine
+Steps to reproduce: TOUR 1-16 ... reach R2 in ESCAPE, x staircase
+Expected: a nudge toward pressing the step (the Don says "never
+trust" it, but nothing suggests how to use it).
+Actual: "The two staircases rise into the dark; the right one
+gleams, its thirteenth step catching the emergency light."
+Suggested fix, R2 escape sentence and staircase examine (escape):
+"The two staircases rise into the dark; the right one gleams, and
+its thirteenth step sits a hair higher than the rest, like it's
+waiting to be pressed."
+
+==============================================================
+P3 — POLISH
+==============================================================
+
+ID: ED-09
+Severity: P3
+Location: HELP text
+Steps to reproduce: help
+Expected: clear rule for what costs time.
+Actual: "On the tour, free actions: ... Once the chaos starts, every
+other command costs time." It reads as if these are free only on
+the tour.
+Suggested fix, last line:
+"Free anytime: look, examine, inventory, status, help, hint. Once
+the chaos starts, everything else costs time."
+
+ID: ED-10
+Severity: P3
+Location: engine's built-in lines (use the messages add-on)
+Steps to reproduce: take hippo (tour), x lemurs, west (in R11)
+Expected: in-voice lines, worded consistently.
+Actual: generic lines, and two versions of the same message:
+"You don't see that here." / "You don't see that."
+Suggested fix (messages entries):
+"You can't go that way." -> "No way through there, detective."
+"You don't see that here." -> "Nothing like that around here."
+"You don't see that." -> "Nothing like that around here."
+"You can't take that." -> "It's bolted down, or it's worth more
+than your car. Either way, no."
+"You don't have that." -> "You're not carrying that."
+"Nothing happens." -> "Nothing happens. The penthouse is
+unimpressed."
+"No one by that name is here." -> "Nobody by that name around."
+"Time passes." -> "You wait. The penthouse doesn't."
+
+ID: ED-11
+Severity: P3
+Location: all item handoffs
+Steps to reproduce: critical path step 20
+Expected: the reveal lands in the narration.
+Actual: "(Lost: GOLD COIN)" and "(Received: SHIPPING MANIFEST)"
+print before "You flick the coin...", spoiling the moment.
+Suggested fix (messages entries): "(Received: *" -> "" and
+"(Lost: *" -> "". Every handoff is already named in its narration.
+
+ID: ED-12
+Severity: P3
+Location: R5, Q1 correct answer
+Steps to reproduce: ... north, say both
+Actual: He laughs and slaps the table. "Both! Now you sound like
+family." "Good answer. Now upstairs, to talk business. South, then
+up, then east."  (two quotes in a row, "Good answer" repeats the
+point)
+Suggested fix:
+He laughs and slaps the table. "Both! Now you sound like family.
+Come, upstairs, we talk business. South, then up, then east."
+
+ID: ED-13
+Severity: P3
+Location: R7 Gallery Hall, first visit
+Actual: the room text says "A guard passes by and nods." and then
+the Don's line says "A guard hurries past." Two guards pass in
+two sentences.
+Suggested fix, R7 first:
+"A long hall of oil portraits, all of them the Don: the Don on a
+horse, the Don with a lion, the Don as a saint. The wallpaper is
+peacock feathers. The atrium is north, the landing east."
+
+ID: ED-14
+Severity: P3
+Location: examine DON
+Steps to reproduce: north, x don
+Actual: "Salvatore Bellandi-Reyes, but friends call him Chava. He
+grips your hand like he's weighing it." (a handshake every time
+you look at him)
+Suggested fix:
+"Salvatore Bellandi-Reyes. White suit, gold rings, and a smile that
+checks your pockets. Friends call him Chava."
+
+ID: ED-15
+Severity: P3
+Location: R9, Q2 prompt
+Actual: "Remind me, what's your bookstore called again?"
+Suggested fix: "Remind me, what's your bookstore called?"
+
+ID: ED-16
+Severity: P3
+Location: ending W1
+Actual: "...slide shut on the roaring, screaming, honking chaos
+above." Nothing in the game honks.
+Suggested fix: "...slide shut on the roaring, screaming,
+chattering chaos above."
+
+ID: ED-17
+Severity: P3
+Location: ending W2
+Steps to reproduce: W2 route using run + peacocks (giraffe never
+released)
+Actual: "Somewhere upstairs, a giraffe is eating the plaque
+proposal." The giraffe may still be penned.
+Suggested fix: "Somewhere upstairs, the Don is still waiting on
+his plaque."
+
+ID: ED-18
+Severity: P3
+Location: ending L3
+Actual: "A shadow the size of a vending machine fills the hall."
+Nando already owns "the size of a vending machine," and you may not
+be in a hall.
+Suggested fix, first sentence:
+"A shadow the size of a delivery truck fills the doorway."
+
+ID: ED-19
+Severity: P3
+Location: staircase examine, TOUR
+Steps to reproduce: north, x thirteenth step
+Actual: the generic "The left staircase is wide and carpeted; the
+right is narrower, polished to a shine."
+Suggested fix (tour version):
+"The left staircase is wide and carpeted, twelve steps up. The
+right is narrower and polished to a shine, thirteen steps. The Don
+is watching your eyes."
+
+==============================================================
+COUNT
+==============================================================
+P2: 8, P3: 11

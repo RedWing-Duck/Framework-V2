@@ -363,3 +363,4 @@ test("validator: holders, at chains and open/close/inside targets", () => {
     'items.rug.on.search[0].inside: "crowbar" in "rug": needs an item and a holder'
   ]);
 });
+require("./big-footprint");   // This Place Has a Big Footprint: the original regression suite

@@ -47,7 +47,8 @@ addon({
   meta:       ["key"],                     extra keys allowed next to effects (recipes: with, fail...)
   // hooks
   input(words, raw)     before a typed line is read: return new words, or true to stop (handled)
-  before(verb, arg, ids)  before every command, including the engine's own (look on entering); true stops it
+  before(verb, arg, ids)  before every command, including the engine's own (look on entering); true stops it.
+                        Runs before the core asks "Which do you mean?", so an add-on can resolve names itself
   afterTurn()           after each turn's events, unless the game has ended
   start()               a new game was set up (S is fresh), before the intro prints
   enter(room)           the player just entered a room (after it was shown): encounters, room scripts
@@ -64,6 +65,8 @@ Engine helpers add-ons may use: `G`, `S`, `print(text, cls)`, `msg(id, vars)`, `
 `inv()`, `reach()` (everything the player can touch, through open holders), `nested(ids)` (those and what's visible in them),
 `where(id)` (the room, or "player", around a thing), `holder(id)` ("in", "on" or undefined), `contents(ids)` (prints what's in them),
 `names(ids)`, `list(v)`, `own(obj, key)`, `notHere(msgId)` (prints it, costs no turn), `MULTI` (verbs that take "all"),
+`isFree(verb)`, `isDir(word)`, `words(text)`, `LINE` (the command being answered: `LINE.verb`, `LINE.said` (the words as
+typed, filler dropped, particles kept), `LINE.it`), `TURN` (`TURN.cost`: this command costs a turn; `TURN.free`: it was refunded),
 `store(key, value)` / `load(key)` (browser storage, namespaced by the game's title), `rand(n)` (a whole number
 from 0 to n-1, from the seeded generator in `S`: use it, never `Math.random`, so undo and saves stay honest), `$`, `out`.
 Reusing a name that's already taken is reported as a problem on the start menu.
@@ -99,6 +102,12 @@ Rules:
 4. Add a test to `tests/run.js` that plays through the mechanic in a built game.
 
 Keep it small. Use the engine's helpers and tables instead of copying their logic.
+
+## A full example
+
+`games/big-footprint/` is a full game whose own mechanics (a guided tour, strikes, guard checkpoints, a
+clock with sound bands, a run report) live in two game-local add-ons, `verbs.js` and `nouns.js`, using only hooks.
+`games/big-footprint/PORT.md` explains how they map onto the contract.
 
 ## Shared add-ons
 
