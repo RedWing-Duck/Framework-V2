@@ -4,25 +4,32 @@ const vm = require("node:vm");
 
 class El {
   constructor() { this.children = []; this.hidden = false; this.className = ""; this.value = ""; this.scrollTop = 0; this.scrollHeight = 0; }
-  append(...xs) { this.children.push(...xs); }
+  append(...xs) { for (const x of xs) { if (x instanceof El) x.parent = this; this.children.push(x); } }
+  remove() { const c = this.parent?.children, i = c ? c.indexOf(this) : -1; if (i >= 0) c.splice(i, 1); }
+  get firstElementChild() { return this.children.find(c => c instanceof El) || null; }
   get textContent() { return this.children.map(c => typeof c === "string" ? c : c.textContent).join(""); }
   set textContent(t) { this.children = [String(t)]; }
   set innerHTML(h) { this.children = h ? [String(h)] : []; }
   focus() {}
 }
 
+// A localStorage stand-in. Pass the same one to two load() calls to test a page reload.
+const storage = (m = new Map()) => ({ getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k), map: m });
+
 // html: a built game file. Runs its scripts; call boot() to fire DOMContentLoaded.
-function load(html) {
+// opts.storage: a storage() to use as localStorage (default: none, as in a browser that blocks it)
+function load(html, opts = {}) {
   const els = {}, ready = [], errors = [], cls = new Set();
   for (const [, id] of html.matchAll(/\sid="([^"]+)"/g)) els[id] = new El();   // only ids in the markup exist
   const document = {
     title: "",
+    head: new El(),
     body: { classList: { add: c => cls.add(c), remove: c => cls.delete(c) } },
     getElementById: id => els[id] || null,
     createElement: () => new El(),
     addEventListener: (e, f) => e === "DOMContentLoaded" && ready.push(f)
   };
-  const ctx = vm.createContext({ document, console: { log() {}, warn() {}, error: (...a) => errors.push(a) } });
+  const ctx = vm.createContext({ document, ...(opts.storage && { localStorage: opts.storage }), console: { log() {}, warn() {}, error: (...a) => errors.push(a) } });
   [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].forEach((m, i) => vm.runInContext(m[1], ctx, { filename: `script ${i + 1}` }));
 
   const game = {
@@ -41,4 +48,4 @@ function load(html) {
   return game;
 }
 
-module.exports = { load };
+module.exports = { load, storage };

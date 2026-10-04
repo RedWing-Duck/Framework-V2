@@ -21,7 +21,7 @@ const G = {
     straw: { name: "straw", at: "cell", fixed: true, desc: "Damp and useless." },
     lantern: { name: "lantern", at: "corridor", light: true, desc: "An oil lantern, burning steadily." },
     key: { name: "iron key", desc: "Heavy and rusted. It might fit the gate.",
-      use: [{ if: { in: "corridor", not: { flag: "gate_open" } }, say: "The key turns with a groan. The gate swings open.", set: "gate_open", mark: "gate" }] }
+      on: { use: [{ if: { in: "corridor", not: { flag: "gate_open" } }, say: "The key turns with a groan. The gate swings open.", set: "gate_open", mark: "gate" }] } }
   },
   npcs: {
     rat: { name: "rat", at: "cell", desc: "Fat, grey, and entirely unbothered by you." },
@@ -39,10 +39,8 @@ const G = {
         no: { text: "Ha! Not a chance." } } }
   },
   events: [
-    { mark: "rat" },
-    { repeat: true, if: { since: { rat: 2 }, here: "rat" }, say: "The [rat] scurries out." },   // listed first: runs before the move
-    { repeat: true, if: { since: { rat: 2 } }, mark: "rat", move: { rat: ["cell", "corridor"] },
-      say: [{ if: { here: "rat" }, text: "A [rat] scurries in." }] },
+    { every: 2, if: { here: "rat" }, say: "The [rat] scurries out." },   // listed first: runs before the move
+    { every: 2, move: { rat: ["cell", "corridor"] }, say: [{ if: { here: "rat" }, text: "A [rat] scurries in." }] },
     { if: { flag: "gate_open" }, say: "The [guard] shrugs and wanders off down the corridor.", move: { guard: null } },
     { if: { in: "yard" }, end: "You escaped in {turns} turns! THE END." },
     { if: { since: { gate: 2 } }, say: "Shouts echo from somewhere above. Someone heard the gate." },

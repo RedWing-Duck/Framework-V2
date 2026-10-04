@@ -1,6 +1,7 @@
 // Build a game into one self-contained HTML file.
 //   node tools/build.js <game>   reads games/<game>/, writes dist/<game>.html, prints validator output
 // Order: css, game, engine, then the add-ons listed in build.json (each in its own <script>).
+// An add-on name starting with "./" is the game's own: "./tour" is games/<game>/tour.js.
 const fs = require("node:fs"), path = require("node:path");
 const root = path.join(__dirname, "..");
 const read = f => fs.readFileSync(path.join(root, f), "utf8").replace(/\s+$/, "");
@@ -8,8 +9,9 @@ const read = f => fs.readFileSync(path.join(root, f), "utf8").replace(/\s+$/, ""
 // dir: a game folder relative to the repo root (e.g. "games/damp-cell" or "template")
 function build(dir) {
   const { addons = [] } = JSON.parse(read(`${dir}/build.json`));
-  for (const a of addons) if (!fs.existsSync(path.join(root, `addons/${a}.js`))) throw new Error(`${dir}/build.json: no add-on "addons/${a}.js"`);
-  const scripts = [`${dir}/game.js`, "engine/engine.js", ...addons.map(a => `addons/${a}.js`)].map(f => {
+  const files = addons.map(a => a.startsWith("./") ? `${dir}/${a.slice(2)}.js` : `addons/${a}.js`);
+  for (const f of files) if (!fs.existsSync(path.join(root, f))) throw new Error(`${dir}/build.json: no add-on "${f}"`);
+  const scripts = [`${dir}/game.js`, "engine/engine.js", ...files].map(f => {
     const code = read(f);
     if (/<\/script/i.test(code)) throw new Error(`${f}: contains "</script", which would end its script block early`);
     return `<script>\n${code}\n</script>`;

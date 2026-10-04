@@ -1,0 +1,76 @@
+// Game data reference: docs/AUTHORING.md
+// A countdown sample that uses every core feature and the craft, journal, endings, tags and hints add-ons.
+const SUNSET = 30;
+const BOARD = { move: { plywood: null }, set: "boarded", log: "boarded", say: "You nail the [plywood] over the [window]. Solid." };   // shared by a recipe and a verb
+const G = {
+  title: "Sundown",
+  intro: `The radio said they come at sundown, ${SUNSET} turns from now. Board up the [window] and be inside when it's dark. (Type "think" if you're stuck.)`,
+  start: "cabin",
+  conds: { DUSK: { min: { turns: SUNSET - 10 } }, SUNDOWN: { min: { turns: SUNSET } } },   // named conditions: if:"DUSK" or is:"SUNDOWN"
+  verbs: { smell: { free: true }, listen: { free: true }, think: { free: true, aliases: ["ponder"] },
+    search: { fail: "You find nothing." }, board: { aliases: ["nail"], fail: "There's nothing to board up there." } },
+  messages: { huh: { rotate: ["Huh?", "Say that again, slower.", "The wind doesn't understand you either."] } },
+  self: { name: "yourself", on: { smell: "Sawdust and nerves.", think: { hints: "You take stock." } } },
+  on: { pray: "Couldn't hurt.", sleep: [{ if: "DUSK", say: "Not now. Not with the light going." }, "You're not tired. You're terrified."] },
+
+  rooms: {
+    cabin: { name: "Cabin", exits: { south: "yard" },
+      desc: [{ if: "DUSK", text: "Orange light slants through the [window]. The [rug] looks like a pool of shadow. The [radio] hisses on the shelf." },
+        "A one-room cabin. A bare [window] faces the woods, a braided [rug] covers the floor, and a [radio] sits on the shelf. The yard is south."],
+      on: { listen: [{ if: "DUSK", say: "The crickets have stopped." }, "Wind in the pines."], smell: "Pine and old coffee." } },
+    yard: { name: "Front Yard", exits: { north: "cabin", east: "shed" },
+      desc: "Pine needles and long shadows. The cabin is north, the shed east.",
+      on: { listen: "Something big moves, far off in the trees." } },
+    shed: { name: "Tool Shed", exits: { west: "yard" },
+      desc: [{ if: { visited: "shed" }, text: "The shed, smelling of oil. The yard is west." }, "A lean-to shed that smells of oil and rust. Cobwebs in every corner. The yard is west."] }
+  },
+
+  items: {
+    window: { name: "window", at: "cabin", fixed: true, kind: "fixture",
+      desc: [{ if: { flag: "boarded" }, text: "Plywood, nailed tight." }, "Bare glass. It won't stop anything."],
+      on: { board: [{ if: { flag: "boarded" }, free: true, say: "It's already boarded." },
+        { if: { has: ["hammer", "nails", "plywood"] }, ...BOARD }, "You need plywood, a hammer and nails."] } },
+    rug: { name: "rug", at: "cabin", fixed: true, kind: "fixture", desc: "Braided rag rug. One corner is lumpy.",
+      on: { search: [{ if: { not: { flag: "lifted" } }, set: "lifted", move: { crowbar: "cabin" }, say: "Under the rug: a [crowbar]." }, "Just floorboards now."] } },
+    radio: { name: "radio", at: "cabin", fixed: true, kind: "fixture", desc: "A battered transistor radio.",
+      on: { listen: { say: { rotate: ["\"...stay indoors after dark...\"", "Static, then a hymn.", "\"...repeat, stay indoors...\""] } } } },
+    hammer: { name: "claw hammer", at: "shed", kind: "tool", desc: "Heavy, reliable." },
+    nails: { name: "box of nails", at: "shed", kind: "tool", aliases: ["nail"], desc: "A full box." },
+    plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window." },
+    crowbar: { name: "crowbar", kind: "tool", desc: "Cold iron. Better than nothing." },   // no "at": offstage until the rug is searched
+    coffee: { name: "mug of coffee", at: "cabin", kind: "food", aliases: ["mug"], desc: "Cold. This morning's.",
+      on: { drink: [{ if: { not: { flag: "drank" } }, set: "drank", log: "coffee", say: "Cold, bitter, heroic." }, "The mug is empty."] } }
+  },
+
+  kinds: {   // replies every thing of a kind shares; {it} is the thing
+    tool: { eat: { say: { rotate: ["You consider eating the {it}. Your dentist sits bolt upright in bed.", "The {it} is not food. You checked. With your teeth."] } } },
+    food: { eat: "Not now. Later. If there is a later." },
+    fixture: { take: "It's part of the cabin." }
+  },
+
+  recipes: [
+    { with: ["plywood", "window"], if: { has: ["hammer", "nails"] }, fail: "You'll need a hammer and nails.", ...BOARD },
+    { with: ["hammer", "nails"], secret: true, say: "Yes, those go together. Now find something to nail." }
+  ],
+
+  journal: {
+    boarded: { text: "You boarded up the window.", add: { progress: 1 } },
+    inside: { text: "You were inside when they came.", add: { progress: 1 } },
+    armed: { text: "You had a crowbar in your hand.", add: { progress: 1 } },
+    coffee: { aside: true, text: "You drank a mug of cold coffee, for courage." }
+  },
+  endings: [{ id: "overrun", name: "Overrun" }, { id: "holdout", name: "Holdout" }, { id: "dawn", name: "Dawn" }],
+
+  events: [
+    { legend: true },
+    { if: "DUSK", say: "The sun touches the treetops." },
+    { if: { min: { turns: SUNSET - 3 } }, say: "Branches snap in the woods. Close now." },
+    { if: { is: "SUNDOWN", in: "cabin" }, log: "inside" },
+    { if: { is: "SUNDOWN", has: "crowbar" }, log: "armed" },
+    { if: "SUNDOWN", say: "Sundown. Looking back, it was quite an evening." },
+    { if: "SUNDOWN", recap: true },
+    { if: { is: "SUNDOWN", min: { progress: 3 } }, ending: "dawn", end: "They try the door, the window, the door again. You hold. Dawn comes. THE END: Dawn. (Endings found: {found} of 3.)" },
+    { if: { is: "SUNDOWN", min: { progress: 2 } }, ending: "holdout", end: "A long night, but you're still here. THE END: Holdout. (Endings found: {found} of 3.)" },
+    { if: "SUNDOWN", ending: "overrun", end: "You should have listened to the radio. THE END: Overrun. (Endings found: {found} of 3.)" }
+  ]
+};

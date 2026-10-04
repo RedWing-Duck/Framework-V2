@@ -15,7 +15,8 @@ const G = {
   },
 
   items: {
-    coin: { name: "copper coin", at: "gate", aliases: ["copper"], desc: "Worn smooth. Enough for a toll." }
+    coin: { name: "copper coin", at: "gate", aliases: ["copper"], desc: "Worn smooth. Enough for a toll.",
+      on: { bite: "Real copper. Tastes like a penny." } }   // any verb: "bite coin"
   },
 
   npcs: {

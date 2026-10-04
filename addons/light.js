@@ -5,6 +5,7 @@
    In the dark (dark room, no light source carried or in the room) the player
    can't look, take, or examine anything they aren't carrying.
    Condition: dark:true / dark:false - is the player in darkness right now?
+   Messages (reword in G.messages): dark, darkFalls.
    ------------------------------------------------------------------------- */
 {
   const holds = v => v === true || (!!v && typeof v === "object" && test(v));
@@ -12,14 +13,15 @@
   addon({
     name: "light",
     state: { room: null, dark: false },
+    messages: { dark: "It's pitch dark. You can't see a thing.", darkFalls: "Everything goes dark." },
     conditions: { dark: v => inDark() === v },
     before(v, a) {
       if (inDark() && (v === "look" || v === "take" || (v === "examine" && !find(a, inv(), G.items))))
-        return print("It's pitch dark. You can't see a thing."), true;
+        return print(msg("dark")), true;
     },
     afterTurn() {   // light appears or vanishes while you stand still: reveal or hide the room
       const d = inDark(), L = S.light;
-      if (L.room === S.room && L.dark !== d) d ? print("Everything goes dark.") : exec("look");
+      if (L.room === S.room && L.dark !== d) d ? print(msg("darkFalls")) : exec("look");
       L.room = S.room; L.dark = d;
     },
     validate(need) {

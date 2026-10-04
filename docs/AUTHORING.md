@@ -1,85 +1,84 @@
 # Authoring a game
 
 A game is one data object, `G`, in `games/<name>/game.js`. The engine reads it and never changes per game.
-Start from `template/game.js`. For a complete example, see `games/damp-cell/game.js`.
+Start from `template/game.js`. For complete examples, see `games/damp-cell/game.js` (small, core only) and
+`games/sundown/game.js` (a countdown that uses every core feature and five add-ons).
 
 ## Quick reference
 
-This is the schema comment from the original single-file framework, word for word:
-
 ```
 title, intro:TEXT, start (room id)
-rooms:  { id: { name, desc:TEXT, exits:{ dir: "roomId" | { to, if:COND, fail:TEXT } } } }
-items:  { id: { name, desc:TEXT, at, aliases:[], fixed:true (can't take),
-          use:[ { if:COND, ...EFFECT } ] } }
-npcs:   { id: { name, desc:TEXT, at, aliases:[],
+rooms:  { id: { name, desc:TEXT, on:REPLIES, exits:{ dir: "roomId" | { to, if:COND, fail:TEXT, hidden:true } } } }
+items:  { id: { name, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES } }
+npcs:   { id: { name, desc:TEXT, at, aliases:[], kind, on:REPLIES,
           dialogue:{ nodeId:{ text:TEXT, options:[{ text, next, if:COND, ...EFFECT }] } } } }
-          ("start" is the first node; an option with no "next" ends the talk)
-events: [ { if:COND, repeat:true, ...EFFECT } ]  world rules, checked after every
-          command (not mid-conversation). Each fires once, unless repeat:true,
-          which fires every time "if" passes. For timed repeats, pair mark + since:
-          { repeat:true, if:{ since:{ tick:3 } }, mark:"tick", ... } = every 3 turns.
-          (the mark must be set once first, e.g. an event with no "if": { mark:"tick" })
+self:   { name, aliases:[], kind, on:REPLIES }   the player as a target: "smell me", "think"
+on:     REPLIES   the game's own replies, tried after the room's
+kinds:  { kind: REPLIES }   replies every thing of that kind shares ("eat" for every "tool")
+verbs:  { verb: { aliases:[], free:true, fail:TEXT, hidden:true } }
+aliases:{ word: "verb" }   phrasal:{ "two words": "verb" }
+conds:  { NAME: COND }   named conditions: if:"NAME", or is:"NAME" next to other keys
+messages: { id: TEXT }   rewords any engine line (see Messages)
+events: [ { if:COND, repeat:true | every:n, ...EFFECT } ]
 
-at:     where a thing starts: a room id, "player" (inventory), or omitted (offstage).
-        Things track their own location, so rooms never list their contents.
-TEXT:   a string, or a list of variants; the first whose "if" passes is shown:
-        [ { if:{ flag:"gate_open" }, text:"The gate is open." }, "The gate is shut." ]
-        Tag things by id: "A [guard] eyes your [bread]." NPC = bold blue,
-        item = bold underlined green (all items look alike, so players discover
-        what matters). Things tagged in a room's text aren't repeated in the
-        "You see / Here" lists. Ids must be unique across items AND npcs.
-        Show a counter's value with {name}: "You have {gold} coins."
-COND:   { has:"item", here:"thing", in:"room", flag:"name", not:COND,
-          min:{ counter:n }, max:{ counter:n }, since:{ mark:n } }  all must pass
-        has = in inventory, here = in the player's room, in = player is in room
-        min/max = counter is at least / at most n (both inclusive)
-        since = at least n turns have passed since that mark was set
-EFFECT: { say:TEXT, set:"flag", unset:"flag", give:"item", take:"item",
-          move:{ id:"roomId" | "player" | null | ["roomA","roomB",...] }, goto:"roomId", end:TEXT,
-          add:{ counter:n } (negative n subtracts), mark:"name" (stamp the current turn) }
-move with a list = a route: the thing steps to the next room in the list, looping.
-say is picked AFTER the effect's other changes, so its variants see the new state;
-        a say with no matching variant prints nothing.
-COUNTERS: numbers that start at 0. "turns" is built in: +1 for every understood
-        command except help and menu. A whole conversation counts as one turn.
+REPLIES: { verb: REPLY }   REPLY = a string, or a list of { if:COND, ...EFFECT } (a string entry = { say })
+         The first entry whose "if" passes runs. Any verb named in REPLIES or verbs becomes a command.
+TEXT:   a string, or a list of variants: [ { if:COND, text:TEXT }, ..., "fallback" ]
+        { rotate:[TEXT, ...] } shows the next line each time and loops; { ladder:[...] } stays on the last.
+        [id] shows a thing's name, styled. {counter} shows a counter. {it} is the thing being acted on.
+COND:   { has, here, in, flag, is, seen, visited, not:COND, any:[COND], all:[COND],
+          min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, since:{ mark:n }, said:"a|b" }
+        has/here/flag/is/seen/visited take one name or a list (all must pass); in takes a room or a list (any).
+EFFECT: { say:TEXT, set, unset, give, take (one or a list), move:{ id: where }, add:{ counter:n },
+          mark, free:true, do:"command", goto:"roomId", end:TEXT }
 ```
 
-The sections below explain each part in more detail.
+The sections below explain each part.
 
 ## Top level
 
 | Key | Meaning |
 |---|---|
-| `title` | Shown on the start menu and as the browser tab title. |
+| `title` | Shown on the start menu and as the browser tab title. It also names the browser save. |
 | `intro` | TEXT printed once when a new game starts. |
 | `start` | Id of the room the player starts in. |
-| `rooms`, `items`, `npcs` | Objects keyed by id. |
+| `rooms`, `items`, `npcs` | Objects keyed by id. Item and NPC ids must be unique across both. |
+| `self` | Optional. The player, as something verbs can target. |
+| `on`, `kinds`, `verbs`, `aliases`, `phrasal` | Verbs and replies (see Verbs and replies). |
+| `conds` | Named conditions. |
+| `messages` | Rewording for the engine's own lines. |
 | `events` | A list of world rules. |
+
+`game.js` is plain JavaScript, so declare shared replies, conditions and numbers as `const`s above `G` and reuse them.
 
 ## Rooms
 
 ```js
 corridor: { name: "Corridor", desc: TEXT,
-  exits: { west: "cell", north: { to: "yard", if: { flag: "gate_open" }, fail: "The gate is locked tight." } } }
+  exits: { west: "cell", north: { to: "yard", if: { flag: "gate_open" }, fail: "The gate is locked tight." } },
+  on: { listen: "Dripping water, far off." } }
 ```
 
-- An exit is either a room id or `{ to, if, fail }`. When the `if` fails, the player sees `fail`. Without a `fail`, they see "Something blocks the way."
-- Directions are typed in full (`north`) or short (`n s e w u d`). Any other word, such as `in` or `portal`, also works as an exit name through `go <word>`.
+- An exit is a room id or `{ to, if, fail, hidden }`. When `if` fails, the player sees `fail` (default: "Something blocks the way."). `hidden: true` leaves it out of the "Exits:" line.
+- Directions: `north`…`down` and `northeast`…`southwest`, typed in full or as `n s e w u d ne nw se sw`. Any other word, like `in` or `portal`, works through `go <word>`.
+- `go <room name>` takes the exit that leads there (`go to the yard`), and `go back` returns to the previous room.
 - Rooms never list their contents. Things say where they are (see `at`).
-- `look` prints the room name, then `desc`, then "You see:" (items), "Here:" (NPCs) and "Exits:". Things you tag with `[id]` in the description are left out of those lists.
+- `look` prints the name, `desc`, then "You see:" (items), "Here:" (NPCs) and "Exits:". Things tagged `[id]` in the description, and things with `hidden: true`, are left out of the lists.
+- `visited: "room"` is false during the first look at a room and true afterwards, so a description can have a first-visit variant:
+  `desc: [{ if: { visited: "shed" }, text: "The shed again." }, "A lean-to shed, full of cobwebs..."]`
 
-## Items
+## Items and NPCs
 
 ```js
-key: { name: "iron key", desc: TEXT, at: "cell", aliases: ["rusty"], fixed: true,
-  use: [ { if: COND, ...EFFECT }, ... ] }
+key: { name: "iron key", desc: TEXT, at: "cell", aliases: ["rusty"], kind: "tool", fixed: true, hidden: true,
+  on: { use: [ { if: COND, ...EFFECT }, ... ] } }
 ```
 
-- `at` is where the item starts: a room id, `"player"` (in the inventory) or omitted (offstage, until something `give`s or `move`s it).
-- `fixed: true` means the item can be looked at but not taken.
-- `use` is a list. Typing `use <item>` runs the first entry whose `if` passes. If none passes, the player sees "Nothing happens." The item must be carried.
-- The player can refer to an item by its id, its full name, any single word of its name, or an alias.
+- `at` is where the thing starts: a room id, `"player"` (carried) or left out (offstage, until something `give`s or `move`s it).
+- `fixed: true`: it can't be taken. `hidden: true`: it isn't listed in "You see:" (scenery mentioned by its aliases in the text).
+- `kind` groups things that share replies (see `kinds`).
+- The player names a thing by its id, its full name, an alias (multi-word aliases work) or any single word of its name. The longest phrase wins, so "iron key" beats "key" when both exist.
+- `examine` shows `desc`, and afterwards `seen: "id"` is true.
 
 ## NPCs and dialogue
 
@@ -92,90 +91,162 @@ guard: { name: "Guard", at: "corridor", desc: TEXT,
     thanks: { text: "Food! ...Here. I never saw you." } } }
 ```
 
-- `talk <npc>` (or just `talk` when only one NPC is present) opens the `start` node.
-- Only options whose `if` passes are shown. They are numbered, and the player types the number.
-- Choosing an option runs its effects, then goes to `next`. An option with no `next`, or a node with no options, ends the conversation.
-- Typing anything that isn't a number ends the conversation and runs that command instead.
-- A whole conversation costs one turn. Events don't run until it ends.
+- `talk <npc>` (or `talk` alone when an NPC is present) opens the `start` node. An NPC with `on.talk` answers with that reply instead.
+- Only options whose `if` passes are shown. The player types the number.
+- An option runs its effects, then goes to `next`. No `next`, or a node with no options, ends the conversation.
+- Typing anything else ends the conversation and runs that command. A whole conversation costs one turn, and events wait until it ends.
+
+## Verbs and replies
+
+Any verb can be given to any thing, room, the player or the game, with a REPLY:
+
+```js
+radio: { name: "radio", at: "cabin", fixed: true,
+  on: { listen: { say: { rotate: ["Static.", "A hymn.", "\"...stay indoors...\""] } },
+        turn: [{ if: { flag: "radio_on" }, unset: "radio_on", say: "Click. Silence." },
+               { set: "radio_on", say: "Click. Static." }] } }
+```
+
+A REPLY is a string, an effect object, or a list of them. The first entry whose `if` passes runs.
+
+When the player types a verb, the engine tries, in order, and stops at the first reply that answers:
+1. each thing the line names, last named first: its `on[verb]`, then `kinds[its kind][verb]`;
+2. the room's `on[verb]`;
+3. when nothing was named: `self.on[verb]` (so "think" or "dance" alone can answer);
+4. the game's `on[verb]`;
+5. the built-in command, if there is one (`take`, `use`, `examine`...);
+6. `verbs[verb].fail`, or "You can't {verb} that." / "{Verb} what?".
+
+So "use key on door" asks the door first, then the key. A reply on a built-in verb (like `on.take` or `on.go`) only replaces the built-in when one of its entries passes. A room's `on.go` with `if: { said: "down" }` can guard one direction.
+
+- `said: "a|b"` passes when the words typed after the verb contain any of the phrases (whole words). A list means all of them. `said: ""` means nothing was typed. Directions are spelled out for `go` (`d` is `down`).
+- `kinds: { tool: { eat: "You'd chip a tooth on the {it}." } }` gives every `kind: "tool"` the same reply.
+- `verbs: { smell: { free: true, aliases: ["sniff"], fail: "Nothing smells.", hidden: true } }`: `free` verbs don't cost a turn, `aliases` are more words for the verb, `fail` answers when nothing else does, and `hidden` keeps the verb out of `help`.
+- `aliases: { quit: "menu", press: "push" }` and `phrasal: { "knock over": "break" }` add words for any command.
+- Reply verb names are just names. `take`, `in` or `set` as a verb won't be read as an effect or condition.
 
 ## Events
 
 ```js
 events: [
-  { mark: "rat" },                                            // no "if": fires once, on the first turn
-  { repeat: true, if: { since: { rat: 2 } }, mark: "rat", move: { rat: ["cell", "corridor"] } },
+  { every: 2, move: { rat: ["cell", "corridor"] } },          // every 2nd turn
   { if: { in: "yard" }, end: "You escaped in {turns} turns! THE END." }
 ]
 ```
 
 - Events are checked in list order after every command, and once at the start of a new game.
-- Each event fires once, unless it has `repeat: true`.
-- Order matters. An earlier event's changes are visible to later events in the same turn.
-- Once a game has ended (`end`), no further events run.
+- Each fires once, unless it has `repeat: true` (every time `if` passes) or `every: n` (on every nth turn, while `if` passes).
+- Earlier events' changes are visible to later events in the same turn. After an `end`, no further events run.
 
 ## TEXT
 
-A TEXT value is either a string or a list of variants. The first variant whose `if` passes is shown, and a bare string always passes:
+A TEXT is a string, or a list of variants. The first variant whose `if` passes is shown, and a bare string always passes:
 
 ```js
 desc: [ { if: { flag: "fed" }, text: "Crumbs on his chin." }, "Bored and clearly hungry." ]
+say:  { rotate: ["Huh?", "Say again?"] }                     // next line each time, then loops
+say:  { if: { in: "salon" }, ladder: ["Hint 1", "Hint 2", "Hint 3"] }   // next line each time, then stays on the last
 ```
 
 - `[id]` shows the item's or NPC's name, styled. The validator reports any `[id]` that doesn't exist.
-- `{counter}` shows a counter's value, for example `{turns}`.
+- `{counter}` shows a counter's value, such as `{turns}`. `{it}` becomes `[id]` for the thing being acted on.
+- A rotation's place is saved with the game.
 
 ## COND
 
-All the keys in an `if` must pass. Keys you can use:
+All keys in an `if` must pass. `if: "NAME"` is short for `if: { is: "NAME" }`.
 
 | Key | Passes when |
 |---|---|
-| `has: "item"` | the item is in the inventory |
-| `here: "thing"` | the item or NPC is in the player's room |
-| `in: "room"` | the player is in that room |
-| `flag: "name"` | the flag is set |
+| `has: "item"` or `["a", "b"]` | all are carried |
+| `here: "thing"` or a list | all are in the player's room |
+| `in: "room"` or a list | the player is in that room (any of them) |
+| `flag: "name"` or a list | all flags are set |
+| `is: "NAME"` or a list | the named conditions in `conds` pass |
+| `seen: "thing"` | it has been examined |
+| `visited: "room"` | the player has been there before |
 | `not: COND` | the nested condition fails |
-| `min: { counter: n }` | counter ≥ n |
-| `max: { counter: n }` | counter ≤ n |
-| `since: { mark: n }` | at least n turns have passed since the mark was set |
+| `any: [COND, ...]` / `all: [COND, ...]` | at least one / every one passes |
+| `min` / `max` / `eq: { counter: n }` | counter ≥ / ≤ / = n |
+| `since: { mark: n }` | at least n turns since the mark was set |
+| `said: "a\|b"` | the typed words contain one of the phrases |
 
-Add-ons can add their own conditions. For example, `dark` comes from `addons/light.js`.
+Add-ons add more, such as `dark` (light), `logged` (journal).
 
 ## EFFECT
 
-These run in table order, except `say`, `goto` and `end`, which always run last.
+These run in table order, except `say`, `do`, `goto` and `end`, which always run last, in that order.
 
 | Key | Does |
 |---|---|
-| `set` / `unset: "flag"` | turns a flag on or off |
-| `give` / `take: "item"` | moves an item into or out of the inventory, with a "(Received: …)" or "(Lost: …)" line |
-| `move: { id: where }` | where is a room, `"player"`, `null` (offstage), or a list (a route that steps to the next room and loops) |
-| `add: { counter: n }` | adds n to the counter (negative n subtracts) |
-| `mark: "name"` | stamps the current turn, for use with `since` |
-| `say: TEXT` | prints the text. The variant is picked after the other effects have run |
-| `goto: "room"` | moves the player there and prints the room |
+| `set` / `unset: "flag"` or a list | turns flags on or off |
+| `give` / `take: "item"` or a list | moves items into or out of the inventory, with a "(Received: …)" or "(Lost: …)" line |
+| `move: { id: where }` | where is a room, `"player"`, `null` (offstage), or a list (a route: the next room in it, looping) |
+| `add: { counter: n }` | adds n (negative subtracts) |
+| `mark: "name"` | stamps the current turn, for `since` |
+| `free: true` | this command costs no turn |
+| `say: TEXT` | prints the text. The variant is picked after the other effects ran |
+| `do: "command"` | runs a command, as if typed: `do: "look"` |
+| `goto: "room"` | moves the player there and shows the room |
 | `end: TEXT` | prints the text and ends the game |
 
-## State, saving, turns
+The validator reports any key in an event, reply or dialogue option that isn't an effect (a typo like `sey:`).
 
-- Game state lives in `S`: the room, where every thing is, flags, counters, marks, which events have fired, and each add-on's state.
-- **Continue** restores a snapshot that is taken after every command. A finished game can't be continued.
-- `turns` goes up by one for every understood command, except `help`, `menu` and the free commands that add-ons declare.
+## Messages
+
+Every line the engine prints has an id, and `messages` rewords it with a TEXT (variants and `rotate` work, `""` hides it):
+
+```js
+messages: { huh: { rotate: ["Huh?", "Say that again?"] }, cantGo: "No way through there.", received: "" }
+```
+
+| id | Default |
+|---|---|
+| `huh` | I don't understand that. Type 'help'. |
+| `over` | The game is over. Type 'restart', 'undo' or 'menu'. |
+| `help` | Commands: {cmds}. Directions: n, s, e, w, u, d.\nFree actions: {free}. |
+| `cantGo`, `blocked`, `goWhere` | You can't go that way. / Something blocks the way. / Go where? |
+| `notHere`, `notHave` | You don't see that here. / You don't have that. |
+| `what`, `cant` | {Verb} what? / You can't {verb} that. |
+| `taken`, `have`, `fixed`, `dropped` | Taken: {it} / You already have that. / You can't take that. / Dropped: {it} |
+| `carry`, `carryNone` | You carry: {list} / You carry nothing. |
+| `nothing`, `plain` | Nothing happens. / You see nothing special. |
+| `noOne`, `silent`, `choose` | No one by that name is here. / {it} doesn't respond. / Choose a number from the list. |
+| `wait` | Time passes. |
+| `see`, `people`, `exits` | You see: {list} / Here: {list} / Exits: {list} |
+| `received`, `lost` | (Received: {it}) / (Lost: {it}) |
+| `noAgain`, `noUndo`, `undone` | There's nothing to do again yet. / There's nothing to undo. / Undone. |
+
+Add-ons add their own ids (light: `dark`, `darkFalls`; craft: `combineWhat`, `combineNo`, `combineFail`; and so on).
 
 ## Player commands
 
-`look (l)`, `go <dir>` or just the direction, `take (get, grab)`, `drop`, `inventory (i, inv)`, `examine (x)`, `use`, `talk (speak)`, `wait (z)`, `help (h, ?)` and `menu`.
-Filler words (`a an the to at with on`) are ignored.
+`look (l)`, `go <dir>` or just the direction, `take (get, grab, pick up)`, `drop (put down)`, `inventory (i)`,
+`examine (x, look at)`, `use`, `talk (speak)`, `wait (z)`, `again (g)`, `undo`, `restart`, `help (h, ?)` and `menu (q, quit)`,
+plus every verb the game gives replies to.
+
+- Punctuation is ignored, so `north.` and `hello!` work. Input is capped at 200 characters.
+- Filler words (`a an the to at with on`) are dropped. Particles at either end of the object (`up down around under out off...`) are dropped too: "feel around", "put the hammer down".
+- `look under/behind/in X` runs `search X` when the game has a `search` verb, and otherwise examines X.
+- The echo of what the player typed is printed as typed: `[key]` stays `[key]`.
+
+## Turns, saving, undo
+
+- `turns` goes up by one for every command, except free ones: `help`, `menu`, `inventory`, `again`, `undo`, `restart`, free verbs and add-on free commands. A reply with `free: true` refunds its turn, and naming something that isn't here costs nothing.
+- **Continue** restores a snapshot taken after every command. It's also kept in the browser's localStorage, so it survives a reload. A finished game, or a save from a different version of the game (different rooms, items, NPCs or events), can't be continued.
+- `undo` steps back one turn-costing command, even after an ending. `again` repeats the last command.
 
 ## Validator
 
-When the page loads, `validate()` checks the data. It lists every problem on the start menu and in the console, each with an exact path. The build prints the same list. It catches:
-- unknown rooms, items and NPCs;
+When the page loads, `validate()` checks the data. Every problem is listed on the start menu and in the console with an exact path, and the build prints the same list. It catches:
+- unknown rooms, items, NPCs, named conditions and message ids;
 - `[id]` tags that don't exist;
-- unknown condition keys;
+- unknown condition keys, in `if`, `not`, `any`, `all` and `conds`;
+- unknown effect keys in events, replies and dialogue options;
 - missing dialogue nodes, and dialogue with no `start` node;
-- ids used by both an item and an NPC;
+- ids used by both an item and an NPC, and things with no name;
 - flags, marks and counters that are checked but never set;
-- add-on checks, such as a dark room when no item has `light`.
+- verb aliases that clash with another command;
+- add-on checks, such as a dark room with no light, or a `log` with no journal entry.
 
 A clean build prints `Validator: no problems`.
