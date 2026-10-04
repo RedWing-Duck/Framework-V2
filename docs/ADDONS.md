@@ -26,6 +26,8 @@ Most v1 add-ons turned out to be data the engine should read. Check these first.
 | a free action, or a refund for one reply | `verbs.X.free`, effect `free: true` |
 | reworded engine lines | `messages` |
 | a timer | `every: n`, or `since` + `mark` |
+| randomness | TEXT `{ random: [...] }`, condition `chance: n` |
+| a score, health or clock always on screen | `status: TEXT` |
 | undo, again, restart, save across reloads | built in |
 
 ## Contract
@@ -48,6 +50,7 @@ addon({
   before(verb, arg, ids)  before every command, including the engine's own (look on entering); true stops it
   afterTurn()           after each turn's events, unless the game has ended
   start()               a new game was set up (S is fresh), before the intro prints
+  enter(room)           the player just entered a room (after it was shown): encounters, room scripts
   end(text)             the game just ended
   text(line, cls)       every line about to print: return it changed, or "" to hide it
   tag(id)               a class name to add to [id]'s styled span (or nothing)
@@ -59,7 +62,8 @@ addon({
 Engine helpers add-ons may use: `G`, `S`, `print(text, cls)`, `msg(id, vars)`, `txt(TEXT, vars)`, `test(COND)`,
 `run(EFFECT)`, `reply(REPLY)`, `exec(verb, arg)`, `named(text, ids)`, `find(text, ids)`, `thing(id)`, `at(table, room)`,
 `inv()`, `reach()`, `names(ids)`, `list(v)`, `own(obj, key)`, `notHere(msgId)` (prints it, costs no turn),
-`store(key, value)` / `load(key)` (browser storage, namespaced by the game's title), `$`, `out`.
+`store(key, value)` / `load(key)` (browser storage, namespaced by the game's title), `rand(n)` (a whole number
+from 0 to n-1, from the seeded generator in `S`: use it, never `Math.random`, so undo and saves stay honest), `$`, `out`.
 Reusing a name that's already taken is reported as a problem on the start menu.
 
 Rules:

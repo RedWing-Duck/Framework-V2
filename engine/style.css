@@ -11,6 +11,7 @@ body{background:var(--bg);color:var(--fg);font:16px/1.55 "IBM Plex Mono",ui-mono
 .npc,.item{font-weight:600}
 .npc{color:var(--npc)}
 .item{color:var(--item);text-decoration:underline;text-underline-offset:.2em}
+#st{width:100%;max-width:42rem;margin:0 auto;box-sizing:border-box;padding:.5rem 1rem;color:var(--dim);border-bottom:1px solid var(--dim);white-space:pre-wrap}
 form{display:flex;gap:.5rem;border-top:1px solid var(--dim)}
 input{flex:1;font:inherit;color:inherit;background:transparent;border:0;outline:0}
 form:focus-within{border-top-color:var(--accent)}
@@ -22,4 +23,4 @@ form:focus-within{border-top-color:var(--accent)}
 #err{color:var(--err);border-left:3px solid var(--err);padding-left:1rem;margin:0;white-space:pre-wrap;font:inherit;font-size:.875rem;max-height:40vh;overflow:auto}
 #ask{display:flex;flex-direction:column;gap:1rem}
 #ask p{margin:0;max-width:30rem}
-body.playing #menu,body:not(.playing) #out,body:not(.playing) form{display:none}
+body.playing #menu,body:not(.playing) #out,body:not(.playing) #st,body:not(.playing) form{display:none}

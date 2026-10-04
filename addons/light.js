@@ -16,7 +16,7 @@
     messages: { dark: "It's pitch dark. You can't see a thing.", darkFalls: "Everything goes dark." },
     conditions: { dark: v => inDark() === v },
     before(v, a) {
-      if (inDark() && (v === "look" || v === "take" || (v === "examine" && !find(a, inv(), G.items))))
+      if (inDark() && (v === "look" || v === "take" || (v === "examine" && !find(a, inv()))))
         return print(msg("dark")), true;
     },
     afterTurn() {   // light appears or vanishes while you stand still: reveal or hide the room

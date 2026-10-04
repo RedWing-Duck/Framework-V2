@@ -101,4 +101,26 @@ This pass doesn't port big-footprint. Its 796-line test suite pins exact wording
 - **Scenery in many rooms.** An item lives in one place. Big-footprint's `at: "any"` nouns (floor, walls, ceiling) suggest `at: ["foyer", "landing"]` or `at: "*"`. It's a small engine change, but it touches `S.loc`, `move` and saves, so it waits for a second game that needs it.
 - **Ask/tell topics.** Common in IF and used by big-footprint. A shared `topics.js` add-on is the likely shape.
 - **Containers and surfaces** ("put coin in box"). No game has needed them yet.
-- **Randomness.** Rotations are deterministic on purpose (tests stay exact). A seeded `random:` TEXT would keep that.
+
+## Second pass: a cold read of v2
+
+A review of v2 on its own terms: is the logic sound, is the syntax right, is the code explained, and can it stretch to any genre?
+
+**Bugs fixed**
+- Continue and `undo` showed the room without asking the add-ons, so the light add-on was bypassed: continuing in a dark cellar showed what was on its shelf. Both now go through `exec("look")`, like entering a room.
+- `go back` on the first turn pointed at the starting room itself. `S.prev` now starts empty.
+- A save missing a state key that a newer engine added (rotation places, the random seed) could crash. Continue now lays the save over a fresh state.
+- The validator now checks named conditions written as strings anywhere (`not: "X"`, `any: ["X"]`), not only in `if`; reports an `aliases` or `phrasal` entry that leads to no command; and compares ids without tripping on `constructor`.
+
+**Clarity**
+- `engine.js` opens with how a typed line flows through `parse → act → exec → events` and a list of its sections; every section has a header.
+- The one-line `{name}` expansion in TEXT is now a small `fill()` function, and name matching (`named()`) builds each thing's phrases once per call, with comments on the matching rules.
+- Every piece of engine state (`S`, `SAVE`, `UNDO`, `LAST`, `VERBS`, `VER`, `LINE`, `TURN`) and every validator table is explained where it's declared.
+
+**For any genre**
+The engine already covered rooms, things, people, conversation, time and story state. The cold read found three gaps that almost every genre outside the classic adventure hits:
+- **Randomness** (combat, loot, encounters, weather): a seeded `rand(n)` for add-ons, TEXT `{ random: [...] }` and condition `chance: n`. The seed lives in `S`, so saves, undo and `again` can't re-roll a result, and `G.seed` makes tests exact.
+- **A status line** (health, score, gold, a clock): `G.status`, a TEXT refreshed after every command.
+- **Room-entry scripts** (random encounters, traps, room-by-room AI): an `enter(room)` hook for add-ons.
+
+Genres and the core they rest on: adventure and puzzle games (rooms, things, replies, recipes); horror and survival (countdowns, `every`, `chance`, `status`); RPG (counters as stats, `kinds` as classes of foes, `rand` in a combat add-on, `status`); mystery (`seen`, `said`, journal); choice-driven stories (dialogue nodes and `goto`); sims and management (counters, `every`, `status`, an `afterTurn` add-on).

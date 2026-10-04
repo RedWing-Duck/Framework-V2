@@ -5,7 +5,8 @@ const fs = require("node:fs"), path = require("node:path");
 const { load, storage } = require("../tools/headless"), { build } = require("../tools/build");
 
 const dist = name => fs.readFileSync(path.join(__dirname, `../dist/${name}.html`), "utf8");
-const CELL = dist("damp-cell"), SUN = dist("sundown");
+const CELL = dist("damp-cell");
+const SUN = dist("sundown").replace('title: "Sundown",', 'title: "Sundown", seed: 1,');   // seeded: the owl and the yard's sounds roll the same every run
 const newGame = (h = CELL, opts) => { const g = load(h, opts).boot(); g.click("bs"); return g; };
 const TO_KEY = ["d", "u", "e", "take lantern", "w", "d", "take bread", "u", "e", "talk guard", "1", "use key"];
 const TO_BOARD = ["s", "e", "take hammer", "take nails", "take plywood", "w", "n", "use plywood on window"];
@@ -216,6 +217,62 @@ test("game-local add-ons (\"./name\") build, and the input, text and start hooks
   g.type("loud", "x coin");
   assert.equal(g.last(), "WORN SMOOTH. ENOUGH FOR A TOLL.");
   assert.equal(g.get("S.count.turns"), 2, "a line the input hook handles costs no turn");
+  assert.equal(g.get("S.shout.rooms"), 1, "the enter hook ran for the start room");
   g.type("restart");
   assert.equal(g.lines()[0], "My Game");
+});
+
+test("light: Continue and undo don't reveal a dark room", () => {
+  let g = newGame();
+  g.type("d", "menu");
+  g.click("bc");
+  assert.deepEqual(g.lines(), ["It's pitch dark. You can't see a thing."]);
+  g = newGame();
+  g.type("d", "z", "undo");
+  assert.equal(g.last(), "It's pitch dark. You can't see a thing.");
+});
+
+test("continue: a save missing newer state keys still loads", () => {
+  const st = storage(), g = newGame(SUN, { storage: st });
+  g.type("listen radio");
+  const k = "Sundown:save", d = JSON.parse(st.map.get(k)), s = JSON.parse(d.s);
+  delete s.seq; delete s.seed; d.s = JSON.stringify(s); st.map.set(k, JSON.stringify(d));
+  const g2 = load(SUN, { storage: st }).boot();
+  g2.click("bc");
+  g2.type("listen radio", "s", "listen");
+  assert.equal(g2.errors.length, 0);
+  assert.equal(g2.get("S.room"), "yard");
+});
+
+test("random: seeded rolls repeat exactly, and undo can't re-roll", () => {
+  const seeded = SUN.replace("seed: 1,", "seed: 7,");
+  const play = () => { const g = newGame(seeded); g.type("s", "listen", "z", "listen", "z", "listen", "z", "z", "z"); return g.lines(); };
+  const a = play();
+  assert.deepEqual(play(), a, "same seed, same game");
+  const heard = a.filter((l, i) => a[i - 1] === "> listen");
+  assert.ok(heard.length === 3 && heard.every(l => /trees|cracks|breathing/.test(l)));
+  const g = newGame(seeded);
+  g.type("s", "listen");
+  const first = g.last();
+  g.type("undo", "s", "listen");
+  assert.equal(g.last(), first, "undo restores the seed");
+});
+
+test("status line: shown while playing, refreshed every command", () => {
+  const g = newGame(SUN);
+  assert.equal(g.$("st").hidden, false);
+  assert.equal(g.$("st").textContent, "Turn 0 of 30");
+  g.type("s", "smell");
+  assert.equal(g.$("st").textContent, "Turn 1 of 30");
+  assert.equal(newGame().$("st").hidden, true, "no G.status, no line");
+});
+
+test("validator: aliases and phrasal verbs must lead somewhere; named conditions in not/any", () => {
+  const bad = CELL.replace('title: "The Damp Cell",', 'title: "The Damp Cell", aliases: { press: "pushh" }, phrasal: { "kick over": "take" },')
+    .replace('if: { in: "yard" }', 'if: { in: "yard", not: "NOPE", any: ["NOPE2"] }');
+  assert.deepEqual(load(bad).boot().problems(), [
+    'aliases.press: no command "pushh"',
+    'events[3].if.not: no condition "NOPE" in conds',
+    'events[3].if.any[0]: no condition "NOPE2" in conds'
+  ]);
 });

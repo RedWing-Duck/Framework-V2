@@ -6,6 +6,7 @@ const G = {
   title: "Sundown",
   intro: `The radio said they come at sundown, ${SUNSET} turns from now. Board up the [window] and be inside when it's dark. (Type "think" if you're stuck.)`,
   start: "cabin",
+  status: `Turn {turns} of ${SUNSET}`,   // the line above the input, refreshed after every command
   conds: { DUSK: { min: { turns: SUNSET - 10 } }, SUNDOWN: { min: { turns: SUNSET } } },   // named conditions: if:"DUSK" or is:"SUNDOWN"
   verbs: { smell: { free: true }, listen: { free: true }, think: { free: true, aliases: ["ponder"] },
     search: { fail: "You find nothing." }, board: { aliases: ["nail"], fail: "There's nothing to board up there." } },
@@ -20,7 +21,7 @@ const G = {
       on: { listen: [{ if: "DUSK", say: "The crickets have stopped." }, "Wind in the pines."], smell: "Pine and old coffee." } },
     yard: { name: "Front Yard", exits: { north: "cabin", east: "shed" },
       desc: "Pine needles and long shadows. The cabin is north, the shed east.",
-      on: { listen: "Something big moves, far off in the trees." } },
+      on: { listen: { say: { random: ["Something big moves, far off in the trees.", "A branch cracks. Then nothing.", "Wind, and under it, breathing?"] } } } },
     shed: { name: "Tool Shed", exits: { west: "yard" },
       desc: [{ if: { visited: "shed" }, text: "The shed, smelling of oil. The yard is west." }, "A lean-to shed that smells of oil and rust. Cobwebs in every corner. The yard is west."] }
   },
@@ -64,6 +65,7 @@ const G = {
   events: [
     { legend: true },
     { if: "DUSK", say: "The sun touches the treetops." },
+    { every: 1, if: { in: "yard", chance: 20 }, say: "An owl calls from the pines." },   // a 1-in-5 roll on each turn in the yard
     { if: { min: { turns: SUNSET - 3 } }, say: "Branches snap in the woods. Close now." },
     { if: { is: "SUNDOWN", in: "cabin" }, log: "inside" },
     { if: { is: "SUNDOWN", has: "crowbar" }, log: "armed" },

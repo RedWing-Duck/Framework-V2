@@ -19,6 +19,7 @@ body{background:var(--bg);color:var(--fg);font:16px/1.55 "IBM Plex Mono",ui-mono
 .npc,.item{font-weight:600}
 .npc{color:var(--npc)}
 .item{color:var(--item);text-decoration:underline;text-underline-offset:.2em}
+#st{width:100%;max-width:42rem;margin:0 auto;box-sizing:border-box;padding:.5rem 1rem;color:var(--dim);border-bottom:1px solid var(--dim);white-space:pre-wrap}
 form{display:flex;gap:.5rem;border-top:1px solid var(--dim)}
 input{flex:1;font:inherit;color:inherit;background:transparent;border:0;outline:0}
 form:focus-within{border-top-color:var(--accent)}
@@ -30,12 +31,13 @@ form:focus-within{border-top-color:var(--accent)}
 #err{color:var(--err);border-left:3px solid var(--err);padding-left:1rem;margin:0;white-space:pre-wrap;font:inherit;font-size:.875rem;max-height:40vh;overflow:auto}
 #ask{display:flex;flex-direction:column;gap:1rem}
 #ask p{margin:0;max-width:30rem}
-body.playing #menu,body:not(.playing) #out,body:not(.playing) form{display:none}
+body.playing #menu,body:not(.playing) #out,body:not(.playing) #st,body:not(.playing) form{display:none}
 </style>
 </head>
 <body>
 <div id="menu"><h1 id="mt"></h1><pre id="err" hidden></pre><button id="bs">Start</button><button id="bc" hidden>Continue</button>
   <div id="ask" hidden><p>This will start a new game. Previous saved data will be lost.</p><button id="by">Yes</button><button id="bn">No</button></div></div>
+<div id="st" hidden></div>
 <div id="out" aria-live="polite"></div>
 <form id="f"><span class="title">&gt;</span><input id="in" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" aria-label="Command" autofocus></form>
 
@@ -93,9 +95,24 @@ const G = {
 
 <script>
 /* =====================================================================
-   ENGINE v2 — reuse as-is. Conditions, effects, commands and messages live
-   in the COND, EFFECT, CMDS and MSG tables, which add-ons extend through
-   addon({...}) and hooks (never by replacing engine functions).
+   ENGINE v2 — reuse as-is. A game is data (G, see docs/AUTHORING.md);
+   new mechanics are add-ons (addon({...}), see docs/ADDONS.md).
+   Conditions, effects, commands and messages live in the COND, EFFECT,
+   CMDS and MSG tables, which add-ons extend; add-ons react through HOOKS
+   and never replace engine functions.
+
+   How a typed line flows:
+     parse(raw)   clean the text, echo it, run "input" hooks
+     act(words)   dialogue numbers, phrasal verbs, aliases, directions;
+                  count the turn (and keep an undo snapshot)
+     exec(v, a)   "before" hooks -> replies (respond) -> the built-in
+                  command (CMDS) -> the verb's fail line
+     then         events, "afterTurn" hooks, the status line, save
+
+   Sections, in order: tables and state · messages · storage · things and
+   name matching · print · TEXT · random · COND · EFFECT · replies and
+   events · look and movement · dialogue · commands · exec · act and
+   parse · start, save, add-ons · validate · menu and boot.
    On load, validate() checks the game data and lists any problems on the
    start menu (and in the browser console) with the exact path.
    ===================================================================== */
@@ -109,11 +126,18 @@ const PHRASAL = tbl({ "pick up": "take", "look at": "examine", "put down": "drop
 const FILLER = ["a", "an", "the", "to", "at", "with", "on"];
 const PARTICLES = ["up", "down", "around", "under", "out", "off", "over", "through", "into", "in", "inside", "from", "behind", "beneath"];
 const FREE = ["help", "menu", "restart", "again", "undo", "inventory"];   // commands that don't cost a turn
-const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], end: [], text: [], tag: [], boot: [], validate: [] };
+const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [] };
+// validator tables: REFS = add-on checks per data key; META = keys allowed next to effects;
+// MAPS = keys whose own keys are names ("def": each value is a definition, "data": each value is data, "map": a map of maps)
 const REFS = tbl({}), META = ["if", "repeat", "every", "text", "next"], MAPS = tbl({ rooms: "def", items: "def", npcs: "def", kinds: "map",
   exits: "data", dialogue: "data", on: "data", verbs: "data", messages: "data", conds: "data", aliases: "data", phrasal: "data" });
+// S = the game state (plain JSON: saved, undone, restored). SAVE = the Continue snapshot, UNDO = one step back,
+// LAST = the last command's words (for "again"), VERBS = every verb the game's data answers, VER = the save version
 let S, SAVE = null, UNDO = null, LAST = null, VERBS = new Set(), VER = "";
-const LINE = { verb: "", said: "", it: null }, TURN = { free: false };   // the command being answered: for said:, {it} and free
+const blank = () => ({ room: G.start, prev: null, loc: {}, flags: {}, count: { turns: 0 }, mark: {}, fired: {},
+  seen: {}, been: {}, seq: {}, seed: G.seed ?? Date.now() % 2147483647, talk: null, over: false });
+// LINE = the command being answered (for said:, {verb} and {it}); TURN = whether this command costs a turn, and was refunded
+const LINE = { verb: "", said: "", it: null }, TURN = { cost: false, free: false };
 
 // ---- messages: every line the engine prints. A game rewords any of them in G.messages (TEXT, variants and rotate work).
 const MSG = tbl({
@@ -137,14 +161,17 @@ const load = k => { try { return JSON.parse(localStorage.getItem(G.title + ":" +
 const thing = id => own(G.items, id) || own(G.npcs, id) || (id === "self" ? G.self : undefined);
 const words = s => String(s).toLowerCase().replace(/-/g, " ").split(/\s+/).filter(Boolean);
 const phrases = id => { const o = thing(id); return [id, o.name, ...(o.aliases || []), ...(id === "self" ? ["me", "myself", "self"] : [])].map(n => words(n).join(" ")); };
-// every thing in ids that the text names, in order; the longest phrase wins, then any single word of a name
+// every thing in ids that the text names, in the order named. At each word, the longest phrase that is
+// an id, a full name or an alias wins ("iron key" before "key"); failing that, any single word of a name.
 function named(a, ids) {
-  const w = words(a), hits = [];
+  const w = words(a), hits = [], P = ids.map(id => [id, phrases(id), words(thing(id).name)]);
   for (let i = 0; i < w.length; i++) {
-    let id, j = w.length;
-    for (; j > i && !id; j--) { const p = w.slice(i, j).join(" "); id = ids.find(x => phrases(x).includes(p)); }
-    if (!id) { id = ids.find(x => words(thing(x).name).includes(w[i])); j = i; }
-    if (id) { if (!hits.includes(id)) hits.push(id); i = j; }
+    let id, end = i + 1;
+    for (let j = w.length; j > i && !id; j--) { const p = w.slice(i, j).join(" "); id = P.find(x => x[1].includes(p))?.[0]; end = j; }
+    id ??= P.find(x => x[2].includes(w[i]))?.[0];
+    if (!id) continue;
+    if (!hits.includes(id)) hits.push(id);
+    i = Math.max(i, end - 1);   // skip the words of the phrase just matched
   }
   return hits;
 }
@@ -172,13 +199,22 @@ function print(t, c, plain) {
   out.scrollTop = out.scrollHeight;
 }
 
-// ---- TEXT: a string, or a list of variants; the first whose "if" passes is shown.
-// A variant can rotate through lines ({ rotate:[...] }) or climb them and stay on the last ({ ladder:[...] }).
+// ---- random: a seeded generator kept in S, so saves, undo and "again" can't re-roll a result.
+// rand(n) is a whole number from 0 to n-1. Set G.seed for the same rolls every game (handy in tests).
+function rand(n) {
+  let t = S.seed = (S.seed + 0x6D2B79F5) | 0;   // mulberry32
+  t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return Math.floor(((t ^ (t >>> 14)) >>> 0) / 4294967296 * n);
+}
+
+// ---- TEXT: a string, or a list of variants; the first whose "if" passes is shown. A variant can also
+// rotate through lines ({ rotate:[...] }), climb them and stay on the last ({ ladder:[...] }), or pick one at random ({ random:[...] }).
 const SEQ = new WeakMap();   // rotate/ladder object -> stable id, assigned by validate()'s walk so saves keep their place
 function pick(v) {
   for (const x of list(v ?? [])) {
     if (typeof x === "string") return x;
     if (!x || !test(x.if)) continue;
+    if (x.random) return pick(x.random[rand(x.random.length)]);
     const L = x.rotate || x.ladder;
     if (!L) return pick(x.text);
     const k = SEQ.get(x) ?? JSON.stringify(L).slice(0, 80), n = S.seq[k] || 0;
@@ -187,9 +223,16 @@ function pick(v) {
   }
   return "";
 }
-const cap = s => s[0].toUpperCase() + s.slice(1);
-const txt = (v, vars = {}) => pick(v).replace(/\{(\w+)\}/g, (m, k) => k in vars ? vars[k]   // {counter} shows its value, {it} the thing
-  : k === "it" ? (LINE.it ? `[${LINE.it}]` : "it") : k === "verb" || k === "Verb" ? (k === "Verb" ? cap(LINE.verb || "do") : LINE.verb) : S.count[k] || 0);
+const cap = s => s && s[0].toUpperCase() + s.slice(1);
+// {name} in a TEXT: a value passed in vars, else {it} (the thing acted on, as a tag), {verb}/{Verb} (the verb typed), else a counter
+function fill(k, vars) {
+  if (k in vars) return vars[k];
+  if (k === "it") return LINE.it ? `[${LINE.it}]` : "it";
+  if (k === "verb") return LINE.verb;
+  if (k === "Verb") return cap(LINE.verb || "do");
+  return S.count[k] || 0;
+}
+const txt = (v, vars = {}) => pick(v).replace(/\{(\w+)\}/g, (m, k) => fill(k, vars));
 
 // ---- conditions: every key in an "if" must pass. "if" can also be a name from G.conds.
 const COND = tbl({
@@ -207,7 +250,8 @@ const COND = tbl({
   max: o => all(o, (v, n) => v <= n),
   eq: o => all(o, (v, n) => v === n),
   since: o => all(o, (v, n, k) => k in S.mark && S.count.turns - S.mark[k] >= n),
-  said: p => list(p).every(q => q === "" ? !LINE.said : q.split("|").some(w => ` ${LINE.said} `.includes(` ${words(w).join(" ")} `)))
+  said: p => list(p).every(q => q === "" ? !LINE.said : q.split("|").some(w => ` ${LINE.said} `.includes(` ${words(w).join(" ")} `))),
+  chance: n => rand(100) < n                               // passes n times in 100 (rolled each time it's checked)
 });
 const test = c => !c ? true : typeof c === "string" ? COND.is(c) : Object.keys(c).every(k => !own(COND, k) || COND[k](c[k]));
 
@@ -228,17 +272,21 @@ const EFFECT = tbl({
   end: v => { print(txt(v), "title"); S.over = true; HOOKS.end.forEach(h => h(v)); }
 });
 const LAST_FX = ["say", "do", "goto", "end"];
+
+// ---- replies and events
+// run one effect object (a string is { say }); stops early once the game has ended
 function run(e = {}) {
   if (typeof e === "string") e = { say: e };
   for (const k of [...Object.keys(EFFECT).filter(k => !LAST_FX.includes(k)), ...LAST_FX]) if (k in e && !S.over) EFFECT[k](e[k]);
 }
-// REPLY: a TEXT-like list of { if, ...EFFECT } entries (a string = { say }); the first that passes runs
+// a REPLY is a TEXT-like list of { if, ...EFFECT } entries (a string = { say }); the first that passes runs
 function reply(r) {
   const e = list(r ?? []).find(x => typeof x === "string" || (x && test(x.if)));
   if (e === undefined) return false;
   run(e); return true;
 }
 
+// world rules, after every command: each fires once, every time with repeat:true, or on every nth turn with every:n
 function events() {
   const tick = S.count.turns !== S.tick; S.tick = S.count.turns;   // every: only on a turn that passed, not after free commands
   (G.events || []).forEach((e, i) => {
@@ -248,6 +296,7 @@ function events() {
   });
 }
 
+// ---- look and movement
 function look() {
   const r = G.rooms[S.room], d = txt(r.desc), extra = T => at(T).filter(id => !T[id].hidden && !d.includes(`[${id}]`));
   const it = extra(G.items), np = extra(G.npcs), ex = Object.keys(r.exits || {}).filter(k => !r.exits[k].hidden);
@@ -257,7 +306,8 @@ function look() {
   if (ex.length) print(msg("exits", { list: ex.join(", ") }));
 }
 
-function enter(id) { S.prev = S.room; S.room = id; exec("look"); S.been[id] = (S.been[id] || 0) + 1; }   // visited: true after the first look
+// entering shows the room, then marks it visited (so a desc can tell the first look from later ones), then runs "enter" hooks
+function enter(id) { S.prev = S.room; S.room = id; exec("look"); S.been[id] = (S.been[id] || 0) + 1; HOOKS.enter.forEach(h => S.over || h(id)); }
 const dest = x => typeof x === "string" ? x : x.to;
 const notHere = (k = "notHere") => { EFFECT.free(true); print(msg(k)); };   // naming something that isn't here costs no turn
 
@@ -271,6 +321,7 @@ function go(a) {
   test(e.if) ? enter(e.to) : print(txt(e.fail) || msg("blocked"));
 }
 
+// ---- dialogue: show a node and its options whose "if" passes; S.talk remembers them until the player answers
 function node(npc, id) {
   const n = G.npcs[npc].dialogue[id], opts = (n.options || []).map((o, i) => i).filter(i => test(n.options[i].if));
   print(`[${npc}]: "${txt(n.text)}"`);
@@ -296,7 +347,7 @@ const CMDS = tbl({
   },
   inventory() { const i = inv(); print(i.length ? msg("carry", { list: names(i) }) : msg("carryNone")); },
   examine(a) {
-    if (!a) return look();
+    if (!a) return exec("look");
     const id = LINE.it;
     if (!id) return notHere();
     print(txt(thing(id).desc) || msg("plain"));
@@ -313,7 +364,7 @@ const CMDS = tbl({
     print(msg("help", { cmds: cmds.filter(c => !isFree(c)).join(", "), free: cmds.filter(isFree).join(", ") }));
   },
   again() { if (!LAST) return print(msg("noAgain")); print("> " + LAST.join(" "), "cmd", true); act(LAST); },
-  undo() { if (!UNDO) return print(msg("noUndo")); S = JSON.parse(UNDO); UNDO = null; print(msg("undone")); look(); },
+  undo() { if (!UNDO) return print(msg("noUndo")); S = JSON.parse(UNDO); UNDO = null; print(msg("undone")); exec("look"); },
   restart: () => play(true),
   menu
 });
@@ -330,7 +381,7 @@ function respond(v, ids) {
   return reply(own(G.rooms[S.room].on, v)) || (!ids.length && reply(own(G.self?.on, v))) || reply(own(G.on, v));
 }
 
-// run verb v on the text a: hooks, then replies, then the command itself, then the verb's fail line
+// ---- exec: run verb v on the text a: hooks, then replies, then the command itself, then the verb's fail line
 function exec(v, a = "", said = a) {
   const keep = { ...LINE }, ids = named(a, reach());
   Object.assign(LINE, { verb: v, said: words(said).join(" "), it: ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null });
@@ -347,6 +398,7 @@ function exec(v, a = "", said = a) {
   }
 }
 
+// ---- act and parse
 const isDir = w => !!own(DIRS, w) || Object.values(DIRS).includes(w);
 function act(w) {
   if (S.talk) {
@@ -384,23 +436,27 @@ function parse(raw) {
   print("> " + raw, "cmd", true);                             // the echo stays literal: "[key]" is not a tag
   TURN.free = TURN.cost = false;
   for (const h of HOOKS.input) { const r = h(w, raw); if (r === true) return save(); if (Array.isArray(r)) w = r; }
-  if (act(w) === true) return save();
-  if (!S.talk) { events(); HOOKS.afterTurn.forEach(h => S.over || h()); }
-  save();
+  if (act(w) !== true && !S.talk) { events(); HOOKS.afterTurn.forEach(h => S.over || h()); }
+  status(); save();
 }
 
+// the status line above the input: G.status, a TEXT shown after every command (score, health, time...); hidden when empty
+function status() { const t = G.status ? txt(G.status) : ""; $("st").hidden = !t; $("st").textContent = t; }
+
+// ---- start, save, add-ons
 // the continue slot: a snapshot after every command, kept in the browser too. A finished game can't be continued.
 const save = () => { SAVE = S.over ? null : JSON.stringify(S); store("save", SAVE && { ver: VER, s: SAVE }); };
 
 function start() {
-  S = { room: G.start, prev: null, loc: {}, flags: {}, count: { turns: 0 }, mark: {}, fired: {}, seen: {}, been: {}, seq: {}, talk: null, over: false };
+  S = blank();
   for (const T of [G.items, G.npcs]) for (const id in T) S.loc[id] = T[id].at ?? null;
   for (const a of ADDONS) if (a.state) S[a.name] = JSON.parse(JSON.stringify(a.state));
   UNDO = LAST = null;
   HOOKS.start.forEach(h => h());
-  print(G.title, "title"); print(txt(G.intro)); enter(G.start); events(); save();
+  print(G.title, "title"); print(txt(G.intro)); enter(G.start); S.prev = null; events(); status(); save();
 }
 
+// register an add-on: merge its tables (a name already taken is reported), aliases, free verbs and hooks
 function addon(a) {
   ADDONS.push(a);
   for (const [T, R] of [[a.commands, CMDS], [a.conditions, COND], [a.effects, EFFECT], [a.messages, MSG], [a.refs, REFS]])
@@ -410,11 +466,14 @@ function addon(a) {
   for (const h in HOOKS) if (a[h]) HOOKS[h].push(a[h]);
 }
 
+// ---- validate: check G against the engine's and add-ons' tables; returns a list of "path: problem" lines
 function validate() {
   const E = [...CLASH], room = r => !!own(G.rooms, r), isThing = t => !!thing(t);
   const need = (ok, path, m) => ok || E.push(`${path}: ${m}`);
   const used = { flag: {}, mark: {}, counter: {} }, made = { flag: {}, mark: {}, counter: { turns: 1 } };
-  const conds = (c, p) => { if (c && typeof c === "object" && !Array.isArray(c)) for (const k in c) need(own(COND, k), `${p}.${k}`, `unknown condition "${k}"`); };
+  // a COND is a name from G.conds, or an object whose keys are all condition keys
+  const conds = (c, p) => typeof c === "string" ? need(own(G.conds, c), p, `no condition "${c}" in conds`)
+    : c && typeof c === "object" && !Array.isArray(c) && Object.keys(c).forEach(k => need(own(COND, k), `${p}.${k}`, `unknown condition "${k}"`));
   const fx = (e, p) => { if (e && typeof e === "object") for (const k in e) need(own(EFFECT, k) || META.includes(k), `${p}.${k}`, `unknown effect "${k}"`); };
   let seq = 0;
   // mode: "def" (a definition: its keys are fields), "data" (keys are conditions and effects), "map:<child mode>" (keys are names)
@@ -426,9 +485,9 @@ function validate() {
       const x = v[k], q = Array.isArray(v) ? `${p}[${k}]` : p ? `${p}.${k}` : k;
       if (mode.startsWith("map:")) { walk(x, q, mode.slice(4) === "map" ? "map:data" : mode.slice(4)); continue; }
       if (mode === "def") { walk(x, q, own(MAPS, k) ? "map:" + MAPS[k] : k === "self" ? "def" : "data"); continue; }
+      // "data" mode: check what each condition or effect key refers to
       {
-        if (k === "if") typeof x === "string" ? need(own(G.conds, x), q, `no condition "${x}" in conds`) : conds(x, q);
-        if (k === "not") conds(x, q);
+        if (k === "if" || k === "not") conds(x, q);
         if (k === "any" || k === "all") list(x).forEach((c, i) => conds(c, `${q}[${i}]`));
         if (["has", "give", "take"].includes(k)) list(x).forEach(id => need(own(G.items, id), q, `no item "${id}"`));
         if (k === "here" || k === "seen") list(x).forEach(id => need(isThing(id), q, `no item or NPC "${id}"`));
@@ -452,7 +511,7 @@ function validate() {
   for (const T of ["items", "npcs"]) for (const id in G[T]) { const a = G[T][id].at;
     need(a == null || a === "player" || room(a), `${T}.${id}.at`, `no room "${a}"`);
     need(typeof G[T][id].name === "string", `${T}.${id}.name`, "needs a name"); }
-  for (const id in G.items) need(!(id in (G.npcs || {})), `items.${id}`, "same id as an NPC");
+  for (const id in G.items) need(!own(G.npcs, id), `items.${id}`, "same id as an NPC");
   for (const n in G.npcs) { const D = G.npcs[n].dialogue; if (!D) continue;
     need(D.start, `npcs.${n}.dialogue`, `no "start" node`);
     for (const id in D) (D[id].options || []).forEach((o, i) => { const p = `npcs.${n}.dialogue.${id}.options[${i}]`;
@@ -466,17 +525,22 @@ function validate() {
   for (const c in G.conds || {}) conds(G.conds[c], `conds.${c}`);
   for (const k in G.messages || {}) need(k in MSG, `messages.${k}`, `no engine message "${k}"`);
   for (const v in G.verbs || {}) for (const w of G.verbs[v].aliases || []) need(!own(ALIAS, w) || ALIAS[w] === v, `verbs.${v}.aliases`, `"${w}" is already a command or alias`);
+  // an alias or phrasal verb must lead to a command the game understands (a built-in, an add-on's, or a verb with replies)
+  const known = c => !!own(CMDS, c) || VERBS.has(c) || isDir(c);
+  for (const T of ["aliases", "phrasal"]) for (const w in G[T] || {}) need(known(words(G[T][w])[0]), `${T}.${w}`, `no command "${G[T][w]}"`);
   walk(G, "", "def");
   for (const t in used) for (const k in used[t]) need(made[t][k], used[t][k], `${t} "${k}" is checked but never set`);
   HOOKS.validate.forEach(h => h(need));
   return E;
 }
 
+// ---- menu and boot
 function menu() { document.body.classList.remove("playing"); $("bs").hidden = false; $("bc").hidden = !SAVE; $("ask").hidden = true; }
 
+// fresh: a new game. Otherwise Continue: the snapshot, over a blank state so a key it lacks (an older save) has its default
 function play(fresh) {
   document.body.classList.add("playing"); out.innerHTML = "";
-  if (fresh) start(); else { S = JSON.parse(SAVE); S.talk = null; UNDO = LAST = null; look(); }
+  if (fresh) start(); else { S = Object.assign(blank(), JSON.parse(SAVE), { talk: null }); UNDO = LAST = null; exec("look"); status(); }
   inp.focus();
 }
 
@@ -523,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
     messages: { dark: "It's pitch dark. You can't see a thing.", darkFalls: "Everything goes dark." },
     conditions: { dark: v => inDark() === v },
     before(v, a) {
-      if (inDark() && (v === "look" || v === "take" || (v === "examine" && !find(a, inv(), G.items))))
+      if (inDark() && (v === "look" || v === "take" || (v === "examine" && !find(a, inv()))))
         return print(msg("dark")), true;
     },
     afterTurn() {   // light appears or vanishes while you stand still: reveal or hide the room

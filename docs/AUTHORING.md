@@ -7,7 +7,7 @@ Start from `template/game.js`. For complete examples, see `games/damp-cell/game.
 ## Quick reference
 
 ```
-title, intro:TEXT, start (room id)
+title, intro:TEXT, start (room id), status:TEXT (the line above the input), seed (fixed random rolls)
 rooms:  { id: { name, desc:TEXT, on:REPLIES, exits:{ dir: "roomId" | { to, if:COND, fail:TEXT, hidden:true } } } }
 items:  { id: { name, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES } }
 npcs:   { id: { name, desc:TEXT, at, aliases:[], kind, on:REPLIES,
@@ -24,10 +24,11 @@ events: [ { if:COND, repeat:true | every:n, ...EFFECT } ]
 REPLIES: { verb: REPLY }   REPLY = a string, or a list of { if:COND, ...EFFECT } (a string entry = { say })
          The first entry whose "if" passes runs. Any verb named in REPLIES or verbs becomes a command.
 TEXT:   a string, or a list of variants: [ { if:COND, text:TEXT }, ..., "fallback" ]
-        { rotate:[TEXT, ...] } shows the next line each time and loops; { ladder:[...] } stays on the last.
+        { rotate:[TEXT, ...] } shows the next line each time and loops; { ladder:[...] } stays on the last;
+        { random:[TEXT, ...] } picks one at random.
         [id] shows a thing's name, styled. {counter} shows a counter. {it} is the thing being acted on.
 COND:   { has, here, in, flag, is, seen, visited, not:COND, any:[COND], all:[COND],
-          min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, since:{ mark:n }, said:"a|b" }
+          min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, since:{ mark:n }, said:"a|b", chance:n }
         has/here/flag/is/seen/visited take one name or a list (all must pass); in takes a room or a list (any).
 EFFECT: { say:TEXT, set, unset, give, take (one or a list), move:{ id: where }, add:{ counter:n },
           mark, free:true, do:"command", goto:"roomId", end:TEXT }
@@ -42,6 +43,8 @@ The sections below explain each part.
 | `title` | Shown on the start menu and as the browser tab title. It also names the browser save. |
 | `intro` | TEXT printed once when a new game starts. |
 | `start` | Id of the room the player starts in. |
+| `status` | Optional TEXT shown in a line above the input, refreshed after every command: `` `Turn {turns} of ${SUNSET}` ``, `"HP {hp} · Gold {gold}"`. Hidden when it's empty. |
+| `seed` | Optional number. Leave it out so every game rolls differently; set it to make every game roll the same (for tests). |
 | `rooms`, `items`, `npcs` | Objects keyed by id. Item and NPC ids must be unique across both. |
 | `self` | Optional. The player, as something verbs can target. |
 | `on`, `kinds`, `verbs`, `aliases`, `phrasal` | Verbs and replies (see Verbs and replies). |
@@ -146,11 +149,13 @@ A TEXT is a string, or a list of variants. The first variant whose `if` passes i
 desc: [ { if: { flag: "fed" }, text: "Crumbs on his chin." }, "Bored and clearly hungry." ]
 say:  { rotate: ["Huh?", "Say again?"] }                     // next line each time, then loops
 say:  { if: { in: "salon" }, ladder: ["Hint 1", "Hint 2", "Hint 3"] }   // next line each time, then stays on the last
+say:  { random: ["A crow caws.", "Wind.", "Somewhere, a bell."] }      // one at random
 ```
 
 - `[id]` shows the item's or NPC's name, styled. The validator reports any `[id]` that doesn't exist.
 - `{counter}` shows a counter's value, such as `{turns}`. `{it}` becomes `[id]` for the thing being acted on.
 - A rotation's place is saved with the game.
+- Random rolls come from a generator kept in the game state, so Continue, `undo` and `again` replay the same roll instead of re-rolling.
 
 ## COND
 
@@ -170,6 +175,7 @@ All keys in an `if` must pass. `if: "NAME"` is short for `if: { is: "NAME" }`.
 | `min` / `max` / `eq: { counter: n }` | counter ≥ / ≤ / = n |
 | `since: { mark: n }` | at least n turns since the mark was set |
 | `said: "a\|b"` | the typed words contain one of the phrases |
+| `chance: n` | a random roll passes, n times in 100 (rolled each time it's checked) |
 
 Add-ons add more, such as `dark` (light), `logged` (journal).
 
