@@ -2,7 +2,7 @@
 //   node tools/build.js damp-cell && node tools/build.js sundown && node tests/run.js
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), path = require("node:path");
-const { load, storage } = require("../tools/headless"), { build } = require("../tools/build");
+const { load, storage, downloads } = require("../tools/headless"), { build } = require("../tools/build");
 
 const dist = name => fs.readFileSync(path.join(__dirname, `../dist/${name}.html`), "utf8");
 const CELL = dist("damp-cell");
@@ -460,4 +460,85 @@ test("oops replaces the unknown word of the last line; brief and verbose; the tr
   assert.ok(g.get("LOG.length") > 600);
   g.type("transcript");
   assert.equal(g.last(), "This browser won't save files, so the transcript can't be saved here.");
+});
+
+// ---- the word layer, fifth pass: each test is named after the fix it covers (docs/REVIEW.md, "Fifth pass")
+test("implicit take obeys add-ons and replies: in the dark, or refused, the command stops", () => {
+  const cell = CELL.replace('bread: { name: "stale bread",', 'crate: { name: "crate", at: "cellar", holds: "in", fixed: true }, bread: { name: "stale bread",');
+  const g = newGame(cell);
+  g.type("d", "take bread");
+  assert.equal(g.last(), "It's pitch dark. You can't see a thing.");
+  g.type("put bread in crate");
+  assert.equal(g.last(), "It's pitch dark. You can't see a thing.", "the light add-on refuses the implicit take too");
+  assert.equal(g.get("S.loc.bread"), "cellar");
+  g.type("u", "e", "take lantern", "w", "d", "put bread in crate");
+  assert.deepEqual(g.lines().slice(-2), ["(first taking the stale bread)", "You put the stale bread in the crate."], "with a light, it works");
+  const w = WORDS();
+  w.type("n", "show sugar to rex");
+  assert.deepEqual(w.lines().slice(-2), ["> show sugar to rex", "The sugar is caked to the shelf."], "a reply on take refuses it, and show never runs");
+  assert.equal(w.get("S.loc.sugar"), "study");
+});
+
+test("'the other one' is forgotten on leaving the room or naming something else", () => {
+  const g = WORDS();
+  g.type("take cup", "white", "e", "w", "take the other one");
+  assert.equal(g.get("S.loc.tea"), "kitchen", "after leaving and coming back, 'the other one' points at nothing");
+  assert.equal(g.last(), "You don't see that here.");
+  g.type("drop cup", "take cup", "white", "x letter", "take the other one");
+  assert.equal(g.get("S.loc.tea"), "kitchen", "naming the letter ended the old pair");
+  g.type("drop all", "take cup", "white", "take the other one");
+  assert.equal(g.last(), "Taken: cup of tea", "right after the question it still works");
+});
+
+test("a role word inside a name doesn't split the line: 'the letter to Ana'", () => {
+  const g = WORDS();
+  g.type("n", "x letter to ana");
+  assert.equal(g.last(), "Addressed in pencil.");
+  g.type("take the letter to ana");
+  assert.equal(g.last(), "Taken: letter to Ana", "'to' and 'the' inside the name stay");
+  g.type("s", "show letter to ana to tony");
+  assert.equal(g.last(), "Big Tony shrugs at the letter to Ana.", "the second 'to' is the role word");
+  g.type("show tony the letter to ana");
+  assert.equal(g.last(), "Big Tony shrugs at the letter to Ana.");
+});
+
+test("messages: {dir} in arrives/leaves; article an/some through {a}/{A}; proper names in 'Which do you mean?'", () => {
+  const html = build("tests/words").replace('title: "Words",', 'title: "Words", messages: { arrives: "{The} comes in from the {dir}.", leaves: "{The} goes out to the {dir}." },');
+  const g = load(html).boot(); g.click("bs");
+  g.type("whistle", "z");
+  assert.equal(g.last(), "Ana comes in from the east.");
+  g.type("z", "z");
+  assert.equal(g.last(), "Ana goes out to the east.");
+  const w = WORDS();
+  w.type("n", "weigh map");
+  assert.equal(w.last(), "You weigh an honest map. An honest map is lighter than it looks.", "article: an");
+  w.type("weigh sugar");
+  assert.equal(w.last(), "You weigh some sugar. Some sugar is lighter than it looks.", "article: some");
+  w.type("x dog");
+  assert.equal(w.last(), "Which do you mean: the toy dog or Rex?", "proper: no article in the list");
+  w.type("rex");
+  assert.equal(w.last(), "A real dog.");
+});
+
+test("transcript: saves '<title> transcript.txt' with every line printed, then says how many", () => {
+  const d = downloads(), g = load(build("tests/words"), { download: d }).boot(); g.click("bs");
+  for (let i = 0; i < 300; i++) g.type("z");
+  const before = g.lines();
+  g.type("transcript");
+  assert.equal(d.files.length, 1);
+  assert.equal(d.files[0].name, "Words transcript.txt");
+  assert.equal(d.files[0].text, [...before, "> transcript"].join("\n") + "\n", "every line, including what the screen dropped");
+  assert.equal(g.last(), `Transcript saved: ${before.length + 1} lines.`);
+  assert.equal(g.get("S.count.turns"), 300, "free");
+});
+
+test("hook order: before hooks run in build.json order, and the first that answers stops the command", () => {
+  const g = WORDS();
+  g.type("ring");
+  assert.equal(g.last(), "First.", "./first is listed before ./second");
+  assert.ok(!g.lines().includes("Second."));
+  const html = build("tests/words"), [a, b] = [/<script>\n\/\* ---- GAME-LOCAL ADD-ON \(test fixture\): answers[\s\S]*?<\/script>/, /<script>\n\/\* ---- GAME-LOCAL ADD-ON \(test fixture\): also[\s\S]*?<\/script>/].map(r => html.match(r)[0]);
+  const h = load(html.replace(a, "\0").replace(b, a).replace("\0", b)).boot(); h.click("bs");   // the same add-ons, the other way round
+  h.type("ring");
+  assert.equal(h.last(), "Second.");
 });

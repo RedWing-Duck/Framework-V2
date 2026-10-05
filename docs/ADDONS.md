@@ -10,7 +10,9 @@ A game switches add-ons on in its `build.json`:
 - A plain name is a shared add-on in `addons/<name>.js`.
 - A name starting with `./` is the game's own add-on, in `games/<game>/<name>.js`. Use it for a mechanic only this game will ever have (a guided tour, a scripted chase). It follows the same contract. If a second game wants it, move it to `addons/`.
 
-The build puts each add-on in its own `<script>` after the engine, in the order listed. Add-ons register while that script runs. The engine boots on `DOMContentLoaded`, after every script has loaded. Hooks run in list order.
+The build puts each add-on in its own `<script>` after the engine, in the order listed. Add-ons register while that script runs. The engine boots on `DOMContentLoaded`, after every script has loaded.
+
+**Hook order.** Every hook runs in `build.json` order, shared and game-local add-ons alike. For `before`, the first hook that returns `true` stops the command: later add-ons' `before` hooks, replies and the built-in never see it. So list the add-on that should win first (light before anything that answers `look` or `take`). There are no priorities: the list is the order.
 
 ## Before writing one: is it data?
 
@@ -100,7 +102,9 @@ Rules:
 1. Create `addons/<name>.js` (or `games/<game>/<name>.js` for a one-game mechanic). Start with a header comment: the data keys it reads, and the conditions, effects, commands and messages it adds. The header is the documentation.
 2. Wrap private helpers in `{ }` and call `addon({ name: "<name>", ... })`.
 3. List it in a game's `build.json`, build, and check the validator output.
-4. Add a test to `tests/run.js` that plays through the mechanic in a built game.
+4. Add a test to `tests/run.js` that plays through the mechanic in a built game. `tools/headless.js` can stand in for the
+   browser's storage (`load(html, { storage: storage() })`) and file downloads (`load(html, { download: downloads() })`,
+   whose `files` collects `{ name, text }` for each saved file).
 
 Keep it small. Use the engine's helpers and tables instead of copying their logic.
 

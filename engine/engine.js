@@ -293,7 +293,7 @@ function look() {
 
 // entering shows the room, then marks it visited (so a desc can tell the first look from later ones), then runs "enter" hooks
 function enter(id) {
-  S.prev = S.room; S.room = id; ENTERING = !!PREF.brief && !!S.been[id];
+  S.prev = S.room; S.room = id; S.pick = null; ENTERING = !!PREF.brief && !!S.been[id];   // "the other one" stays in its room
   try { exec("look"); } finally { ENTERING = false; }
   S.been[id] = (S.been[id] || 0) + 1; HOOKS.enter.forEach(h => S.over || h(id)); }
 const dest = x => typeof x === "string" ? x : x.to;
@@ -343,7 +343,7 @@ const CMDS = tbl({
     if (!id) return notHere();
     if (S.loc[id] === "player") return notHere("have");
     if (thing(id).fixed || !own(G.items, id)) return print(msg("fixed"));
-    S.loc[id] = "player"; print(msg("taken", { it: `[${id}]` }));
+    S.loc[id] = "player"; IMPLICIT ? print(msg("firstTake", { it: `[${id}]` }), "cmd") : print(msg("taken", { it: `[${id}]` }));
   },
   drop(a, ids) {
     if (holder(LINE.with)) return exec("put", a);   // "drop the coin in the box"
@@ -448,12 +448,13 @@ function exec(v, a = "", said = a) {
   if (what === wth) wth = null;
   Object.assign(LINE, { verb: v, said: words(said).join(" "), what: what || null, with: wth || null,
     it: ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null });
+  if (S.pick && ids.some(id => !S.pick.ids.includes(id))) S.pick = null;   // naming something else ends "the other one"
   if (ids.pick) S.pick = ids.pick;
   try {
     if (HOOKS.before.some(h => h(v, a, ids))) return;
     if (ids.amb && !NOOBJ.includes(v) && !settle(v, a, said, ids.amb)) return;   // messages.which can read said:
     if (!what && before.length && named(before.join(" "), Object.keys({ ...G.items, ...G.npcs })).length) return notHere();   // "give the bread to him", no bread here
-    carry(v);
+    if (!carry(v)) return;
     if (respond(v, ids)) return;
     LINE.it = ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null;
     if (own(CMDS, v)) return CMDS[v](a, ids);
@@ -479,17 +480,31 @@ function point(id) {
   const p = own(G.npcs, id) ? list(G.npcs[id].pronoun || ["him", "her"]) : ["it"];
   for (const x of [...p, "them"]) S.pro[x] = id;
 }
-// "give the bread to the guard": the words before the first role word and after it, or null
-function roles(t) {
-  const w = words(t), i = w.findIndex(x => ROLES.includes(x));
+// "give the bread to the guard": the words before the first role word and after it, or null.
+// A role word inside a name in reach ("the letter to Ana") doesn't split the line.
+function roles(t, inside = inNames(words(t))) {
+  const w = words(t), i = w.findIndex((x, j) => ROLES.includes(x) && !inside.has(j));
   return i < 0 ? null : { before: w.slice(0, i).join(" "), after: w.slice(i + 1).join(" "), prep: w[i] };
 }
-// "(first taking the key)": put, and any verb with verbs.X.carry, takes the direct thing first when it's here
+// the positions in w that fall inside a name or alias of more than one word, of something in reach
+function inNames(w) {
+  const pos = new Set();
+  for (const id of reach()) for (const p of phrases(id)) { const q = words(p);
+    if (q.length > 1) for (let s = 0; s + q.length <= w.length; s++) if (q.every((x, k) => w[s + k] === x)) q.forEach((x, k) => pos.add(s + k)); }
+  return pos;
+}
+// "(first taking the key)": put, and any verb with verbs.X.carry, takes the direct thing first when it's here.
+// The take runs as a typed "take" would (before hooks, replies on take, the built-in, which then prints firstTake
+// instead of taken), so darkness or a reply can refuse it. Returns false when the thing still isn't carried:
+// the command stops there.
+let IMPLICIT = false;
 function carry(v) {
   const id = LINE.what;
-  if (!(v === "put" ? holder(LINE.with) : own(G.verbs, v)?.carry) || !own(G.items, id) || G.items[id].fixed) return;
-  if (S.loc[id] === "player" || !nested(at(G.items)).includes(id) || (LINE.with && nested([id]).includes(LINE.with))) return;
-  S.loc[id] = "player"; print(msg("firstTake", { it: `[${id}]` }), "cmd");
+  if (!(v === "put" ? holder(LINE.with) : own(G.verbs, v)?.carry) || !own(G.items, id) || G.items[id].fixed) return true;
+  if (S.loc[id] === "player" || !nested(at(G.items)).includes(id) || (LINE.with && nested([id]).includes(LINE.with))) return true;
+  IMPLICIT = true;
+  try { exec("take", id); } finally { IMPLICIT = false; }
+  return S.loc[id] === "player";
 }
 // a name that fits several things: take wants one that isn't carried, drop and put one that is; if that leaves one,
 // use it (true). Otherwise ask "Which do you mean?", keep the command in S.ask, and refund the turn (false).
@@ -525,8 +540,9 @@ function act(w) {
   }
   const two = w.slice(0, 2).join(" "), ph = own(G.phrasal, two) || own(PHRASAL, two);
   if (ph) w = [...words(ph), ...w.slice(2)];
-  ROLE = roles(w.slice(1).join(" "));   // before filler words go: "give bread TO guard" keeps its role word
-  w = w.filter(x => !FILLER.includes(x));
+  const inside = inNames(w.slice(1));   // a filler or role word inside a name stays: "take the letter to Ana"
+  ROLE = roles(w.slice(1).join(" "), inside);   // before filler words go: "give bread TO guard" keeps its role word
+  w = w.filter((x, i) => !FILLER.includes(x) || (i > 0 && inside.has(i - 1)));
   if (!w.length) return print(msg("huh"));
   let [v, ...r] = w; v = own(ALIAS, v) || v;
   if (isDir(v)) { r = [v]; v = "go"; }

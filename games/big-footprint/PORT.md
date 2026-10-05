@@ -18,6 +18,9 @@ The original game ran on the v1 engine with four add-ons (`restart`, `verbs`, `n
 | G.keys | G.conds |
 | — | a status line: the Bigfoot clock and secrets in the escape, strikes on the tour |
 
+The game's design documents (GDD, Scripts rev 1-3, the polish build brief and QA focus) are in [`design/`](design/); the
+release pack (walkthrough, bug list, changelog, QA reports, and the original v1 build) is in [`release/`](release/).
+
 `game.js` keeps the Script's own data formats (line tables, noun words, categories): they are this game's authoring format, and `./nouns.js` reads them. The data changes are only the ones in the table.
 
 ## How "the same game" is checked

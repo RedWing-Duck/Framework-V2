@@ -97,6 +97,7 @@ key: { name: "iron key", desc: TEXT, at: "cell", aliases: ["rusty"], kind: "tool
   `take` first rules out what's already carried, and `drop` and `put` what isn't. A word elsewhere in the line that fits only one of them
   picks it too. Give things distinct words and the question never comes up.
 - After a question (or a word that narrowed one), "the other one" is the other choice, and "both" (or "all") takes or drops both.
+  The pair is forgotten when the player enters a room, or names something that isn't one of the two.
 - Pronouns: `it` is the last item acted on, `him` and `her` the last person, `them` the last thing of either kind. A person is
   both `him` and `her` unless `pronoun` says which (`"her"`, `"him"`, `"them"`, or `"it"` for an animal).
   "x letter", "x tony", "show it to him" shows the letter to Tony.
@@ -182,6 +183,10 @@ verbs: { give: { carry: true } }   // "(first taking the bread)" when it's lying
 - A first slot that names something out of reach ("give the bread to him" with no bread here) answers "You don't see that here."
 - `put X in/on Y` uses the slots, and so does the craft add-on. `verbs.X.carry: true` takes the direct thing first, with a
   "(first taking ...)" line (message `firstTake`), when it's here and can be taken; `put` does this on its own.
+  That take runs exactly like a typed `take`: add-ons' `before` hooks (darkness), replies on `take`, then the built-in, which
+  prints `firstTake` instead of `taken`. If the thing still isn't carried afterwards, the command stops there.
+- A role word inside a name in reach doesn't split the line: with "the letter to Ana" here, "take the letter to Ana" is one
+  thing, and "show the letter to Ana to Tony" splits at the second `to`.
 
 When the player types a verb, the engine tries, in order, and stops at the first reply that answers:
 1. each thing the line names, last named first: its `on[verb]`, then `kinds[its kind][verb]`;
@@ -332,9 +337,9 @@ Also, all free:
 The engine reads a **verb followed by the things it names**. It is a command reader, not a grammar parser:
 - The first word (or a two-word phrasal verb like "pick up") is the verb, after aliases. A direction alone means `go`.
 - Punctuation is ignored, so `north.` and `hello!` work. Input is capped at 200 characters.
-- Filler words (`a an the to at with on`) are dropped. Particles at either end of the object (`up down around under out off...`) are dropped too: "feel around", "put the hammer down".
+- Filler words (`a an the to at with on`) are dropped, except inside a name of something in reach ("the letter to Ana"). Particles at either end of the object (`up down around under out off...`) are dropped too: "feel around", "put the hammer down".
 - The rest is scanned for things in reach, longest name first, and words next to each other narrow one thing ("chipped cup"). Other words are kept for `said:` but otherwise ignored.
-- The first role word (`to`, `with`, `on`, `at`, `about`...) splits the line into two slots (`what:` and `with:`). "use the key on the door" and "use key door" still read the same: without one, the first and last things named fill the slots.
+- The first role word (`to`, `with`, `on`, `at`, `about`...) outside a name splits the line into two slots (`what:` and `with:`). "use the key on the door" and "use key door" still read the same: without one, the first and last things named fill the slots.
 - `take` and `drop` accept `all`, `all except X`, `both` and `X and Y`. Pronouns stand for the last item (`it`), person (`him`, `her`) or thing (`them`); "the other one" for the other choice of the last question. A name that fits several things asks "Which do you mean?".
 - `look under/behind/in X` runs `search X` when the game has a `search` verb, and otherwise examines X.
 - The echo of what the player typed is printed as typed: `[key]` stays `[key]`.

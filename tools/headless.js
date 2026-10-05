@@ -16,21 +16,28 @@ class El {
 
 // A localStorage stand-in. Pass the same one to two load() calls to test a page reload.
 const storage = (m = new Map()) => ({ getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k), map: m });
+// A file-download stand-in (Blob, URL.createObjectURL, a link's click). Each saved file lands in files as { name, text }.
+const downloads = () => ({ files: [], blobs: new Map() });
 
 // html: a built game file. Runs its scripts; call boot() to fire DOMContentLoaded.
 // opts.storage: a storage() to use as localStorage (default: none, as in a browser that blocks it)
+// opts.download: a downloads() to let the page save files (default: none, as in a browser that won't)
 function load(html, opts = {}) {
   const els = {}, ready = [], errors = [], cls = new Set();
   for (const [, id] of html.matchAll(/\sid="([^"]+)"/g)) els[id] = new El();   // only ids in the markup exist
   const document = {
     title: "",
     head: new El(),
-    body: { classList: { add: c => cls.add(c), remove: c => cls.delete(c) } },
+    body: { classList: { add: c => cls.add(c), remove: c => cls.delete(c) }, append() {} },
     getElementById: id => els[id] || null,
-    createElement: () => new El(),
+    createElement: () => { const e = new El(), d = opts.download;   // a link clicked with download set saves its blob
+      if (d) e.click = () => { if (e.download && d.blobs.has(e.href)) d.files.push({ name: e.download, text: d.blobs.get(e.href) }); };
+      return e; },
     addEventListener: (e, f) => e === "DOMContentLoaded" && ready.push(f)
   };
-  const ctx = vm.createContext({ document, ...(opts.storage && { localStorage: opts.storage }), console: { log() {}, warn() {}, error: (...a) => errors.push(a) } });
+  const d = opts.download, files = d && { Blob: class { constructor(parts) { this.text = parts.join(""); } },
+    URL: { createObjectURL: b => { const u = "blob:" + d.blobs.size; d.blobs.set(u, b.text); return u; }, revokeObjectURL() {} }, setTimeout: () => 0 };
+  const ctx = vm.createContext({ document, ...(opts.storage && { localStorage: opts.storage }), ...files, console: { log() {}, warn() {}, error: (...a) => errors.push(a) } });
   [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].forEach((m, i) => vm.runInContext(m[1], ctx, { filename: `script ${i + 1}` }));
 
   const game = {
@@ -49,4 +56,4 @@ function load(html, opts = {}) {
   return game;
 }
 
-module.exports = { load, storage };
+module.exports = { load, storage, downloads };

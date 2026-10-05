@@ -165,3 +165,18 @@ same layer. All are in the core now, with tests (`tests/words/` is a small game 
 - Default messages use `{the}` instead of "the {it}". A game that reworded them is unaffected; the output only changes for a `proper` thing.
 
 **Still not in the reader, on purpose:** several commands on one line, a third slot, orders to people ("guard, open the gate"), adjectives that aren't in a name. Each is an `input` hook or a `said:` reply in the game that needs it.
+
+## Fifth pass: finishing the word layer
+
+A read of the fourth pass found places where the word layer stepped around the rest of the engine. Each fix has a test in
+`tests/run.js`, using the `tests/words/` game (now with a study, two game-local add-ons, and a name with "to" in it).
+
+| Item | Change | Test |
+|---|---|---|
+| Implicit take skipped add-ons: in the dark, "put coin in box" picked the coin up though "take coin" was refused | `carry()` runs `exec("take")`: `before` hooks, replies on `take`, then the built-in, which prints `firstTake` instead of `taken`. If the thing isn't carried afterwards, the command stops | implicit take obeys add-ons and replies: in the dark, or refused, the command stops |
+| Stale "the other one" / "both": `S.pick` outlived its room and later commands | Cleared on entering a room, and when a command names something outside the pair | 'the other one' is forgotten on leaving the room or naming something else |
+| Role words inside names: "the letter to Ana" split into two slots | `roles()` skips a role word inside a multi-word name or alias in reach, and filler words inside such a name are kept | a role word inside a name doesn't split the line: 'the letter to Ana' |
+| Untested: `{dir}`, `article: "an"`/`"some"`, `proper` in "Which do you mean?" | Tests only; the code already worked | messages: {dir} in arrives/leaves; article an/some through {a}/{A}; proper names in 'Which do you mean?' |
+| Transcript download untested | `tools/headless.js` gets opt-in `downloads()` (Blob, URL, a link's click); the old no-download fallback test stays | transcript: saves '<title> transcript.txt' with every line printed, then says how many |
+| Hook order undocumented | `docs/ADDONS.md`: hooks run in `build.json` order; the first `before` that returns true stops the command | hook order: before hooks run in build.json order, and the first that answers stops the command |
+| Design files mixed into the release pack | GDD, Scripts (rev 1-3), build brief and QA focus moved to `games/big-footprint/design/`; links updated. `release/v1/big-footprint.html` stays (the differential test reads it) | (none: the whole suite, including the differential, still passes) |

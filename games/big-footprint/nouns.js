@@ -1,5 +1,5 @@
 /* ---- GAME-LOCAL ADD-ON: nouns (Big Footprint's Script tables) --------------
-   The Script (games/big-footprint/release) writes scenery as "nouns" with line
+   The Script (games/big-footprint/design) writes scenery as "nouns" with line
    tables, and its whole penthouse runs on two phases: TOUR (the Don shows you
    around; touching things earns strikes) and ESCAPE (Big Tony's clock, guard
    checkpoints, turn feedback). Those are this game's rules, so they live here,
