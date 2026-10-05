@@ -2,6 +2,19 @@
 Build: `dist/big-footprint.html` (single file, runs offline). Branch `claude/penthouse-heist-game-o7k6w5`.
 Credits: **Retroment Gaming.** Week 01 was a process check (a dry run), so there are no chat contributors.
 
+## Week 01 rev4: Framework v2 showcase
+Same game, same size: 12 rooms, 3 puzzles, 3 NPCs, 5 items, 5 endings; W1 and W2 take the same commands and end with 7 and 4 turns to spare. Design: [`../design/GDD_week01_rev4.md`](../design/GDD_week01_rev4.md) (section 12 maps each feature to where you meet it).
+- **Two slots.** "Show the card to the Don" (in his office it answers Q2), "give the coin to the Don", "give the coin to the hippo", "put the coin in the hippo's mouth". Showing a secret to Nando is refused, free, and the checkpoint stays open. Something lying here is picked up first.
+- **Which do you mean?** The double staircase is two things: "push the stairs", "the right one", "push the other one". "open gate" on the roof asks which gate (it replaces the game's own nudge).
+- **Names.** Don Chava, Nando and Big Tony are proper names and "him". The gates and the aviary change their names once opened (OPEN GIRAFFE GATE, EMPTY AVIARY).
+- **Topics.** Ask or tell the Don about the tour's clues (piano, Mama, Sunday dinner, the hippo, the stairs, the plaque, the animals...), plurals included; ask Nando about the boss, the animals, Tony or his flashlight. Everything else gets a line of its own.
+- **Loose animals.** The giraffe, the jaguar and Reina roam two rooms each once released; you see them come and go, and they refuse take, eat, ride and pet (talking to one is free).
+- **Holders.** The ledger waits in the piano's hidden tray and the manifest in the hippo's mouth; the puzzles open them.
+- **Random lines** for waiting in the escape and for the animals. **Help** names give/show, ask, oops, brief and transcript.
+- **The Don** has lines for his two quiet moves on the landing.
+- **Fixes found on the way:** a dropped card can be picked up again (it used to say "You already have that."); a coin dropped in the atrium still pays Pepita; "x tray" and "close mouth" read like holders.
+- **Tests:** the differential test against the v1 build is replaced by scripted playthroughs of every ending with their clocks, a seeded random-command run (no exceptions, no validator problems, turns never negative, an ending always reachable), and one test per showcase feature. `release/v1/` stays as history. One QA assertion changed on purpose: "Things examined" counts its total from the data, since four nouns became things (the total is now 103: three "away" lines for the loose animals are new).
+
 ## Final wording sweep
 Every noun in every room, tried with examine, search, take, touch, open, push, smell, listen and talk, at every tour stop and through the escape (about 2,700 commands), then read line by line for sense in that place and moment.
 - **Looking through a doorway:** a room you haven't been to shows its first sentence (no more "still" or "again" before you've seen it); a room you know shows its revisit line; in the escape, the room's escape text. Direction sentences are dropped, since you're not standing in that room. The elevator from outside is "doors open, mirrors gleaming", not your reflection.

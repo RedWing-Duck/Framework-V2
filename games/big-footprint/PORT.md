@@ -12,7 +12,8 @@ The original game ran on the v1 engine with four add-ons (`restart`, `verbs`, `n
 | `verbs.js`: `bare`, `oneAtATime`, `ways`, `drop X in Y`, `only`, `line`, the reply-ladder order | `./verbs.js`, a game-local add-on (hooks: `input`, `before`, `afterTurn`) |
 | `nouns.js`: named states (`keys`) | core `conds` |
 | `nouns.js`: `rotate`, `ladder` effects | core TEXT `{ rotate }`, `{ ladder }` |
-| `nouns.js`: scenery nouns, categories, tour strikes, checkpoints, tails, bands, feedback, topics, close looks, the run report | `./nouns.js`, a game-local add-on (hooks: `before`, `text`, `afterTurn`; effect `finish` in place of a patched `end`) |
+| `nouns.js`: scenery nouns, categories, tour strikes, checkpoints, tails, bands, feedback, close looks, the run report | `./nouns.js`, a game-local add-on (hooks: `before`, `text`, `afterTurn`; effect `finish` in place of a patched `end`) |
+| `nouns.js`: topics ("ask the Don about ...") | core `npcs.X.topics` (rev 4) |
 | `add: { turns: -1 }` (17 places) | `free: true` |
 | `Take:`, `Say:`, `Give:` (capitalized to dodge the v1 validator) | lowercase |
 | G.keys | G.conds |
@@ -26,11 +27,14 @@ release pack (walkthrough, bug list, changelog, QA reports, and the original v1 
 ## How "the same game" is checked
 
 1. **The original test suite** (`tests/big-footprint.js`): all 43 tests from QA rounds 1-4. Nine of them were already failing in the original repository, because the Script changed after they were written. The original build fails them with the same output as this one, so they were updated to the shipped Script and marked "stale in the original suite".
-2. **A differential test** against the original build (`release/v1/big-footprint.html`): six scripted playthroughs and 2,720 seeded random commands built from the game's own words. After every command the output and the state (room, counters, flags, game over) must match. A one-off run of the same check covered about 120,000 commands with no unexplained difference.
+2. **Scripted playthroughs** of the tour, both wins and each loss, with the clocks the GDD promises (W1 7 turns to spare, W2 4), and **a seeded random-command run** built from the game's own words: no exceptions, no validator problems, turns never below zero, and from wherever a run stops, an ending is always reachable.
+3. **One test per v2 feature** the game shows off (rev 4, below).
+
+Until rev 4 a differential test compared every command's output and state against the original build (`release/v1/big-footprint.html`, kept as history): 2,720 seeded random commands in the suite, about 120,000 in a one-off run, with no unexplained difference. Rev 4 changes the game on purpose, so the playthroughs replaced it.
 
 ## Where v2 plays differently, on purpose
 
-These come from the v2 core, apply to every game, and are excluded by name in the differential test:
+These come from the v2 core and apply to every game (the differential test excluded them by name):
 
 | | v1 | v2 |
 |---|---|---|
@@ -55,3 +59,24 @@ The port was the framework's first large test, and it found general problems. Ea
 - `look under X` reaches an add-on's `search` command.
 - A holder can't share its id with a room, and holder chains only follow holders (the item `aviary` sits in the room `aviary`).
 - The headless test runner keeps the whole transcript; the screen keeps the last 500 paragraphs.
+
+## Rev 4: the v2 showcase
+
+The game now uses every word-layer and core feature where a player meets it naturally ([`design/GDD_week01_rev4.md`](design/GDD_week01_rev4.md), section 12), at the same size and with the same critical paths. The engine and the shared add-ons are untouched.
+
+Removed, because the core does the job now:
+- `G.topics` and the topic code in `./nouns.js` (word lists, longest match, plurals, the cold rotation, the "other" line): `npcs.don.topics` and `npcs.nando.topics`, with `"*"`. `./nouns.js` only routes a spoken topic ("say the piano") to `ask`, and lets ask/tell through a checkpoint.
+- The checkpoint's `ask` reply in `G.on` (Nando's `"*"` topic answers instead).
+- The terrace's "open gate" nudge (`T.nudge.gate`): two gates are two things, so the core asks "Which do you mean?".
+- `messages: { arrives: "", leaves: "" }`: every move of the Don and Nando has its own line, so the core's lines are free for the loose animals.
+- The generic use lines for the card, coin and secrets in `G.on.use`, and the Don's give/show lines read from typed words: they are `on.use` replies on the things and the Don, read by slot (`what:`, `with:`).
+- Four nouns became things: `R2.leftstairs` and `R2.rightstairs` (the two staircases, so "Which do you mean?" and "the other one" work), `R4.tray` and `R8.mouth` (holders). The pair item `staircase` is now `staircases` (the id is a name, and "staircase" has to mean either one).
+
+Changed in `./nouns.js` so core things can answer:
+- names come from `nm()`, so a name can follow the state;
+- when two of the core's things fit the words equally, the core asks which;
+- a thing (or its kind) with its own reply for the verb gets the core's turn;
+- a tail line is printed only if its key still passes at the end of the turn (a loose animal may have left).
+
+Kept: strikes, checkpoints, the run report, bands, feedback, close looks, categories and `./verbs.js` (bare words, one at a time, `ways`, "drop X in Y", `only`, `line`, and the reply order).
+

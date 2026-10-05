@@ -410,7 +410,7 @@ test("Polish C: W2 with and without the run; things examined counts first looks"
   assert.match(talker.last(), /You never ran once/);
   const r = report(talker), [x, y] = r["Things examined"].split(" of ").map(Number);
   assert.equal(x, 2, "manifest and hippo, each counted once");
-  assert.equal(y, Object.keys(talker.get("G.nouns")).length + 7 - 6, "BG-01: the six escape-only nouns are bonus finds");
+  assert.equal(y, Object.keys(talker.get("G.nouns")).length + talker.get("G.report.counted.length") - 6, "BG-01: the six escape-only nouns are bonus finds");   // rev4: counted from data (four nouns became items)
   assert.equal(r["Bonus finds"], "0 of 6");
   assert.match(talker.last(), /Every secret\. Not every corner\./);
 });
@@ -726,46 +726,205 @@ test("Wording sweep: every noun, every common verb, tour and escape; doorways ne
   t.diagnostic(`${n} commands`);
 });
 
-// ---- Differential: the v2 rebuild against the original v1 build (games/big-footprint/release/v1), same commands.
-// Every command's output and the state after it (room, counters, flags, game over) must match, except for the
-// differences the v2 core makes on purpose, each listed in games/big-footprint/PORT.md.
-const V1 = fs.readFileSync(path.join(__dirname, "../games/big-footprint/release/v1/big-footprint.html"), "utf8");
-const KNOWN = d => d.a[1] === "You're not carrying that." && ["You're not carrying that.", "Nothing like that around here.", "Nothing happens. The penthouse is unimpressed."].includes(d.b[1])   // B, D: use/drop of what you don't carry
-  || d.a[1] === "You're not carrying that." && /^Dropped: /.test(d.b[1])   // E
-  || d.a[1] === "Nothing like that around here." && d.b[1] !== d.a[1] && !/^(CAUGHT|COVER|BIG)/.test(d.b[1])   // E: a name inside a longer phrase
-  || d.a.slice(1, 2).join() === d.b.slice(1, 2).join() && ["Nobody by that name around.", "Nothing like that around here.", "You're not carrying that."].includes(d.b[1])   // A: free in v2
-  || /"turns":-/.test(d.sa) || d.a.join() === d.b.join() && d.sa.replace(/"turns":-?\d+/, "") === d.sb.replace(/"turns":-?\d+/, "")   // F: v1's refund of a free command
-  || /\b(it|them|him|her)\b/.test(d.cmd);   // C: pronouns
-function differ(cmds) {
-  const start = h => { const g = load(h).boot(); g.click("bs"); return g; }, a = start(V1), b = start(BF);
-  const st = g => JSON.stringify([g.get("S.room"), g.get("S.count"), g.get("S.flags"), g.get("S.over")]), clean = l => l.replace(/​/g, "");
-  for (const cmd of cmds) {
-    const na = a.lines().length, nb = b.lines().length; a.type(cmd); b.type(cmd);
-    const d = { cmd, a: a.lines().slice(na).map(clean), b: b.lines().slice(nb).map(clean), sa: st(a), sb: st(b) };
-    if (d.a.join("\n") !== d.b.join("\n") || d.sa !== d.sb) return KNOWN(d) ? null : d;   // past a known difference the runs diverge
-    if (a.get("S.over")) return null;
-  }
-  return null;
-}
-test("differential: the v2 rebuild plays exactly like the original v1 build", t => {
-  for (const cmds of [[...TOUR, ...ESCAPE, "s", "d"], [...TOUR, ...ESCAPE, "e", "play cielito lindo", "w", "s", "d"], WALKTHROUGH.map(s => s[0]),
-    [...TOUR, ...Array(18).fill("dance")], ["n", "w", "take rifle", "touch rifle", "pull rifle"], [...TOUR, "s", "s", "s", "say jaguar"]])
-    assert.equal(differ(cmds), null, cmds.join(", "));
-  // seeded random commands from the game's own words, from the start, from the escape, and from partway through the tour
-  const g = bigfoot(), D = g.get("{ n: G.nouns, i: G.items, p: G.npcs, r: G.rooms, a: G.aliases, c: G.categories, y: G.anywhere }");
-  const objs = [...Object.values(D.n).flatMap(n => n.words), ...[...Object.values(D.i), ...Object.values(D.p)].flatMap(o => [o.name.toLowerCase(), ...(o.aliases || [])]),
-    ...Object.values(D.r).flatMap(r => r.words || []), "coin on hippo", "both", "dog-eared page", "cielito lindo", "giraffe", "jaguar", "peacocks", "13th step"];
-  const verbs = [...new Set(["look", "x", "take", "drop", "use", "talk to", "ask don about", "push", "open", "search", "smell", "say", "play", "run", "hint", "status",
-    ...Object.keys(D.a), ...Object.values(D.c).flatMap(Object.keys), ...Object.keys(D.y)].map(v => v.toLowerCase()).filter(v => !["*", "handle", "save", "undo", "load", "restore", "quit"].includes(v)))];
+// ---- Scripted playthroughs (rev4: these replace the differential test against the v1 build; release/v1 stays as history)
+// Each ending, with the clock the GDD's critical paths promise (section 9: W1 with 7 turns to spare, W2 with 4).
+const ending = g => g.get("S.nouns.notes.ENDING");
+const seeded = n => { const g = load(BF).boot(); g.run(`G.seed = ${n}`); g.click("bs"); return g; };   // the same rolls every time
+const W1 = [...TOUR, ...ESCAPE, "s"], W2 = [...TOUR, ...ESCAPE, "e", "play cielito lindo", "w", "s"];
+test("playthrough: TOUR ends on the roof with the escape begun, no strikes, the clock at 18", () => {
+  const g = play(...TOUR);
+  assert.equal(g.get("S.room"), "terrace");
+  assert.equal(g.get("S.flags.escape"), true);
+  assert.equal(g.get("S.count.clock"), 18);
+  assert.equal(g.get("S.count.strikes || 0"), 0);
+  assert.equal(g.get("S.loc.don"), null, "the Don has fled");
+});
+test("playthrough: ESCAPE, W1: two secrets, 7 turns to spare, CLEAN GETAWAY", () => {
+  const g = play(...W1);
+  assert.equal(g.get("S.count.clock"), 7);
+  g.type("d");
+  assert.equal(ending(g), "W1"); assert.match(g.last(), /^CLEAN GETAWAY\n/);
+  assert.equal(g.get("S.count.secrets"), 2);
+});
+test("playthrough: W2: three secrets, 4 turns to spare, CLEAN SWEEP", () => {
+  const g = play(...W2);
+  assert.equal(g.get("S.count.clock"), 4);
+  g.type("d");
+  assert.equal(ending(g), "W2"); assert.match(g.last(), /^CLEAN SWEEP\n/);
+});
+test("playthrough: each loss: L1 COVER BLOWN, L2 CAUGHT, L3 BIG FOOTPRINT", () => {
+  const l1 = play("n", "w", "take rifle", "kick rifle", "pull rifle");
+  assert.equal(ending(l1), "L1"); assert.match(l1.last(), /^COVER BLOWN\n/);
+  const l2 = play(...TOUR, "s", "s", "s", "say jaguar");
+  assert.equal(ending(l2), "L2"); assert.match(l2.last(), /^CAUGHT\n/);
+  const l3 = play(...TOUR, ...Array(18).fill("wait"));
+  assert.equal(ending(l3), "L3"); assert.match(l3.last(), /^BIG FOOTPRINT\n/);
+  assert.equal(l3.get("S.count.clock"), 0);
+});
+
+// ---- Seeded random commands from the game's own words: no exceptions, no validator problems, turns never negative,
+// and from wherever a run stops, following the Don (then waiting out the clock) always reaches an ending.
+test("random commands: consistent state, and an ending is always reachable", t => {
+  const g0 = bigfoot(), D = g0.get("{ n: G.nouns, i: G.items, p: G.npcs, r: G.rooms, a: G.aliases, c: G.categories, y: G.anywhere, legs: G.events }");
+  const name = o => g0.get(`(${JSON.stringify(o)})`) && (typeof o.name === "string" ? o.name : o.name.at(-1));
+  const objs = [...Object.values(D.n).flatMap(n => n.words), ...[...Object.values(D.i), ...Object.values(D.p)].flatMap(o => [name(o).toLowerCase(), ...(o.aliases || [])]),
+    ...Object.values(D.r).flatMap(r => r.words || []), "coin on hippo", "coin to don", "card to don", "photos to nando", "both", "dog-eared page", "cielito lindo", "giraffe", "jaguar", "peacocks", "13th step", "the right one", "the other one"];
+  const verbs = [...new Set(["look", "x", "take", "drop", "use", "give", "show", "put", "talk to", "ask don about", "ask nando about", "push", "open", "search", "smell", "say", "play", "run", "hint", "status", "brief", "oops",
+    ...Object.keys(D.a), ...Object.values(D.c).flatMap(Object.keys), ...Object.keys(D.y)].map(v => v.toLowerCase()).filter(v => !["*", "handle", "save", "undo", "load", "restore", "quit", "transcript", "menu"].includes(v)))];
   const dirs = ["n", "s", "e", "w", "u", "d", "back", "go upstairs"];
   let seed = 7; const rnd = n => (seed = (seed * 1103515245 + 12345) % 2147483648) % n;
   const cmd = () => { const k = rnd(10); return k < 3 ? dirs[rnd(dirs.length)] : k < 4 ? verbs[rnd(verbs.length)] : verbs[rnd(verbs.length)] + " " + objs[rnd(objs.length)]; };
+  // the rescue: answer a pending question, else walk toward the Don's next stop; in the escape, wait
+  const LEGS = [["foyer"], ["trophy"], ["foyer"], ["salon"], ["foyer"], ["dining"], ["foyer"], ["landing"], ["office"], ["landing"], ["gallery"], ["atrium"], ["aviary"], ["terrace"]].map(l => l[0]);
+  const exits = Object.fromEntries(Object.entries(D.r).map(([r, R]) => [r, Object.entries(R.exits || {}).map(([d, x]) => [d, typeof x === "string" ? x : x.to])]));
+  const step = (from, to) => { const seen = { [from]: null }, q = [from];
+    while (q.length) { const r = q.shift(); if (r === to) break; for (const [d, x] of exits[r]) if (!(x in seen)) { seen[x] = [r, d]; q.push(x); } }
+    let r = to, d = null; while (seen[r]) { [r, d] = [seen[r][0], seen[r][1]]; } return d; };
+  const rescue = g => {
+    for (let i = 0; i < 200 && !g.get("!!S.over"); i++) {
+      if (g.get("!!S.flags.escape")) { g.type("wait"); continue; }
+      const room = g.get("S.room");
+      if (room === "dining" && !g.get("!!S.flags.q1")) { g.type("say both"); continue; }
+      if (room === "office" && !g.get("!!S.flags.q2")) { g.type("say dog-eared page"); continue; }
+      g.type(step(room, LEGS[Math.min(g.get("S.count.leg || 0"), LEGS.length - 1)]) || "look");
+    }
+    return g.get("!!S.over");
+  };
   let n = 0;
-  for (let r = 0; r < 60; r++) {
-    const cmds = [...(r % 3 === 0 ? [] : r % 3 === 1 ? TOUR : TOUR.slice(0, rnd(TOUR.length))), ...Array.from({ length: 40 }, cmd)];
-    n += cmds.length;
-    const d = differ(cmds);
-    assert.equal(d, null, d && `run ${r}: "${d.cmd}"\n  v1: ${d.a.join(" / ")}\n  v2: ${d.b.join(" / ")}\n  ${d.sa}\n  ${d.sb}`);
+  for (let r = 0; r < 45; r++) {
+    const g = seeded(r + 1);
+    g.type(...(r % 3 === 0 ? [] : r % 3 === 1 ? TOUR : TOUR.slice(0, rnd(TOUR.length))));
+    for (let i = 0; i < 40 && !g.get("!!S.over"); i++) {
+      const c = cmd(); n++;
+      assert.doesNotThrow(() => g.type(c), `run ${r}: ${c}`);
+      assert.ok(g.get("S.count.turns") >= 0, `run ${r}: "${c}" took the turns below zero`);
+    }
+    assert.deepEqual(g.problems(), [], `run ${r}`);
+    assert.ok(rescue(g), `run ${r}: no ending reached from ${g.get("S.room")}`);
   }
-  t.diagnostic(`${n} random commands compared`);
+  t.diagnostic(`${n} random commands`);
+});
+
+// ---- Rev 4: one test per Framework v2 feature the game shows off (games/big-footprint/design/GDD_week01_rev4.md)
+test("feature two slots: give/show/put with what: and with:, {the:what}/{The:with}, carry", () => {
+  const g = play("n", "show card to don");
+  assert.match(g.last(), /^He glances at it and hands it back/, "the Don's reply, by what:");
+  g.type("drop card", "show the card to the don");
+  assert.equal(g.lines().at(-2), "(first taking the BRIEFING CARD)", "carry: picked up first");
+  const q = play(...TOUR.slice(0, 10), "show card to don");
+  assert.equal(q.get("S.flags.q2"), true, "the card answers Q2");
+  assert.match(q.last(), /^Don Chava takes the BRIEFING CARD, finds the name/, "{The:with} {the:what}, a proper name with no article");
+  assert.equal(q.get("S.loc.coin"), "player");
+  for (const c of ["give gold coin to hippo", "put coin in hippo's mouth", "feed pepita the coin"]) {
+    const p = play(...TOUR, "open giraffe gate", "s", "s", c);
+    assert.equal(p.get("S.flags.p2"), true, c);
+  }
+  const n = play(...TOUR, "open giraffe gate", "s", "s", "use gold coin on hippo", "s"), clock = n.get("S.count.clock");
+  n.type("show the manifest to nando");
+  assert.match(n.last(), /^The Don's own guard, and the SHIPPING MANIFEST\? Not in this lifetime/);
+  assert.equal(n.get("S.flags.checkpoint"), true, "the checkpoint stays open"); assert.equal(n.get("S.count.clock"), clock, "free");
+  assert.equal(n.get("S.loc.manifest"), "player");
+});
+test("feature Which do you mean?: the two staircases, 'the right one', 'the other one'; the two gates", () => {
+  const g = play(...W1.slice(0, -2));   // the foyer, checkpoint cleared, the step not pressed yet
+  assert.equal(g.get("S.room"), "foyer");
+  g.type("push the stairs");
+  assert.equal(g.last(), "Which do you mean: the left staircase or the right staircase?");
+  g.type("the right one");
+  assert.ok(g.lines().includes("Thirteen steps. You need one in particular."));
+  g.type("push the other one");
+  assert.ok(g.lines().includes("The family side. Twelve honest steps. Nothing to hide there, apparently."));
+  g.type("push the thirteenth step");
+  assert.equal(g.get("S.flags.p3"), true, "the step still works");
+  assert.match(play("n", "look at the staircase").last(), /twelve steps up/, "both at once, as before (BR-05)");
+  const roof = play(...TOUR), t0 = roof.get("S.count.turns");
+  roof.type("open gate");
+  assert.equal(roof.last(), "Which do you mean: the GIRAFFE GATE or the JAGUAR GATE?");
+  assert.equal(roof.get("S.count.turns"), t0, "free (CP-02)");
+  roof.type("jaguar");
+  assert.equal(roof.get("S.count.jaguar"), 1);
+});
+test("feature proper names and pronouns: Don Chava, Nando and Big Tony are him", () => {
+  const P = bigfoot().get("Object.fromEntries(['don', 'nando', 'tony'].map(id => [id, [G.npcs[id].proper, G.npcs[id].pronoun]]))");
+  assert.deepEqual(P, { don: [true, "him"], nando: [true, "him"], tony: [true, "him"] });
+  const g = play("n", "x don", "give him the card");
+  assert.match(g.last(), /^He glances at it and hands it back/, "him = the Don");
+  g.type("ask him about the hippos");
+  assert.match(g.last(), /A lady/);
+  assert.match(play("n", "touch tony").last(), /^Whatever Big Tony is, he isn't here/, "[tony] in the text");
+  const r = play(...TOUR, "open giraffe gate", "s", "open aviary", "s", "x reina", "x it");
+  assert.equal(r.lines().filter(l => /^Reina /.test(l)).length >= 1, true, "Reina, no article");
+});
+test("feature topics: ask and tell the Don about the tour's clues; Nando's few; each has a '*'", () => {
+  for (const [q, a] of [["the piano", /Nobody plays her but me/], ["mama", /She deserves a table/], ["sunday dinner", /Business first/], ["pepita", /She has a price/],
+    ["the staircases", /Twelve for family/], ["the plaque", /Brass\. My name/], ["the animals", /a family that bites/], ["the weather", /Ask me something interesting/]])
+    assert.match(play("n", "ask don about " + q).last(), a, q);
+  assert.match(play("n", "tell the don about the giraffe").last(), /Mariposa/, "tell works like ask");
+  const t = play(...TOUR.slice(0, 4), "take piano", "ask don about the piano");
+  assert.equal(t.last(), "\"Don't look at the piano like that.\"", "one strike: the cold line");
+  const n = play(...TOUR, "s", "s", "s"), clock = n.get("S.count.clock");
+  for (const [q, a] of [["the don", /The boss is busy/], ["tony", /Not my department/], ["the giraffe", /Say it\./], ["his flashlight", /found one/], ["the moon", /I asked you a question/]]) {
+    n.type("ask nando about " + q); assert.match(n.last(), a, q); }
+  assert.equal(n.get("S.count.clock"), clock, "free"); assert.equal(n.get("S.flags.checkpoint"), true, "and the checkpoint stays open");
+});
+test("feature names follow state: the gates and the aviary", () => {
+  const g = play(...TOUR, "open giraffe gate", "look");
+  assert.match(g.lines().at(-2) + g.last(), /The OPEN GIRAFFE GATE creaks on its hinges/);
+  g.type("open gate");
+  assert.equal(g.last(), "Which do you mean: the OPEN GIRAFFE GATE or the JAGUAR GATE?");
+  g.type("giraffe", "s", "open aviary", "look");
+  assert.ok(g.lines().some(l => l.startsWith("The EMPTY AVIARY again")));
+});
+test("feature events every n: loose animals roam, the core says when they come and go, and it costs nothing", () => {
+  const g = play(...TOUR, "open giraffe gate", "open jaguar gate", "s", "open aviary", "s");
+  assert.equal(g.get("[S.loc.giraffe, S.loc.jaguar, S.loc.reina].every(Boolean)"), true, "released animals are in the house");
+  const before = g.get("S.count.clock"); let moves = 0;
+  for (let i = 0; i < 6; i++) { const k = g.lines().length; g.type("wait"); moves += g.lines().slice(k).filter(l => / (comes in from|slips away to) the (north|south|east|west)\.$/.test(l)).length; }
+  assert.ok(moves >= 1, "Reina came or went in the atrium");
+  assert.equal(g.get("S.count.clock"), before - 6, "only the waits cost turns");
+  const e = g.get("G.events").filter(x => x.every && x.move);
+  assert.equal(e.length, 3); assert.ok(e.every(x => !("say" in x)), "no say: the core narrates");
+});
+test("feature holders: the hippo's mouth and the piano's tray open with their puzzles; secrets go straight to the jacket", () => {
+  const g = play(...TOUR, "open giraffe gate", "s", "s");
+  assert.deepEqual(g.get("[S.loc.manifest, !!S.shut.mouth]"), ["mouth", true]);
+  g.type("take manifest"); assert.equal(g.last(), "Nothing like that around here.", "inside a closed holder");
+  g.type("put coin in hippo's mouth");
+  assert.deepEqual(g.get("[S.loc.manifest, !!S.shut.mouth]"), ["player", false]);
+  g.type("x mouth"); assert.match(g.last(), /^Wide open/);
+  g.type("close mouth"); assert.match(g.last(), /keeps her mouth open now/);
+  g.type("drop manifest"); assert.equal(g.get("S.loc.manifest"), "player", "secrets can't be dropped");
+  const p = play(...W2.slice(0, -2));
+  assert.deepEqual(p.get("[S.loc.tray, !!S.shut.tray, S.loc.ledger]"), ["salon", false, "player"]);
+  p.type("x tray"); assert.match(p.last(), /^Velvet-lined/);
+});
+test("feature random: escape waits vary, and G.seed repeats them", () => {
+  const run = s => { const g = seeded(s); g.type(...TOUR, ...Array(5).fill("wait")); return g.lines().filter(l => l.startsWith("You ") && /wait|breath|count/.test(l)); };
+  const a = run(3);
+  assert.deepEqual(run(3), a, "same seed, same lines");
+  assert.ok(a.every(l => ["You wait. The thudding doesn't.", "You hold your breath. The house doesn't hold its.", "You count to three. Big Tony counts faster."].includes(l)));
+  assert.ok(new Set([...a, ...run(4), ...run(5)]).size > 1, "they vary");
+});
+test("feature help names brief, oops and transcript; brief makes escape revisits short", () => {
+  const g = play("help");
+  for (const w of ["give or show", "ask [", "oops", "brief", "transcript"]) assert.ok(g.last().replace(/​/g, "").includes(w), w);
+  const b = play(...TOUR, "brief", "s", "n");
+  assert.equal(b.lines().at(b.lines().lastIndexOf("> n") + 1), "Zoo Terrace");
+  assert.notEqual(b.lines().at(b.lines().lastIndexOf("> n") + 2)?.startsWith("Wind and alarms"), true, "no description on a revisit");
+  const o = play("n", "x the danc", "oops don");
+  assert.match(o.last(), /Salvatore Bellandi-Reyes/, "oops fixes the last line");
+});
+test("feature kinds: every loose animal refuses take, eat, ride and pet, and hears you out", () => {
+  const g = play(...TOUR, "s", "open aviary", "s"), k = g.get("G.kinds.animal");
+  assert.equal(g.get("S.loc.reina"), "atrium");
+  while (g.get("S.loc.reina !== S.room || S.count.turns % 5 !== 0")) g.type("wait");   // she just came in: four turns before she roams on
+  const said = c => { const n = g.lines().length; g.type(c); return g.lines().slice(n + 1); };
+  assert.ok(said("take reina").includes(k.take));
+  assert.ok(said("eat reina").includes(k.eat));
+  assert.ok(said("ride reina").some(l => ["You picture riding Reina out of here. Reina pictures something else.", "Reina gives you a look. You'd make it about one step."].includes(l)));
+  assert.ok(said("pet reina").includes("Reina gives you a look that ends the idea."), "pet = touch");
+  const t = g.get("S.count.turns");
+  assert.ok(said("talk to reina").includes("You make your case. Reina hears you out, then goes back to being somebody else's problem."));
+  assert.equal(g.get("S.count.turns"), t, "talking is free");
+  assert.notEqual(g.get("S.loc.reina"), "player");
 });

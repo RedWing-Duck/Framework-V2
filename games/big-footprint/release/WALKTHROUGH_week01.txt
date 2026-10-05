@@ -48,3 +48,20 @@ W2 BRANCH (Clean Sweep), after step 26:
 Final result on the release build: both routes win; no step differs
 from the Critical Path QA run except the reworded text from the fixes
 (the "(Received: ...)" lines are hidden by ED-11).
+
+WEEK01_REV4 (Framework v2 showcase)
+The route above is unchanged: same commands, same clocks (W1 ends
+with 7 turns to spare, W2 with 4). Automated in
+tests/big-footprint.js ("playthrough: ..." tests, one per ending).
+Optional alternatives, none needed and none slower:
+11. show the card to the don  instead of "say dog-eared page"
+20. give the coin to the hippo / put the coin in the hippo's mouth
+    instead of "use gold coin on hippo"
+Any tour stop: ask the don about the piano (or mama, sunday dinner,
+    the hippo, the stairs, the plaque, the animals...)   free
+21./24. at a checkpoint: ask nando about tony              free
+After 25 (foyer): push the stairs -> "Which do you mean?" ->
+    the right one -> push the other one   (each push costs a turn;
+    the walkthrough doesn't use them)
+Loose animals roam once released; they never block a step or cost
+a turn, but their comings and goings may print an extra line.

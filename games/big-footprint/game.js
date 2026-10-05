@@ -7,7 +7,7 @@
 // ---- All player-facing text, keyed by Script id. Logic lives in G below.
 const T = {
   intro: "A Retroment Gaming production.\n\nYour client wants three secrets from Don Chava's penthouse. Your cover: Walter Pryce, bookstore investor, carrying a plaque proposal and a smile. The Don will give you the grand tour himself. Listen to everything. Touch nothing. Get out with at least two.\n\nType HELP for commands.",
-  help: "Move: north, south, east, west, up, down (or n, s, e, w, u, d).\nLook around: look. Look at something: examine [\u200bthing] (or x).\nTake, drop, use [\u200bitem] on [\u200bthing], open, push, play, read.\nTalk: talk to [\u200bperson]. Answer: say [\u200bwords].\nIn a tight spot: run (works once).\nOther: inventory (i), status, hint, quit.\nFree anytime: look, examine, inventory, status, help, hint. Once the chaos starts, everything else costs time.",   // \u200b: shown as [thing], not read as an [id] tag
+  help: "Move: north, south, east, west, up, down (or n, s, e, w, u, d).\nLook around: look. Look at something: examine [\u200bthing] (or x).\nTake, drop, use [\u200bitem] on [\u200bthing], give or show [\u200bitem] to [\u200bperson], open, push, play, read.\nTalk: talk to [\u200bperson], ask [\u200bperson] about [\u200bthing]. Answer: say [\u200bwords].\nIn a tight spot: run (works once).\nOther: inventory (i), status, hint, quit. Typo? oops [\u200bword] fixes the last line.\nShort rooms you've seen: brief (verbose for full). Save the story so far: transcript.\nFree anytime: look, examine, inventory, status, help, hint, brief, transcript. Once the chaos starts, everything else costs time.",   // [REV4] two slots, topics, oops, brief, transcript   // \u200b: shown as [thing], not read as an [id] tag
   huh: ["You try that. The universe gives you a look usually reserved for bad checks.",
     "That doesn't make sense, even for a guy pitching a bookstore to a kingpin.",
     "Nice try, detective. Say it plain."],
@@ -16,10 +16,10 @@ const T = {
     R1: { first: "The elevator doors open on a box of mirrored gold, and you see six versions of Walter Pryce, bookstore investor, all of them sweating a little. Don Chava's man hits the button and steps back out. The only way is north, into the foyer, where a voice is already saying your name like it's a deal.",
       revisit: "Mirrored gold, and your reflection trying hard to look like it belongs here. The foyer is north.",
       escape: "The gold box hums, waiting. One button, one way down. Behind you, the double staircase and every problem you left on it." },
-    R2: { first: "White marble floors, gold banisters, and two [staircase] that curve up to the same landing like arms around a hug you didn't ask for. The left staircase is wide and carpeted; the right is narrower, polished to a shine. The trophy room glitters west, a piano waits in the salon east, a long table stretches north in the dining hall, the stairs lead up, and the elevator is south.",
-      revisit: "The twin [staircase], left for family and right for business, still curling up toward the landing. West to the trophies, east to the piano, north to dinner, up the stairs, or south to the elevator.",
-      escape: [{ if: { flag: "p3" }, text: "The foyer lights flicker. Somewhere above, glass breaks. The two [staircase] rise into the dark; a panel in the right one stands open at the thirteenth step, breathing cold air. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead." },
-        "The foyer lights flicker. Somewhere above, glass breaks. The two [staircase] rise into the dark; the right one gleams, and its thirteenth step sits a hair higher than the rest, like it's waiting to be pressed. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead."] },
+    R2: { first: "White marble floors, gold banisters, and two [staircases] that curve up to the same landing like arms around a hug you didn't ask for. The left staircase is wide and carpeted; the right is narrower, polished to a shine. The trophy room glitters west, a piano waits in the salon east, a long table stretches north in the dining hall, the stairs lead up, and the elevator is south.",
+      revisit: "The twin [staircases], left for family and right for business, still curling up toward the landing. West to the trophies, east to the piano, north to dinner, up the stairs, or south to the elevator.",
+      escape: [{ if: { flag: "p3" }, text: "The foyer lights flicker. Somewhere above, glass breaks. The two [staircases] rise into the dark; a panel in the right one stands open at the thirteenth step, breathing cold air. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead." },
+        "The foyer lights flicker. Somewhere above, glass breaks. The two [staircases] rise into the dark; the right one gleams, and its thirteenth step sits a hair higher than the rest, like it's waiting to be pressed. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead."] },
     R3: { first: "Glass cases line the walls, lit like jewelry counters. Inside: a [rifle] engraved with roses, a pistol studded with enough diamonds to buy a small town, and a framed newspaper headline someone has carefully cut the name out of. The foyer is back east.",
       revisit: "The glass cases, the [rifle], the diamonds, the headline with the missing name. East to the foyer.",
       escape: "The cases rattle each time something heavy hits a floor above. The [rifle] stares back at you, useless. The only way out is back toward the staircases." },
@@ -45,11 +45,11 @@ const T = {
       escape: "Papers everywhere, a chair knocked over, the humidor open and empty. Whatever mattered in here, the Don took it. The only way out is back to the balcony." },
     R10: { first: "A glass room full of peacocks that scream like car alarms with feelings. The [aviary] door has a keypad lock, glowing red. The atrium is south, and fresh night air blows in from the terrace north.",
       revisit: "The peacocks, the screaming, the red keypad on the [aviary] door. South to the atrium, north to the terrace.",
-      escape: [{ if: { min: { peacocks: 1 } }, text: "The [aviary] door hangs open, the keypad smashed. Feathers everywhere, and the peacocks are screaming their way through the palace. One doorway breathes fresh night air; the other smells of chlorine." },
+      escape: [{ if: { min: { peacocks: 1 } }, text: "The door of the [aviary] hangs open, the keypad smashed. Feathers everywhere, and the peacocks are screaming their way through the palace. One doorway breathes fresh night air; the other smells of chlorine." },
         "The [aviary] keypad is smashed, its door rattling. The peacocks are screaming louder than ever. One doorway breathes fresh night air; the other smells of chlorine."] },
     R11: { first: "A rooftop garden with a view of the whole city, glittering in the rain. Behind the [giraffegate] a giraffe chews thoughtfully; beside it, a black jaguar paces behind the [jaguargate]. The Don spreads his arms. \"My family.\"\n\nThen the alarms start, every speaker in the palace at once. Lemurs pour out of the dark, a roar shakes the glass, and the Don goes pale. \"The accountant,\" he breathes. \"He opened the big one.\"\n\nHe's gone south with his guards in three seconds flat. You are alone on a roof, holding a plaque proposal, with something enormous waking up to the east.",   // [ROOM.R11.first]
       revisit: { opening: "Wind and alarms.",   // ED-02: built from parts by animal state
-        giraffe: ["The giraffe peers over the [giraffegate].", "The [giraffegate] hangs open, the yard empty."],
+        giraffe: ["The giraffe peers over the [giraffegate].", "The [giraffegate] creaks on its hinges, the yard empty."],
         jaguar: ["The jaguar paces behind the [jaguargate].", "The [jaguargate] swings in the wind."],
         closing: "The broken enclosure gapes past the gates. The screaming aviary leads back inside." } },
     R12: { escape: "Steel bars bent outward like someone opened a bag of chips. A brass sign reads \"BIG TONY — DO NOT FEED.\" Footprints the size of snow shovels lead back past you. The only way out is the terrace." }
@@ -58,7 +58,8 @@ const T = {
     card: { look: "Your cover, in your own handwriting. Name: Walter Pryce. Business: The Dog-Eared Page, a bookstore planned for the empty lot next door. Offer: a brass plaque reading \"The Bellandi-Reyes Reading Room.\" At the bottom: \"Smile. Don't touch anything.\"",
       take: "You already have it. It's the only thing keeping you from being a very short story.",
       use: "That won't help. The card is for reading, not for handing to anyone.",
-      q2: "\"Smile. Don't touch anything.\" You smiled. He liked the name. So far, so good." },   // Script rev 3 [I1] IF Q2
+      q2: "\"Smile. Don't touch anything.\" You smiled. He liked the name. So far, so good.",
+      answer: "{The:with} takes {the:what}, finds the name in your own handwriting, and laughs." },   // Script rev 3 [I1] IF Q2; [REV4] answer: the card answers Q2
     coin: { look: "A heavy gold coin with an eagle on one side and a winged figure on the other. The Don called it your \"first dividend.\"",
       take: "You pocket the coin. It's warm from his hand, which somehow makes it worse.",
       use: "You hold out the coin. Nothing here wants it. You put it back before you lose it.",
@@ -71,6 +72,8 @@ const T = {
       take: "You slide the photos into your jacket." },
     have: "You already have that.",   // BR-02
     evidence: "Tempting, but this is evidence, not a tool. Keep it safe.",
+    showNando: "The Don's own guard, and {the:what}? Not in this lifetime. The flashlight stays on your face. \"Well?\"",   // [REV4] free: the checkpoint stays open
+    showDon: "He looks at your hands, then at you. \"Keep it, Walter. I have one of everything.\"",   // [REV4]
     // scenery: the Script has no examine lines, so these reuse its room sentences
     rifle: "A GOLD RIFLE engraved with roses, in a glass case lit like a jewelry counter.",
     piano: [{ if: { flag: "escape" }, text: "Its mirrored lid reflects flashing alarm lights. Mama's piano. Mama's song." },
@@ -94,6 +97,7 @@ const T = {
       R3: "\"My collection. Every piece has a story, and I tell none of them.\" He nods at the [rifle]. \"Admire. Don't touch. Back east, then the salon.\" He's already back through the door, into the foyer.",
       R4: "\"My mother's piano. Only one song is ever played on her: my mother's song. Anything else is disrespect.\" He watches your hands. \"Now, dinner. Back west, then north.\" He holds the door for you, west, back toward the foyer.",
       R5: "\"Mama Rosa sang 'Cielito Lindo' every Sunday at this table. Every Sunday. My nonna banged her spoon on the table to keep time.\" Then he leans in.",
+      R6: "He's waiting at the top, not even out of breath. \"East, Walter. Follow the cigar smoke.\"",   // [REV4]
       R9: "He drops into a leather chair. \"A reading room. With my name on it. You know what that does for a man's reputation?\" He smiles.",
       R7: "\"Me, by the finest painters money can scare.\" A guard hurries past. \"My boys know the rule: the animals come first. Anything gets loose, they drop everything and chase it. North, to my girl.\" He strolls north, toward the sound of running water.",
       R8: "\"Pepita.\" He flicks a gold coin into the [hippo]'s mouth, and the bronze jaw swings open, then snaps shut. \"She only opens up for gold. Like my accountants. North, the birds.\" He heads north, toward the screaming.",
@@ -126,6 +130,7 @@ const T = {
       3: "He glances at the right-hand staircase and smiles at some private joke. \"My business stairs. Nobody climbs them but me.\" Then he's walking north, toward the smell of dinner.",
       4: "He takes the left staircase, the family side, two steps at a time. \"Up. My office is east.\"",
       cold: "The Don doesn't slow down or look back. \"Keep up.\"" },
+    leg: { 9: "He's halfway across the balcony already. \"West. Don't look down, Walter. Nobody trusts a man who looks down.\"" },   // [REV4] the landing, after Q2
     social: {   // [D3] social verbs with the Don
       card: "He glances at it and hands it back. \"I know who you are, Walter.\" A pause just long enough for you to sweat. \"The bookstore man.\"",
       coin: "He folds your fingers back over it. \"A dividend is not a loan.\"",
@@ -153,7 +158,13 @@ const T = {
       LEMURS: "\"The lemurs?\" Nando snorts. \"The lemurs are always loose, friend.\"",   // BG-04 (QA text)
       TONY: "\"Everybody knows about Tony. That's why I'm standing here.\"",
       HIPPO: "Nando glances at the bronze hippo. \"She's not going anywhere. Neither are you.\"" },
-    after: "Nando is gone, shouting somewhere far away." },
+    after: "Nando is gone, shouting somewhere far away.",
+    topics: {   // [REV4] ask Nando: short, free, and he always comes back to his question (answer it with "say")
+      "don|boss|chava|salvatore": "\"The boss is busy. I'm not. Why are you up here?\"",
+      "animal|animals|giraffe|giraffes|jaguar|jaguars|peacock|peacocks|bird|birds|lemur|lemurs|zoo": "\"Something you want to tell me about the animals? Say it.\"",
+      "tony|big tony|bigfoot": "His eyes flick to the ceiling and back. \"Not my department. You are.\"",
+      "flashlight|light|radio": "\"It's for finding people. Look, it found one.\"",
+      "you|yourself|nando|job|family": "\"My life story costs extra, friend. Why are you here?\"" } },
   q1: { prompt: "\"So tell me, Walter. Sunday dinner: my mother's pozole or my nonna's Sunday gravy?\"",
     right: "He laughs and slaps the table. \"Both! Now you sound like family. Come, upstairs, we talk business. South, then up, then east.\" He's already at the foot of the stairs.",   // + leg cue
     redirect: "The Don smiles. \"Compliments later, Walter. Pozole or gravy?\"",   // NB-02 (QA text)
@@ -187,6 +198,17 @@ const T = {
     giraffe: "You lift the latch. The giraffe ducks out and ambles off toward the stairs, curious about everything. Perfect alibi: GIRAFFE.",
     jaguar: "You swing the gate open and flatten yourself against the wall. The jaguar pours past like smoke and disappears downstairs. Perfect alibi: JAGUAR.",
     already: "It's already open. That animal's somebody else's problem now." },
+  animal: {   // [REV4] the loose animals, out of their pens and roaming the palace (items, kind "animal")
+    giraffe: { random: ["Six meters of eyelashes and bad decisions, eating the Don's silk lilies one by one.", "She looks down at you from the ceiling, chewing, and decides you're not food. Probably."] },
+    jaguar: { random: ["Black, silent, and very interested in the pozole on your sleeve.", "It sits like a statue and watches you like a bill collector."] },
+    reina: { random: ["Reina, the loudest of the Don's peacocks, tail fanned like a stolen chandelier.", "Reina screams at you personally. Then at a lamp. Then at you again."] },
+    take: "Faster than you, angrier than you, and not going in your jacket.",
+    eat: "Absolutely not. In this house, the animals are family.",
+    ride: { random: ["You picture riding {the} out of here. {The} pictures something else.", "{The} gives you a look. You'd make it about one step."] },
+    pet: "{The} gives you a look that ends the idea.",
+    talk: "You make your case. {The} hears you out, then goes back to being somebody else's problem.",
+    here: { giraffe: "The giraffe is in here with you, browsing the ceiling.", jaguar: "The jaguar is in here with you. You make no sudden moves.",
+      reina: "Reina struts past your ankles, screaming at nothing." } },
   guard: {   // E4 R7 (gallery) lines; run keeps rev 2's
     peacocks: "\"The peacocks are out! The Don wants them rounded up!\" As if on cue, a scream echoes down the hall. Nando sprints toward it.",
     giraffe: "\"The giraffe is loose, and she's heading for the stairs!\" Nando swears and runs past you toward the balcony, already yelling into his radio.",
@@ -196,9 +218,8 @@ const T = {
     3: "A roar, closer now. Something is sniffing its way through the palace.",
     1: "The floor shakes. You smell wet dog and bad decisions. Move." },
   hint: { tour: "Listen to the Don. Every brag is a clue.", escape: "Walk the tour backward. Grab what you can. The guards chase animals first." },
-  nudge: {   // P3 fixes: BR-08, CP-02, CP-03 (QA wording)
+  nudge: {   // P3 fixes: BR-08, CP-03 (QA wording); CP-02 "open gate" is the core's "Which do you mean?" [REV4]
     run: "Nothing to run from yet.",
-    gate: "Which gate: the GIRAFFE GATE or the JAGUAR GATE?",
     piano: "You already found what she was hiding." },
   statusTour: "Tour in progress. Strikes: {strikes}/3.",
   fallback: "I don't understand that. Type 'help'.",   // the engine's line; the messages add-on rotates T.huh in its place
@@ -263,8 +284,8 @@ const exits = (from, o) => Object.fromEntries(Object.entries(o).map(([d, to]) =>
 // Script B [ROOM.Rn.escrevisit]: ESC_REVISIT (this room already seen during ESCAPE)
 const AGAIN = {   // Script B [ROOM.Rn.escrevisit]
   elevator: [[null, "Back in the gold box. The doors wait. So does the button."]],
-  foyer: [["!P3", "The foyer again: the elevator behind you, the [staircase] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The thirteenth step still sits a hair too high."],
-    ["P3", "The foyer again: the elevator behind you, the [staircase] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The panel under the stairs is still breathing cold air."]],
+  foyer: [["!P3", "The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The thirteenth step still sits a hair too high."],
+    ["P3", "The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The panel under the stairs is still breathing cold air."]],
   trophy: [[null, "The trophy cases again, rattling, the [rifle] still behind glass. The way out is back toward the staircases."]],
   salon: [["!P1", "Mama's [piano] again, in the flashing light. The way out is back toward the staircases."], ["P1", "The open [piano] and its empty tray. The way out is back toward the staircases."]],
   dining: [[null, "The wrecked dinner again. The lemur hasn't moved and has no plans to. The way out is back toward the staircases."]],
@@ -272,7 +293,7 @@ const AGAIN = {   // Script B [ROOM.Rn.escrevisit]
   gallery: [[null, "The painted Dons again, still glaring. Chlorine at one end, the balcony at the other."]],
   atrium: [["!P2", "Pepita the [hippo] again, mouth shut, lemurs overhead. Peacocks one way, portraits the other."], ["P2", "Pepita the [hippo] again, jaw hanging open, lemurs overhead. Peacocks one way, portraits the other."]],
   office: [[null, "The ransacked office again. Only the balcony is out."]],
-  aviary: [["!OUT_PEACOCKS", "The screaming [aviary] again. Night air one way, chlorine the other."], ["OUT_PEACOCKS", "The empty [aviary] again, feathers still falling. Night air one way, chlorine the other."]],
+  aviary: [["!OUT_PEACOCKS", "The screaming [aviary] again. Night air one way, chlorine the other."], ["OUT_PEACOCKS", "The [aviary] again, feathers still falling. Night air one way, chlorine the other."]],
   terrace: [],   // no ESCAPE revisit line in the Script for R11: its REVISIT text is used
   enclosure: [[null, "The broken enclosure again, a tire swing creaking on its chain. The terrace is the only way out."]]
 };
@@ -300,7 +321,11 @@ const secret = (flag, item, text) => ({ set: flag, add: { secrets: 1 }, give: it
 // ---- Guard checkpoints (GDD 7): the next turn-costing command must be "run" or "say <released animal>"
 const CLEAR = { unset: "checkpoint", add: { cleared: 1 }, move: { nando: null } };
 const alibi = (a, words = a) => ({ if: { flag: "checkpoint", said: words, min: { [a]: 1 }, max: { [a]: 1 } }, ...CLEAR, add: { [a]: 1, cleared: 1 }, say: [{ if: { in: "foyer" }, text: T.foyerGuard[a] }, T.guard[a]] });
-const release = (a, words) => [{ if: { said: words, max: { [a]: 0 } }, add: { [a]: 1 }, say: T.alibi[a] }, { if: { said: words }, say: T.alibi.already }];
+// [REV4] a released animal is a thing that roams two rooms (events below; the core says when it comes and goes)
+const LOOSE = { peacocks: { id: "reina", route: ["atrium", "gallery"], every: 5 }, giraffe: { id: "giraffe", route: ["landing", "gallery"], every: 3 },
+  jaguar: { id: "jaguar", route: ["dining", "foyer"], every: 4 } };
+const release = (a, words) => [{ if: { said: words, max: { [a]: 0 } }, add: { [a]: 1 }, move: { [LOOSE[a].id]: LOOSE[a].route[0] }, say: T.alibi[a] },
+  { if: { said: words }, say: T.alibi.already }];
 const unused = (a, name) => [{ if: { min: { [a]: 1 }, max: { [a]: 1 } }, text: name }];
 
 const STEP = "step|steps|stair|stairs|staircase|staircases";
@@ -308,8 +333,6 @@ const ORD = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", 
 const GRADED_STEPS = [   // Script E2, P3: counted steps, the two staircases, no number
   ...ORD.map((o, i) => ({ if: { ...ESC, said: [`${o}|${i + 1}th|${i + 1}st|${i + 1}nd|${i + 1}rd|${i + 1}`, "step"] }, say: T.graded.nthStep(i + 1), feedback: true })),
   { if: { ...ESC, said: [HIGH.join("|") + "|" + HIGH.map((h, i) => `${i + 14}th|${i + 14}`).join("|"), "step"] }, say: T.graded.tooHigh, feedback: true },
-  { if: { ...ESC, said: "left staircase|left stairs|family stairs|family side|family staircase" }, say: T.graded.leftStairs, feedback: true },
-  { if: { ...ESC, said: "right staircase|right stairs|business stairs|business side|business staircase" }, say: T.graded.rightStairs, feedback: true },
   { if: { ...ESC, only: "step|steps" }, say: T.graded.whichStep, feedback: true }];
 const HIPPO = "hippo|pepita|fountain|jaw|mouth";
 
@@ -335,12 +358,8 @@ const NOUNS = {
     "R2.banisters": { at: "foyer", cat: "FIXTURE", words: ["banister", "banisters", "railing", "railings", "rail", "rails", "gold leaf", "handrail"],
       examine: [["TOUR", "Real gold leaf, rubbed dull along the right-hand rail where a lot of hands have gripped it on the way up to do business. The left rail still shines."], ["ESCAPE", "The rail is cold under your palm, and it's vibrating. Something heavy is walking around up there."], ["OUT_GIRAFFE", "A giraffe's head rests on the upper banister like it owns the place, chewing a silk lily from the Don's arrangement. It blinks at you. You blink back."]],
       touch: [["TOUR", "The Don watches you not slide down it."]] },
-    "R2.leftstairs": { at: "foyer", cat: "FIXTURE", strike: "STEP", words: ["left staircase", "left stairs", "left side", "carpet", "red carpet", "carpeted stairs", "family stairs", "family side", "family staircase", "twelve steps"],
-      examine: [["TOUR", "Wide, carpeted in deep red, and lined with small gold frames of family moments. Twelve steps. You count them twice, because the Don is watching you count."], ["ESCAPE", "The family side. Twelve steps of red carpet, and every frame on the wall is rattling."]] },
     "R2.frames": { at: "foyer", cat: "ART", words: ["frames", "frame", "snapshots", "family pictures", "family photos", "family photo", "pictures", "christening", "wedding", "weddings", "baby", "quinceanera", "envelope", "envelopes"],
       examine: [["TOUR", "Christenings, weddings, a quinceañera, a baby in a tiny tuxedo. In every one, the Don is either handing someone an envelope or holding someone's baby."], ["ESCAPE", "One frame has fallen and cracked straight across a wedding. Someone is going to hear about that."]] },
-    "R2.rightstairs": { at: "foyer", cat: "FIXTURE", strike: "STEP", words: ["right staircase", "right stairs", "right side", "business stairs", "business side", "business staircase", "narrow stairs", "thirteen steps"],
-      examine: [["TOUR", "Narrower, bare marble, polished to a shine, and no frames on the wall at all. Business doesn't keep pictures. Thirteen steps."], ["ESCAPE", "Thirteen steps, and one of them is wrong. Standing close, you can see it: the thirteenth sits a hair proud of the rest, with a thin dark seam around its edge."], ["P3", "The panel under the thirteenth step hangs open, breathing cold air up at you."]] },
     "R2.step": { at: "foyer", cat: "PUZZLE", strike: "STEP", puzzle: "P3", words: ["thirteenth step", "13th step", "step thirteen", "step 13", "thirteenth", "top step", "13", "thirteen", "step"],   // + NB-07, BG-08
       examine: [["TOUR", "Thirteen up the business side. It looks like every other step, except the shine on it is worn in a small ring, as if someone steps on it more carefully than the rest. The Don is watching your eyes."], ["ESCAPE", "A hair taller than its neighbors, with a seam you'd never notice unless you were looking. The shine is worn in a ring right in the center, right where a thumb would press."], ["P3", "Pressed flat now. The panel beside it hangs open."]],
       search: [["TOUR", "Your hand drifts toward it. The Don clears his throat. \"Admire, Walter. Don't touch.\""], ["ESCAPE", "You run your fingers around the seam. It moves, just barely. It's waiting for a firm push."]] },
@@ -387,9 +406,6 @@ const NOUNS = {
       examine: [["TOUR", "A waterfall of crystal with one bulb out near the back. In a house this perfect, you wonder who's too scared to change it."], ["ESCAPE", "Swinging. Not much. Enough. Every crystal chimes when something upstairs moves."]] },
     "R4.fresco": { at: "salon", cat: "ART", words: ["fresco", "ceiling", "painting", "angels", "angel", "cherubs", "cherub", "clouds", "mustache"],
       examine: [["TOUR", "Clouds, cherubs, and a ring of angels gazing down in approval. One angel, off to the side, has the Don's exact mustache."], ["ESCAPE", "In red light, the angels look a lot less approving."]] },
-    "R4.tray": { at: "salon", cat: "FURNITURE", words: ["tray", "hidden tray", "compartment", "drawer", "velvet", "rubber band"],
-      examine: [["P1", "Velvet-lined, with a ledger-shaped dent and one stray rubber band. Mama's piano kept that secret for years."]],
-      take: [["P1", "You leave it. Something tells you the Don counts those.", "rubber band"]] },
     "R5.table": { at: "dining", cat: "FURNITURE", words: ["table", "dining table", "long table", "dinner table"],
       examine: [["TOUR", "Twenty place settings, each with a handwritten place card. Yours says \"Mr. Pryce (Guest)\" in better handwriting than yours. At the far end, one chair has no card at all, and a silver spoon lies beside it, bent double."], ["ESCAPE", "Chairs knocked flat, silver everywhere, and a lemur holding court in the middle of it all. The empty chair at the end is the only one still standing."]] },
     "R5.placecards": { at: "dining", cat: "ART", words: ["place card", "place cards", "cards", "name card", "name cards", "seating", "seating chart", "father tomas"],
@@ -462,8 +478,6 @@ const NOUNS = {
       examine: [["TOUR", "The pool is lined with coins, every single one gold, winking up through the water. Nobody has ever dared take one."], ["ESCAPE", "Water slops over the rim with every thud. The gold coins on the bottom shimmer."]],
       take: [["ESCAPE", "They're set into the bottom of the pool. Pepita's savings are not available for withdrawal.", "coins"]],
       drink: [[null, "Chlorine and gold. You'll pass."]] },
-    "R8.mouth": { at: "atrium", cat: "PUZZLE", strike: "HIPPO", puzzle: "P2", words: ["mouth", "jaw", "jaws", "teeth", "jowls", "lips", "hinges", "hinge", "nostrils"],
-      examine: [["TOUR", "The lips are shut tight, but look closer: two tiny brass hinges tucked into the jowls. Pepita's mouth was built to open."], ["ESCAPE", "Shut. The hinges in her jowls gleam wet in the red light. She opens for one thing, the Don said."], ["P2", "Wide open. There's nothing inside now but a little gold in the back of her throat. Yours."]] },
     "R8.tube": { at: "atrium", cat: "FURNITURE", words: ["tube", "waterproof tube", "canister"],
       examine: [["P2", "The empty tube bobs in the fountain. The manifest inside is in your jacket, still damp."]] },
     "R8.roof": { at: "atrium", cat: "FIXTURE", words: ["roof", "glass roof", "sky", "rain", "storm", "glass", "lightning"],
@@ -551,6 +565,10 @@ const NOUNS = {
       examine: [["ESCAPE", "Gone, south, with every guard he could grab and all the cigars. He left you his house, his animals, and his secrets."]] },
     "ANY.nando": { at: "any", cat: "PERSON", words: ["nando", "guard", "guards", "radio"],
       examine: [["TOUR", "You haven't met Nando yet. You'd remember."], ["ESCAPE&!CP7_DONE", "Not here. You can hear guards shouting somewhere, though. One of them sounds very large."], ["ESCAPE&CP7_DONE", "Somewhere in the palace, busy with an animal you gave him. Keep it that way."]] },
+    // [REV4] a loose animal that isn't here right now (the thing itself answers when it is)
+    "ANY.giraffe": { at: "any", cat: "ANIMAL", words: ["giraffe", "mariposa"], examine: [["OUT_GIRAFFE", "She's around. You can hear her eating the Don's decorations, one expensive bite at a time."]] },
+    "ANY.jaguar": { at: "any", cat: "ANIMAL", words: ["jaguar", "gato", "big cat"], examine: [["OUT_JAGUAR", "Not in here. Probably. You check the shadows twice."]] },
+    "ANY.reina": { at: "any", cat: "ANIMAL", words: ["reina"], examine: [["OUT_PEACOCKS", "Somewhere close, Reina is screaming at the furniture."]] },
     "ANY.tony": { at: "any", cat: "PERSON", words: ["big tony", "tony", "bigfoot", "sasquatch", "yeti", "creature", "monster", "beast", "thing"],
       examine: [["TOUR", "The Don mentioned the family. He didn't mention anyone called Tony. Yet."], ["ESCAPE", "You haven't seen him. You've seen his footprints, his bent bars, and his banana bill. That's plenty."], ["BAND_C", "You haven't seen him. You can smell him now, though."], ["BAND_D", "You're about to see him."]] },
     "ANY.accountant": { at: "any", cat: "PERSON", words: ["accountant", "prisoner", "escaped prisoner", "contador"],
@@ -648,11 +666,12 @@ const G = {
   bare: { show: "Show what, to whom?", give: "Give what, to whom?" },   // F-08 (QA text), free
   phrasal: { "knock over": "break", "set fire": "burn", "scream at": "provoke", "yell at": "provoke", "shout at": "provoke", "holler at": "provoke" },   // F-03
   verbs: Object.fromEntries(["look", "examine", "inventory", "status", "hint", "search", "smell", "listen", "where", "exits", "ways", "map", "save"]
-    .map(v => [v, { free: true }])),   // GDD 12.1 D2; NB-04
+    .map(v => [v, { free: true }]).concat([["use", { carry: true }]])),   // GDD 12.1 D2; NB-04. [REV4] give/show/put (all "use") pick a thing up first
   status: [{ if: ESC, text: "Bigfoot clock: {clock} · Secrets: {secrets}/3" }, "The tour · Strikes: {strikes}/3"],   // v2: the status line
   messages: {   // the engine's own lines, reworded (ids: docs/AUTHORING.md)
     huh: HUH, cant: HUH, what: HUH,   // one rotation for every "I don't follow"
-    arrives: "", leaves: "",   // the Don's and Nando's moves are narrated by their own lines (as in v1)
+    arrives: "{A} comes in from the {dir}.", leaves: "{The} slips away to the {dir}.",   // [REV4] roaming animals (the Don and Nando have their own lines)
+    see: [{ if: { is: "ESCAPE", not: { any: [{ here: "coin" }, { here: "card" }] } }, text: "" }, "You see: {list}"],   // ESCAPE: no item list (PT-13) but what you dropped; loose animals are in G.tails
     over: { rotate: T.overs },   // F3
     help: T.help,
     exits: [{ if: ESC, text: "" }, "Exits: {list}"],   // ESCAPE: exits are named by landmark in the room text
@@ -683,12 +702,13 @@ const G = {
         { if: { ...ESC, said: "thirteenth|13th|13|thirteen", flag: "p3" }, free: true, say: T.graded.stepDone },   // E2: free
         { if: { ...ESC, said: "thirteenth|13th|13|thirteen", not: { flag: "p3" } }, ...secret("p3", "photos", T.p3.solved) },
         ...GRADED_STEPS,   // E2
-        { if: { ...ESC, said: `thirteenth|13th|${STEP}` }, say: T.p3.wrong, feedback: true } ] }) },
+        { if: { ...ESC, said: "thirteenth|13th|step|steps|stair" }, say: T.p3.wrong, feedback: true } ],   // "push the stairs": the staircases ask which [REV4]
+        examine: [{ if: { said: "staircase|stairs|staircases|stair", not: { said: "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps" } }, say: T.item.staircase }] }) },   // BR-05: both at once
     trophy: { name: "Trophy Room", desc: desc("trophy"), exits: exits("trophy", { east: "foyer" }), on: strikes("rifle", "RIFLE") },   // R3
     salon: { name: "Music Salon", desc: desc("salon"), exits: exits("salon", { west: "foyer" }),                // R4
       on: merge(strikes("piano|lid|keys|keyboard|ivory|ivories", "PIANO"), { play: [
         { if: TOUR, ...STRIKE, note: { STRIKE3_BY: "PIANO" } },
-        { if: { said: "cielito lindo", not: { flag: "p1" } }, ...secret("p1", "ledger", T.p1.solved) },
+        { if: { said: "cielito lindo", not: { flag: "p1" } }, ...secret("p1", "ledger", T.p1.solved), move: { tray: "salon" }, open: "tray" },
         { if: { not: { flag: "p1" }, only: "piano|keys|keyboard|lid|song|a|some|something|music|tune" }, say: T.p1.wrong, feedback: true },   // E2: no song
         { if: { not: { flag: "p1" }, said: "mama's song|mamas song|mama song|her song|mother's song|mothers song|rosa's song|rosas song|mama rosa's song" }, say: T.graded.rightSong, feedback: true },
         { if: { not: { flag: "p1" } }, say: { rotate: T.graded.otherSong }, feedback: true },   // any other title
@@ -703,7 +723,7 @@ const G = {
     gallery: { name: "Gallery Hall", desc: desc("gallery"), exits: exits("gallery", { east: "landing", north: "atrium" }) },                 // R7
     atrium: { name: "Atrium", desc: desc("atrium"), exits: exits("atrium", { south: "gallery", north: "aviary" }),   // R8
       on: merge(strikes(HIPPO, "HIPPO"), {
-        use: [PEPITA_DONE, { if: { ...ESC, said: "coin", has: "coin" }, take: "coin", ...secret("p2", "manifest", T.p2.solved) },
+        use: [PEPITA_DONE, { if: { ...ESC, said: "coin", any: [{ has: "coin" }, { here: "coin" }] }, take: "coin", ...secret("p2", "manifest", T.p2.solved), open: "mouth" },
           { if: { ...ESC, said: "coin", key: "COIN_DROPPED" }, free: true, say: T.graded.noCoin },   // E2: no turn
           { if: { ...ESC, said: ["card|briefing", HIPPO] }, say: T.graded.card, feedback: true },
           { if: { ...ESC, said: ["ledger|manifest|photos|photo", HIPPO] }, say: T.item.evidence, feedback: true },
@@ -720,50 +740,79 @@ const G = {
         ...release("peacocks", "aviary|door|keypad|cage|peacock|peacocks")] } },
     terrace: { name: "Zoo Terrace", exits: exits("terrace", { south: "aviary", east: "enclosure" }),              // R11
       desc: [...terrace, T.room.R11.first],   // R11 has no escape revisit line: its REVISIT is built from animal state
-      on: { open: [...release("giraffe", "giraffe"), ...release("jaguar", "jaguar"),
-        { if: { said: "gate|gates" }, free: true, say: T.nudge.gate }] } },   // CP-02: free nudge
+      on: { open: [...release("giraffe", "giraffe"), ...release("jaguar", "jaguar")] } },   // "open gate": two gates, so the core asks which (CP-02, free)
     enclosure: { name: "Broken Enclosure", desc: [...again("enclosure"), T.room.R12.escape], exits: exits("enclosure", { west: "terrace" }) }   // R12
   },
 
   items: {
-    card: { name: "BRIEFING CARD", cat: "OWN", at: "player", aliases: ["briefing"], desc: [{ if: { flag: "q2" }, text: T.item.card.look.replace(/"Smile\. Don't touch anything\."$/, T.item.card.q2) }, T.item.card.look] },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
-    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look] },   // PT-10                                                          // I2
-    ledger: { name: "LEDGER", cat: "OWN", desc: T.item.ledger.look },                                                         // I3
-    manifest: { name: "SHIPPING MANIFEST", cat: "OWN", desc: T.item.manifest.look },                                         // I4
-    photos: { name: "DEAL PHOTOS", cat: "OWN", aliases: ["photo"], desc: T.item.photos.look },                              // I5
+    card: { name: "BRIEFING CARD", cat: "OWN", at: "player", aliases: ["briefing"], desc: [{ if: { flag: "q2" }, text: T.item.card.look.replace(/"Smile\. Don't touch anything\."$/, T.item.card.q2) }, T.item.card.look],
+      on: { take: [{ if: { has: "card" }, say: T.item.card.take }], use: [{ if: { has: "card", not: { with: "don" } }, say: T.item.card.use }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
+    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look], on: { use: [{ if: { has: "coin", not: { with: "don" } }, say: T.item.coin.use }] } },   // PT-10                                                          // I2
+    ledger: { name: "LEDGER", cat: "OWN", at: "tray", desc: T.item.ledger.look, on: { use: T.item.evidence } },                                                         // I3
+    manifest: { name: "SHIPPING MANIFEST", cat: "OWN", at: "mouth", desc: T.item.manifest.look, on: { use: T.item.evidence } },                                         // I4
+    photos: { name: "DEAL PHOTOS", cat: "OWN", aliases: ["photo"], desc: T.item.photos.look, on: { use: T.item.evidence } },                              // I5
     // scenery (not GDD items): examine is free and safe; the Script rev 3 nouns answer first
     rifle: { name: "GOLD RIFLE", cat: "ART", strike: "RIFLE", at: "trophy", fixed: true, desc: T.item.rifle },
     piano: { name: "PIANO", cat: "PUZZLE", strike: "PIANO", puzzle: "P1", at: "salon", fixed: true, aliases: ["lid"], desc: T.item.piano },
-    staircase: { name: "staircases", cat: "PUZZLE", strike: "STEP", puzzle: "P3", at: "foyer", fixed: true, aliases: ["stairs", "staircase", "step", "steps", "thirteenth step", "13th step"], desc: T.item.staircase },
+    staircases: { name: "staircases", cat: "PUZZLE", strike: "STEP", puzzle: "P3", at: "foyer", fixed: true, aliases: ["twin staircases", "double staircase", "both staircases"], desc: T.item.staircase },
+    // [REV4] the two staircases are two things: "push the stairs" asks which; "the right one", then "the other one"
+    leftstairs: { name: "left staircase", cat: "FIXTURE", strike: "STEP", at: "foyer", fixed: true, hidden: true,
+      aliases: ["staircase", "stairs", "left stairs", "left side", "carpet", "red carpet", "carpeted stairs", "family stairs", "family side", "family staircase", "twelve steps"],
+      desc: [{ if: "ESCAPE", text: "The family side. Twelve steps of red carpet, and every frame on the wall is rattling." },
+        "Wide, carpeted in deep red, and lined with small gold frames of family moments. Twelve steps. You count them twice, because the Don is watching you count."],
+      on: { push: [{ if: "ESCAPE", say: T.graded.leftStairs, feedback: true }] } },   // on the tour, pushing one is a strike
+    rightstairs: { name: "right staircase", cat: "FIXTURE", strike: "STEP", at: "foyer", fixed: true, hidden: true,
+      aliases: ["staircase", "stairs", "right stairs", "right side", "business stairs", "business side", "business staircase", "narrow stairs", "thirteen steps"],
+      desc: [{ if: "P3", text: "The panel under the thirteenth step hangs open, breathing cold air up at you." },
+        { if: "ESCAPE", text: "Thirteen steps, and one of them is wrong. Standing close, you can see it: the thirteenth sits a hair proud of the rest, with a thin dark seam around its edge." },
+        "Narrower, bare marble, polished to a shine, and no frames on the wall at all. Business doesn't keep pictures. Thirteen steps."],
+      on: { push: [{ if: "ESCAPE", say: T.graded.rightStairs, feedback: true }] } },   // on the tour, pushing one is a strike
     hippo: { name: "HIPPO", cat: "PUZZLE", strike: "HIPPO", puzzle: "P2", at: "atrium", fixed: true, aliases: ["pepita", "fountain"], desc: T.item.hippo },
-    aviary: { name: "AVIARY", cat: "FIXTURE", at: "aviary", fixed: true, aliases: ["door", "keypad"], desc: T.item.aviary },
-    giraffegate: { name: "GIRAFFE GATE", cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.giraffegate },
-    jaguargate: { name: "JAGUAR GATE", cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.jaguargate }
+    // [REV4] holders the puzzles open: each keeps its secret until then (the secret still goes straight to your jacket)
+    tray: { name: "hidden tray", cat: "OBJECT", fixed: true, hidden: true, holds: "in", closed: true,   // offstage until P1 slides it out of the piano
+      aliases: ["tray", "compartment", "drawer", "velvet", "rubber band"], desc: "Velvet-lined, with a ledger-shaped dent and one stray rubber band. Mama's piano kept that secret for years.",
+      on: { take: [{ if: { said: "rubber band|band" }, say: "You leave it. Something tells you the Don counts those." }, { say: "You're here for secrets, not souvenirs.", feedback: true }],
+        open: "Already open, and already empty.", close: "It won't close. Mama's piano has nothing left to hide." } },
+    mouth: { name: "hippo's mouth", cat: "PUZZLE", strike: "HIPPO", puzzle: "P2", at: "atrium", fixed: true, hidden: true, holds: "in", closed: true,
+      aliases: ["mouth", "pepita's mouth", "jaw", "jaws", "teeth", "jowls", "lips", "hinges", "hinge", "nostrils"],
+      desc: [{ if: { open: "mouth" }, text: "Wide open. There's nothing inside now but a little gold in the back of her throat. Yours." }, { if: "ESCAPE", text: "Shut. The hinges in her jowls gleam wet in the red light. She opens for one thing, the Don said." }, "The lips are shut tight, but look closer: two tiny brass hinges tucked into the jowls. Pepita's mouth was built to open."],
+      on: { smell: "Wet bronze and chlorine.", listen: "Water splashing from her nostrils, steady as a heartbeat.",
+        close: [{ if: { open: "mouth" }, say: "Pepita keeps her mouth open now. She's earned it." }] } },
+    aviary: { name: [{ if: "OUT_PEACOCKS", text: "EMPTY AVIARY" }, "AVIARY"],   // [REV4] names follow the state
+      cat: "FIXTURE", at: "aviary", fixed: true, aliases: ["door", "keypad"], desc: T.item.aviary },
+    // [REV4] the loose animals: offstage until released, then roaming (kind "animal": take, eat, ride, pet)
+    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["mariposa", "neck"], desc: T.animal.giraffe },
+    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], desc: T.animal.jaguar },
+    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], desc: T.animal.reina },
+    giraffegate: { name: [{ if: "OUT_GIRAFFE", text: "OPEN GIRAFFE GATE" }, "GIRAFFE GATE"], aliases: ["giraffe gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.giraffegate },
+    jaguargate: { name: [{ if: "OUT_JAGUAR", text: "OPEN JAGUAR GATE" }, "JAGUAR GATE"], aliases: ["jaguar gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.jaguargate }
   },
 
+  kinds: { animal: { take: T.animal.take, eat: T.animal.eat, ride: { say: T.animal.ride }, touch: T.animal.pet, talk: { free: true, say: T.animal.talk } } },   // [REV4] every loose animal (talking is free, as to the penned ones)
+
   npcs: {
-    don: { name: "Don Chava", cat: "PERSON", at: "foyer", aliases: ["don", "chava", "salvatore"],
+    don: { name: "Don Chava", proper: true, pronoun: "him", cat: "PERSON", at: "foyer", aliases: ["don", "chava", "salvatore"],
+      on: { use: [   // D3: give / show him something. "Show the card to the Don" in his office answers Q2 [REV4]
+        { if: { in: "office", not: { flag: "q2" }, what: "card" }, set: "q2", give: "coin", say: T.item.card.answer + " " + T.q2.right + " " + T.don.after2 },
+        { if: { what: "card" }, say: T.don.social.card }, { if: { what: "coin" }, say: T.don.social.coin },
+        { if: { said: "plaque|proposal|mockup" }, say: T.don.social.plaque }, T.item.showDon] },
       desc: [{ if: { key: "STRIKES=2" }, text: T.don.look + " " + T.don.lookStop.cold },
         ...Object.keys(T.don.lookStop).filter(r => r !== "cold").map(r => ({ if: { in: Object.keys(ROOM).find(k => ROOM[k] === r) }, text: T.don.look + " " + T.don.lookStop[r] })), T.don.look],                // N1
       dialogue: { start: { text: [   // BR-09: a pending question comes first
         ...Object.entries(QUIZ).map(([r, [q, prompt]]) => ({ if: { in: r, not: { flag: q } }, text: prompt.slice(1, -1) })), T.don.talk] } } },
-    nando: { name: "Nando", cat: "PERSON", aliases: ["guard"], desc: T.nando.look, dialogue: { start: { text: T.nando.talk } } }  // N2 (offstage until a checkpoint)
-    // N3 Big Tony is heard, never met: he is the clock below.
+    nando: { name: "Nando", proper: true, pronoun: "him", cat: "PERSON", aliases: ["guard"], desc: T.nando.look, dialogue: { start: { text: T.nando.talk } },  // N2 (offstage until a checkpoint)
+      topics: { ...Object.fromEntries(Object.entries(T.nando.topics).map(([k, line]) => [k, { free: true, say: line }])), "*": { free: true, say: { rotate: T.nando.repeat } } } },   // D3: free, the checkpoint stays open
+    tony: { name: "Big Tony", proper: true, pronoun: "him", cat: "PERSON", aliases: ["tony", "bigfoot"], desc: "You haven't seen him. You'd rather keep it that way." }   // N3: heard, never met (offstage); he is the clock below
   },
 
   on: {   // global replies (verbs add-on), after the room's own
     use: [
+      { if: { flag: "checkpoint", what: ["ledger", "manifest", "photos"] }, free: true, say: T.item.showNando },   // [REV4] "show the photos to Nando": he never gets them
       { if: { flag: "checkpoint" }, note: { CAUGHT_BY: "ITEM" } },   // an item on Nando: CAUGHT (D4)
-      { if: { here: "don", said: "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread" }, say: "Throw Mama's pozole? You'd be out of the house before it landed." },   // BG-05 (QA text)
-      { if: { here: "don", said: ["card|briefing", "don|chava|salvatore"] }, say: T.don.social.card },   // D3: give / show to the Don
-      { if: { here: "don", flag: "q2", said: ["coin", "don|chava|salvatore"] }, say: T.don.social.coin },
-      { if: { here: "don", said: ["plaque|proposal|mockup", "don|chava|salvatore"] }, say: T.don.social.plaque },
-      { if: { said: "coin", has: "coin" }, say: T.item.coin.use },
-      { if: { said: "card|briefing", has: "card" }, say: T.item.card.use },
-      { if: { said: "ledger|manifest|photos|photo" }, say: T.item.evidence } ],
+      { if: { here: "don", said: "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread" }, say: "Throw Mama's pozole? You'd be out of the house before it landed." } ],   // BG-05 (QA text)
+      // give / show / use an item: the Don's own replies (npcs.don.on.use), then the item's (items.X.on.use)
     drop: [{ if: { said: "ledger|manifest|photos|photo" }, say: T.item.evidence }],
     take: [
-      { if: { said: "card|briefing", has: "card", not: { said: "place" } }, say: T.item.card.take },   // not the place cards
       { if: { said: "coin", here: "coin" }, move: { coin: "player" }, say: T.item.coin.take },
       ...["coin", "ledger", "manifest", "photos"].map(i => ({ if: { said: i === "photos" ? "photos|photo" : i, has: i }, free: true, say: T.item.have })) ],
     talk: [
@@ -775,7 +824,6 @@ const G = {
         ...Object.keys(T.don.talkStop).filter(r => r !== "strike1").map(r => ({ if: { in: Object.keys(ROOM).find(k => ROOM[k] === r) }, text: T.don.talkStop[r] })),
         T.don.talk] },
       { if: { said: "nando|guard", min: { cleared: 1 }, not: { here: "nando" } }, say: T.nando.after }],
-    ask: [{ if: { flag: "checkpoint" }, free: true, say: { rotate: T.nando.repeat } }],   // D3
     tell: [{ if: { flag: "checkpoint", only: "nando|guard|about|him" }, free: true, say: { rotate: T.nando.repeat } },   // NB-03: "tell nando <text>" = say <text>
       ...CHECKPOINT_SAY,
       FLATTER],
@@ -813,11 +861,13 @@ const G = {
     { if: { flag: "won", min: { secrets: 3 } }, note: { ENDING: "W2" }, finish: ENDINGS.W2 },
     { if: { flag: "won" }, note: { ENDING: "W1" }, finish: ENDINGS.W1 },
     // tour: arriving at each stop moves the Don along and plays his line
+    // (every move has a say, so the core never narrates his comings and goings; R11's text has him spread his arms)
     ...LEGS.map(([, , to], k) => ({ if: { in: to, min: { leg: k }, max: { leg: k } }, add: { leg: 1 }, move: { don: to },
-      ...(to === "foyer" && k > 0 && { say: [{ if: { key: "STRIKES=2" }, text: T.don.pass.cold }, T.don.pass[k / 2 + 1]] }),   // PASS(2)-PASS(4)
-      ...(T.don.stop[ROOM[to]] && LEGS.findIndex(l => l[2] === to) === k && { say: T.don.stop[ROOM[to]] + (QUIZ[to] ? " " + QUIZ[to][1] : "") }) })),
+      say: to === "foyer" && k > 0 ? [{ if: { key: "STRIKES=2" }, text: T.don.pass.cold }, T.don.pass[k / 2 + 1]]   // PASS(2)-PASS(4)
+        : T.don.stop[ROOM[to]] && LEGS.findIndex(l => l[2] === to) === k ? T.don.stop[ROOM[to]] + (QUIZ[to] ? " " + QUIZ[to][1] : "")
+        : T.don.leg[k] || "" })),
     // ESCAPE begins on entering R11: the Don flees, the Bigfoot clock starts at 18
-    { if: { in: "terrace" }, set: "escape", move: { don: null }, add: { clock: 18 }, mark: "tick" },
+    { if: { in: "terrace" }, set: "escape", move: { don: null }, add: { clock: 18 }, mark: "tick", say: "" },   // R11's text says he runs
     { repeat: true, if: { ...ESC, since: { tick: 1 } }, mark: "tick", add: { clock: -1 } },   // every turn-costing command
     { if: { flag: "checkpoint", since: { stop: 1 } }, note: { ENDING: "L2" }, finish: ENDINGS.L2 },
     { if: { ...ESC, max: { clock: 0 } }, note: { ENDING: "L3" }, finish: ENDINGS.L3 },
@@ -830,6 +880,8 @@ const G = {
     // checkpoints resolved (R7 always comes first: it's the only way out)
     { if: { min: { cleared: 1 } }, set: "cp7_done" },
     { if: { min: { cleared: 2 } }, set: "cp2_done" },
+    // [REV4] loose animals roam, costing nothing; with no say, the core tells you when one comes or goes
+    ...Object.entries(LOOSE).map(([a, { id, route, every }]) => ({ every, if: { min: { [a]: 1 } }, move: { [id]: route } })),
     // ESC_REVISIT: this room already seen during ESCAPE
     ...Object.keys(ROOM).map(r => ({ if: { in: r, ...ESC }, set: `escbeen_${r}` })),
     // REVISIT text after the first look at each room
@@ -845,6 +897,7 @@ G.conds = {   // GDD 12.4: the only states Script lines may name
   Q1: { flag: "q1" }, Q2: { flag: "q2" },
   COIN_HELD: { has: "coin" }, COIN_SPENT: { flag: "p2" }, COIN_DROPPED: { flag: "q2", not: { any: [{ has: "coin" }, { flag: "p2" }] } },
   P1: { flag: "p1" }, P2: { flag: "p2" }, P3: { flag: "p3" },
+  GIRAFFE_HERE: { here: "giraffe" }, JAGUAR_HERE: { here: "jaguar" }, REINA_HERE: { here: "reina" },   // [REV4] the roaming animals
   OUT_GIRAFFE: { min: { giraffe: 1 } }, OUT_JAGUAR: { min: { jaguar: 1 } }, OUT_PEACOCKS: { min: { peacocks: 1 } },
   USED_GIRAFFE: { min: { giraffe: 2 } }, USED_JAGUAR: { min: { jaguar: 2 } }, USED_PEACOCKS: { min: { peacocks: 2 } },
   RAN: { min: { ran: 1 } },
@@ -902,6 +955,7 @@ G.categories = {   // Script C1: reply ladder step 4
     chase: [[null, "You chase it for two steps and it chases you back for three."]],
     call: [[null, "You call it. It ignores you, like a cat, even the ones that aren't cats."]],
     feed: [[null, "It doesn't want what you've got."]],
+    eat: [[null, T.animal.eat]], ride: [[null, "You picture it. It pictures something else."]],   // [REV4] as the loose ones (kinds.animal)
     break: [[null, "No. Absolutely not. Not in this game."]], hit: [[null, "No. Absolutely not. Not in this game."]] },
   FOOD: {
     take: [[null, "Your pockets are for evidence, not leftovers."]],
@@ -943,7 +997,7 @@ G.anywhere = {   // Script C2: reply ladder step 5
   sorry: [["TOUR", "The Don: \"Don't be sorry. Be careful.\""], ["ESCAPE", "Say it to the giraffe."]],
   lie: [["TOUR", "You're already lying. You're doing great."], ["ESCAPE", "Save it for Nando."]],
   bribe: NOBODY, flatter: NOBODY, shake: NOBODY, tell: NOBODY, show: NOBODY, ask: NOBODY, hug: NOBODY,   // the Don's own lines: Milestone B (Script D)
-  wait: [["ESCAPE", "You wait. The thudding doesn't."]]
+  wait: [["ESCAPE", { random: ["You wait. The thudding doesn't.", "You hold your breath. The house doesn't hold its.", "You count to three. Big Tony counts faster."] }]]   // [REV4] random
 };
 G.alone = {   // Script C2 "(no noun)" lines; SMELL / LISTEN try the room's own line first
   search: [[null, "You scan the room. Everything you can see is in the description; everything you can touch is in the description too. Try \"search <thing>.\""]],
@@ -988,6 +1042,8 @@ G.tails = {   // Script B [ROOM.Rn.tails]: ESCAPE, after the room text
   aviary: [{ key: "OUT_GIRAFFE", text: "Through the glass, a long neck glides past, heading somewhere it definitely isn't allowed." }],
   terrace: [{ key: "OUT_GIRAFFE&OUT_JAGUAR&OUT_PEACOCKS", text: "For one second the roof is quiet. Then the palace below you erupts.", once: true }]
 };
+// [REV4] a loose animal in the room gets a line, after the Script's own tails
+for (const { id, route } of Object.values(LOOSE)) for (const r of route) (G.tails[r] ||= []).push({ key: `${id.toUpperCase()}_HERE`, text: T.animal.here[id] });
 G.oneAtATime = "One thing at a time, detective.";   // NB-08 (QA text)
 // BG-12 "take all" / "drop all" and NB-08 "X and Y": ./verbs.js answers them with G.oneAtATime, before the core can split them
 G.spoken = ["say", "tell", "ask"];
@@ -1021,43 +1077,44 @@ G.reactions = {   // Script D3: after the first look, while the Don is in the ro
   "R7.portraits": "\"Don't count them. Nobody likes a man who counts portraits.\"", "R8.hippo": "\"Pepita. Say hello. She won't say it back.\"",
   "R10.peacocks": "\"Reina. The loud one. She's my favorite.\"", "R2.step": "\"Careful where you look, Walter.\" Pleasant. Too pleasant."
 };
-const topic = (words, s0, s1, after, afterKey) => ({ words: words.split("|"), lines: [[null, s0], ...(after ? [[afterKey, after]] : []), ["STRIKES=1", s1]] });
-G.topics = { don: {   // Script D2: ask / tell the Don about <topic>, on the tour
-  when: { here: "don" }, coldKey: "STRIKES=2",
-  cold: ["\"No more questions.\"", "He doesn't answer. He just keeps walking.", "\"You talk a lot for a bookstore man.\"", "\"Careful, Walter.\""],
-  other: [[null, "\"Ask me something interesting, Walter.\""], ["STRIKES=1", "\"No.\""]],
-  list: [
-    topic("mother|mama|mama rosa|rosa", "\"At dinner. She deserves a table.\"", "\"My mother is not small talk.\"", "\"'Cielito Lindo.' Every Sunday. The whole street could hear her. Nobody ever complained. Nobody would dare.\"", "Q1"),
-    topic("nonna|grandmother|grandma", "\"Palermo. Four foot ten. She kept time with a wooden spoon and kept order with the same spoon.\"", "\"She'd have liked you less.\""),
-    topic("family|photos|photo|pictures|picture", "\"Two families, one house. My mother's people from the mountains out west, my father's from Palermo. I never pick. Never.\"", "\"Family is not your business, Walter.\""),
-    topic("palermo|italy|sicily|father|papa|dad", "\"My father's town. Lemons, churches, and men who never raise their voices. I learned a lot there.\"", "\"Far away. Like you'll be, soon.\""),
-    topic("mountains|mexico|west coast", "\"My mother's mountains. Cold mornings, strong coffee, and church bells you can hear three valleys away.\"", "\"Mountains are mountains.\""),
-    topic("song|cielito lindo|music", "\"At dinner.\" He taps his heart.", "\"Don't hum at me.\"", "\"Her song. Only hers. You play it on that piano, you'd better play it right.\"", "Q1"),
-    topic("piano", "\"Mama's. Nobody plays her but me, and I play only one thing.\"", "\"Don't look at the piano like that.\""),
-    topic("hippo|pepita|fountain", "\"A lady. She has standards. She has a price. Like everyone.\"", "\"Leave Pepita alone.\""),
-    topic("peacocks|birds|reina", "\"Nine names. Reina is the loudest. She's also my favorite. Don't tell the others.\"", "\"Birds. Loud birds.\""),
-    topic("giraffe|mariposa", "\"Mariposa. Butterfly. She's six meters of grace. She eats my hedges and I let her. That's love, Walter.\"", "\"She's on the roof. You'll see.\""),
-    topic("jaguar|gato|cat", "\"He came from my mother's mountains. He's the only one in this house who doesn't pretend to like me. I respect that.\"", "\"Don't worry about the cat. Worry about me.\""),
-    topic("lemurs", "\"Thieves. Little furry thieves. I have a soft spot for thieves, as long as they're mine.\"", "\"They steal. Everybody steals. Next.\""),
-    topic("big tony|tony|bigfoot|creature", "The smile slips for half a second. \"Family pet. Very private. You'll never meet him.\" It sounds like a promise.", "\"No.\""),
-    topic("accountant|contador|prisoner|empty chair", "The temperature drops. \"On a leave of absence. Next question.\"", "He doesn't answer. He just looks at you until you look away."),
-    topic("guards|nando|security", "\"Nando runs my house. Big man, big heart, small patience. And my boys know the rule: the animals come first.\"", "\"They're watching you. That's their job.\""),
-    topic("rifle|gun|pistol|trophies", "\"Gifts from friends. I keep every one, behind glass, so I remember who my friends are.\"", "\"Admire. Don't touch. I won't say it again.\""),
-    topic("stairs|staircase|steps|thirteenth step", "\"Twelve for family, thirteen for business. People who don't count, don't last.\"", "\"Mind your feet, Walter.\""),
-    topic("plaque|reading room", "He lights up. \"Brass. My name. On a building full of books. My mother would cry. You'll make the letters big?\"", "\"We'll see about the plaque.\""),
-    topic("bookstore|dog eared page|books|lot", "\"Tell me in my office. I like to hear business in the right room.\"", "\"Your little store. Yes.\"", "\"The Dog-Eared Page. Cute name. I like cute. Cute is easy to remember.\"", "Q2"),
-    topic("business|money|legitimate", "\"Legitimate. It says so on my desk.\" He winks, very slowly.", "\"My business is my business.\""),
-    topic("coin|dividend|gold", "\"What coin?\" He smiles. \"Business first.\"", "\"Don't lose it.\"", "\"Your first dividend. Keep it close. In this house, gold always finds a use.\"", "Q2"),
-    topic("city|view|window", "\"Mine. Not on paper. But mine.\"", "\"Pretty, from up here.\""),
-    topic("walter|pryce|about me|about you|yourself|myself",   // F-04: only "about me / about you"
-       "\"You? You're a bookstore man who sweats in elevators. I like you. Mostly.\"", "\"I'm still deciding about you.\""),
-    topic("saint|portraits|paintings|portrait|painting|god|church|lion|horse", "\"Every family needs a saint. Mine is me. It saves time.\"", "\"Keep walking.\""),
-    topic("house|marble|palace|elevator", "\"Every stone, I picked. Every stone, I paid for. Mostly.\"", "\"It's a house.\""),   // NB-09 (QA text)
-    topic("dinner|food|pozole|gravy", "\"Patience. Business first, then the table.\"", "\"Patience. Business first, then the table.\"",   // BG-10 (QA text)
-      "\"Mama's pozole, Nonna's gravy, same flame, every Sunday. That's the whole philosophy, Walter.\"", "Q1"),
-    topic("wife|kids|children", "\"Family is not for strangers, Walter. Not yet.\"", "\"Family is not for strangers, Walter. Not yet.\""),
-    topic("animals|zoo", "\"Some men buy boats. I bought a family that bites.\"", "\"They're fed. Mostly.\"")
-  ] } };
+// Script D2: ask / tell the Don about <topic>, on the tour (core npcs.don.topics; the first key that fits answers)
+const COLD = { rotate: ["\"No more questions.\"", "He doesn't answer. He just keeps walking.", "\"You talk a lot for a bookstore man.\"", "\"Careful, Walter.\""] };   // one rotation for every topic
+const topic = (words, s0, s1, after, afterKey) => [words, [{ if: "STRIKES=2", free: true, say: COLD }, { if: "STRIKES=1", free: true, say: s1 },
+  ...(after ? [{ if: afterKey, free: true, say: after }] : []), { free: true, say: s0 }]];
+const DON_TOPICS = Object.fromEntries([
+  topic("mother|mama|rosa", "\"At dinner. She deserves a table.\"", "\"My mother is not small talk.\"", "\"'Cielito Lindo.' Every Sunday. The whole street could hear her. Nobody ever complained. Nobody would dare.\"", "Q1"),
+  topic("nonna|grandmother|grandma", "\"Palermo. Four foot ten. She kept time with a wooden spoon and kept order with the same spoon.\"", "\"She'd have liked you less.\""),
+  topic("family|families|photos|photo|pictures|picture", "\"Two families, one house. My mother's people from the mountains out west, my father's from Palermo. I never pick. Never.\"", "\"Family is not your business, Walter.\""),
+  topic("palermo|italy|sicily|father|papa|dad", "\"My father's town. Lemons, churches, and men who never raise their voices. I learned a lot there.\"", "\"Far away. Like you'll be, soon.\""),
+  topic("mountains|mexico|west coast", "\"My mother's mountains. Cold mornings, strong coffee, and church bells you can hear three valleys away.\"", "\"Mountains are mountains.\""),
+  topic("song|songs|cielito lindo|music", "\"At dinner.\" He taps his heart.", "\"Don't hum at me.\"", "\"Her song. Only hers. You play it on that piano, you'd better play it right.\"", "Q1"),
+  topic("piano|pianos", "\"Mama's. Nobody plays her but me, and I play only one thing.\"", "\"Don't look at the piano like that.\""),
+  topic("hippo|hippos|pepita|fountain", "\"A lady. She has standards. She has a price. Like everyone.\"", "\"Leave Pepita alone.\""),
+  topic("peacock|peacocks|bird|birds|reina", "\"Nine names. Reina is the loudest. She's also my favorite. Don't tell the others.\"", "\"Birds. Loud birds.\""),
+  topic("giraffe|giraffes|mariposa", "\"Mariposa. Butterfly. She's six meters of grace. She eats my hedges and I let her. That's love, Walter.\"", "\"She's on the roof. You'll see.\""),
+  topic("jaguar|jaguars|gato|cat|cats", "\"He came from my mother's mountains. He's the only one in this house who doesn't pretend to like me. I respect that.\"", "\"Don't worry about the cat. Worry about me.\""),
+  topic("lemur|lemurs", "\"Thieves. Little furry thieves. I have a soft spot for thieves, as long as they're mine.\"", "\"They steal. Everybody steals. Next.\""),
+  topic("big tony|tony|bigfoot|creature", "The smile slips for half a second. \"Family pet. Very private. You'll never meet him.\" It sounds like a promise.", "\"No.\""),
+  topic("accountant|contador|prisoner|empty chair", "The temperature drops. \"On a leave of absence. Next question.\"", "He doesn't answer. He just looks at you until you look away."),
+  topic("guard|guards|nando|security", "\"Nando runs my house. Big man, big heart, small patience. And my boys know the rule: the animals come first.\"", "\"They're watching you. That's their job.\""),
+  topic("rifle|rifles|gun|guns|pistol|pistols|trophy|trophies", "\"Gifts from friends. I keep every one, behind glass, so I remember who my friends are.\"", "\"Admire. Don't touch. I won't say it again.\""),
+  topic("stairs|staircase|staircases|step|steps", "\"Twelve for family, thirteen for business. People who don't count, don't last.\"", "\"Mind your feet, Walter.\""),
+  topic("plaque|reading room", "He lights up. \"Brass. My name. On a building full of books. My mother would cry. You'll make the letters big?\"", "\"We'll see about the plaque.\""),
+  topic("bookstore|dog eared page|books|lot", "\"Tell me in my office. I like to hear business in the right room.\"", "\"Your little store. Yes.\"", "\"The Dog-Eared Page. Cute name. I like cute. Cute is easy to remember.\"", "Q2"),
+  topic("business|money|legitimate", "\"Legitimate. It says so on my desk.\" He winks, very slowly.", "\"My business is my business.\""),
+  topic("coin|coins|dividend|gold", "\"What coin?\" He smiles. \"Business first.\"", "\"Don't lose it.\"", "\"Your first dividend. Keep it close. In this house, gold always finds a use.\"", "Q2"),
+  topic("city|view|window", "\"Mine. Not on paper. But mine.\"", "\"Pretty, from up here.\""),
+  topic("walter|pryce|me|you|yourself|myself",   // F-04: "about me / about you"
+    "\"You? You're a bookstore man who sweats in elevators. I like you. Mostly.\"", "\"I'm still deciding about you.\""),
+  topic("saint|portraits|paintings|portrait|painting|god|church|lion|horse", "\"Every family needs a saint. Mine is me. It saves time.\"", "\"Keep walking.\""),
+  topic("house|marble|palace|elevator", "\"Every stone, I picked. Every stone, I paid for. Mostly.\"", "\"It's a house.\""),   // NB-09 (QA text)
+  topic("dinner|food|pozole|gravy", "\"Patience. Business first, then the table.\"", "\"Patience. Business first, then the table.\"",   // BG-10 (QA text)
+    "\"Mama's pozole, Nonna's gravy, same flame, every Sunday. That's the whole philosophy, Walter.\"", "Q1"),
+  topic("wife|kids|children", "\"Family is not for strangers, Walter. Not yet.\"", "\"Family is not for strangers, Walter. Not yet.\""),
+  topic("animal|animals|zoo", "\"Some men buy boats. I bought a family that bites.\"", "\"They're fed. Mostly.\""),
+  topic("*", "\"Ask me something interesting, Walter.\"", "\"No.\"")
+]);
+G.npcs.don.topics = DON_TOPICS;
 
 const BONUS_FINDS = ["R5.lemur", "R9.papers", "R12.bars", "R12.sign", "R12.footprints", "R12.floor"];   // BG-01
 // ---- Script F2: the run report, printed inside every ending's block (nouns add-on); F3 is in messages
@@ -1071,7 +1128,7 @@ const TEASE = [   // first that applies
   [{ ...ENDED("W1"), key: "!P2" }, "One secret stayed home. Pepita has expensive taste."],
   [{ ...ENDED("W1"), key: "!P3" }, "One secret stayed home. Count the steps."]];
 G.report = {
-  counted: ["card", "coin", "ledger", "manifest", "photos", "don", "nando"],   // Y = Script section A nouns + items + NPCs, less the bonus finds
+  counted: ["card", "coin", "ledger", "manifest", "photos", "don", "nando", "leftstairs", "rightstairs", "tray", "mouth"],   // Y = Script section A nouns + items + NPCs, less the bonus finds
   bonus: BONUS_FINDS,   // BG-01: only reachable off every W2 route (ESCAPE detours the clock can't pay for)
   lines: [
     ["RUN REPORT"],
@@ -1174,7 +1231,7 @@ C.PERSON.search.unshift([null, "You're not frisking anybody tonight."]);
 C.PERSON.smell.unshift([null, "Cologne and nerves. Everybody here wears both."]);
 C.PERSON.listen.unshift([null, "You listen. Nobody's saying anything useful."]);
 for (const [cat, ids] of Object.entries({
-  OBJECT: ["R5.placecards", "R5.bentspoon", "R5.napkins", "R9.letteropener", "R9.slip", "R9.papers", "R7.cap", "R10.feathers", "R8.tube", "R4.tray", "R2.shoebox"],
+  OBJECT: ["R5.placecards", "R5.bentspoon", "R5.napkins", "R9.letteropener", "R9.slip", "R9.papers", "R7.cap", "R10.feathers", "R8.tube", "R2.shoebox"],
   AIR: ["R6.smoke", "R2.glass", "R11.alarms", "R11.rain", "R11.city", "R6.foyer"],
   OUTDOOR: ["R11.garden", "R11.yard", "R11.enclosure", "R12.bars", "R12.footprints", "R12.floor"] })) for (const id of ids) NOUNS[id].cat = cat;
 const more = (id, lines) => { for (const [v, L] of Object.entries(lines)) NOUNS[id][v] = [...(NOUNS[id][v] || []), ...L]; };
@@ -1185,13 +1242,13 @@ for (const id of ["R3.rifle", "R3.roses", "R3.pistol", "R3.diamonds", "R3.headli
 const PIANO_SENSES = { smell: SWEEP_LINE("Lemon polish and old sheet music."),
   listen: [["TOUR", "Silent. It only plays one song, and not for you."], ["ESCAPE", "The strings hum along with every thud."], ["P1", "Silent now. It already sang for you."]] };
 for (const id of ["R4.piano", "R4.lid", "R4.keys"]) more(id, PIANO_SENSES);
-for (const id of ["R8.hippo", "R8.fountain", "R8.mouth"]) more(id, { smell: SWEEP_LINE("Wet bronze and chlorine."), listen: SWEEP_LINE("Water splashing from her nostrils, steady as a heartbeat.") });
+for (const id of ["R8.hippo", "R8.fountain"]) more(id, { smell: SWEEP_LINE("Wet bronze and chlorine."), listen: SWEEP_LINE("Water splashing from her nostrils, steady as a heartbeat.") });
 NOUNS["R8.fountain"].take.unshift(["ESCAPE", "The coins are set into the bottom of the pool. Pepita's savings are not available for withdrawal."]);
 more("R8.fountain", { handle: [["ESCAPE", "Cold water, and gold coins set into the bottom. The mouth is the part that opens."]] });
 more("R2.step", { search: [["P3", "The seam is open now. Nothing behind it but the passage and the cold air."]] });
 const ABSENT = { "R1.man": [[null, "He's gone. Men like that don't wait around."]],
   "ANY.accountant": [["TOUR", "He isn't here. According to the Don, he isn't anywhere."], ["ESCAPE", "He isn't here. Wherever he is, he's running faster than you."]],
-  "ANY.tony": [["TOUR", "Whatever Big Tony is, he isn't here. You'd know."], ["ESCAPE", "He isn't in this room. Yet. Don't go looking."]],
+  "ANY.tony": [["TOUR", "Whatever [tony] is, he isn't here. You'd know."], ["ESCAPE", "He isn't in this room. Yet. Don't go looking."]],
   "R7.guard": [["TOUR", "He's gone, radio and all."], ["ESCAPE&!CP7_PENDING", "No guards in sight. You can hear plenty of them."]] };
 for (const [id, L] of Object.entries(ABSENT)) NOUNS[id]["*"] = L;
 more("R8.roof", { take: SWEEP_LINE("It's a glass roof, twenty feet up. You'd need a ladder and a reason."), handle: SWEEP_LINE("It's a glass roof, twenty feet up. You'd need a ladder and a reason.") });

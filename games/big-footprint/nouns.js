@@ -25,7 +25,7 @@
           tourFree: true   commands this add-on answers cost no turn while TOUR passes
           tails: { room: [{ key, text, group?, once?, top? }, ...] }   ESCAPE: extra lines after
             the room's description (one per group; once: once a game; top: printed first).
-            They wait for the end of the turn, then the band line: at most G.extras lines,
+            They wait for the end of the turn (and print only if KEY still passes), then the band line: at most G.extras lines,
             counting any of G.npcLines printed that turn. No band line on a turn where one of
             G.warnings prints; no turn feedback then either.
           bands: { rooms: { room: TYPE }, lines: { KEY: { TYPE: [TEXT, TEXT] } } }   one line after
@@ -36,9 +36,8 @@
           reactions: { id: TEXT }, reactIf: COND   printed after the FIRST look at id while reactIf passes
           caught: { if: COND, by: (verb, words) => value }   while "if" passes, a command that costs a
             turn and nothing earlier answered does nothing but note CAUGHT_BY = by(...)
-          topics: { npc: { when: COND, list: [{ words:[...], lines: LINES }], other: LINES,
-                           coldKey, cold: [TEXT, ...] } }   "ask/tell <npc> about <topic>";
-            "say <words>" with no reply of its own: a topic if the words name one, else "talk <npc>"
+          npcs.X.topics (the core's)   "ask/tell" go to the core while someone here has topics, even at a
+            checkpoint; "say <words>" with no reply of its own: "ask" if the words name a topic, else "talk"
           lookCloser: { prefix: TEXT, room: roomId => [TEXT, ...] }   "examine X" that finds nothing: the
             first sentence naming X in the room's text, its things' lines, or anything printed since you
             walked in (not the engine's own lines), after prefix. Only then "not here".
@@ -66,7 +65,7 @@
   const pick = (L, arg = "") => [...(L || [])].reverse().find(([k, , obj]) =>
     key(k === "SOLVED" || k?.includes("SOLVED") ? k.replace("SOLVED", noun?.puzzle || "ESCAPE") : k) && (!obj || obj.split("|").some(o => has(arg, o))));
   const visible = id => { const n = N[id]; return (n.at === S.room || n.at === "any") && !!pick(n.examine); };
-  const phrases = T => id => [T[id].name, ...(T[id].aliases || []), ...T[id].name.split(" ")];
+  const phrases = T => id => [nm(id), ...(T[id].aliases || []), ...nm(id).split(" ")];   // nm(): the name now (it can follow the state)
   // every thing the line names: [{ id, kind, len, pos, rank }]
   const scan = arg => {
     const a = norm(arg), hits = [];
@@ -76,7 +75,7 @@
     at(G.npcs).forEach(id => add(id, "npc", phrases(G.npcs)(id), 4));
     // things somewhere else: only a longer phrase than anything here can pick them ("jaguar gate" in the enclosure)
     Object.keys(N).filter(id => !visible(id)).forEach(id => add(id, "away", N[id].words, 0));
-    Object.keys(G.items).filter(id => S.loc[id] !== "player" && S.loc[id] !== S.room).forEach(id => add(id, "away", [G.items[id].name, ...(G.items[id].aliases || [])], 0));
+    Object.keys(G.items).filter(id => S.loc[id] !== "player" && S.loc[id] !== S.room).forEach(id => add(id, "away", [nm(id), ...(G.items[id].aliases || [])], 0));
     return hits;
   };
   const best = hits => hits.sort((x, y) => y.len - x.len || y.rank - x.rank)[0];
@@ -98,7 +97,7 @@
     return !!t && (print("Through the doorway: " + txt(t)), true);
   };
   // "examine <a word the room's text used>": that sentence, looked at closer
-  const wordsOf = s => ` ${s.replace(/\[(\w+)\]/g, (m, id) => (G.items[id] || G.npcs[id])?.name || id).toLowerCase().replace(/'s\b/g, "").replace(/[^\p{L}\p{N}' ]+/gu, " ").replace(/\s+/g, " ")} `;   // "mama" finds "Mama's"
+  const wordsOf = s => ` ${s.replace(/\[(\w+)\]/g, (m, id) => thing(id) ? nm(id) : id).toLowerCase().replace(/'s\b/g, "").replace(/[^\p{L}\p{N}' ]+/gu, " ").replace(/\s+/g, " ")} `;   // "mama" finds "Mama's"
   let heard = [];
   const SYS = new Set(JSON.stringify(G.messages || {}).match(/"(?:[^"\\]|\\.)*"/g)?.map(q => JSON.parse(q)) || []);   // the engine's own lines, as reworded
   const closer = a => {
@@ -148,7 +147,8 @@
   const endTurn = () => {
     if (extras) {
       let room = (G.extras ?? 9) - npcLines;
-      for (const T of extras) { if (room <= 0) break; if (T.once) S.nouns.once.push(T.id); print(txt(T.text)); room--; }
+      for (const T of extras) { if (room <= 0) break; if (!key(T.key)) continue;   // still true after this turn's events (an animal may have left)
+        if (T.once) S.nouns.once.push(T.id); print(txt(T.text)); room--; }
       const b = room > 0 && !warned && band(); if (b) print(b);
     }
     if (fb && !warned) print(txt(rotate(G.feedback)));
@@ -157,26 +157,18 @@
   const react = id => { const first = !S.nouns.seen.includes(id);
     if (first) S.nouns.seen.push(id);
     if (first && G.reactions?.[id] && test(G.reactIf)) print(txt(G.reactions[id])); };
-  // "ask <npc> about <topic>"
-  const ask = a => {
-    for (const npc in G.topics || {}) { const P = G.topics[npc];
-      if (!test(P.when)) continue;
-      if (P.coldKey && key(P.coldKey)) return say([null, rotate(P.cold)]);
-      const one = a.split(" ").map(w => w.replace(/s$/, "")).join(" ");   // "hippos" asks about the hippo
-      const hits = P.list.flatMap(t => t.words.filter(w => has(a, w) || has(one, w)).map(w => ({ t, len: w.split(" ").length }))).sort((x, y) => y.len - x.len);
-      return say(pick(hits[0]?.t.lines || P.other)); }
-  };
+  // someone here who answers "ask/tell X about Y" with the core's npcs.X.topics
+  const asked = () => at(G.npcs).find(id => G.npcs[id].topics);
   const commands = {};
   for (const v of MINE) if (!own(CMDS, v)) commands[v] = () => print(msg("huh"));   // the before hook answers first
   const mine = v => MINE.has(v) || ["examine", "go", "wait", "say", "talk"].includes(v);
   function answer(v, a) {
     noun = null; verb = v;
-    if ((v === "ask" || v === "tell") && ask(a)) return true;
+    if ((v === "ask" || v === "tell") && asked()) return;   // the core's topics answer
     if (v === "say") {   // no question or checkpoint answered it: a topic if it names one, else talk
-      for (const npc in G.topics || {}) { const P = G.topics[npc];
-        if (!test(P.when)) continue;
-        return P.list.some(t => t.words.some(w => has(a, w))) ? ask(a) : (exec("talk", npc), true); }
-      return;
+      const n = asked(); if (!n) return;
+      const named = Object.keys(G.npcs[n].topics).some(k => k !== "*" && k.split("|").some(w => has(a, w)));
+      return exec(named ? "ask" : "talk", named ? `${n} about ${a}` : n), true;
     }
     if (v === "wait") return key("ESCAPE") && say(pick(ANY.wait));
     if (!a) {   // the verb alone: this room's line, then the lone-verb line, then anywhere
@@ -196,6 +188,8 @@
       return print(msg("notHere")), refund(), true;
     }
     const t = thingOf(h);
+    // two of the core's things fit the words equally ("gate" on the roof): the core asks "Which do you mean?"
+    if (h.kind !== "noun" && hits.some(x => x.kind !== "noun" && x.id !== h.id && x.len === h.len && x.rank === h.rank)) return;
     // strikes: a strike verb on a strike thing while the Don is watching
     if (key("TOUR") && G.strike) {
       const target = (G.strikeWith || []).includes(v) ? hits.find(x => thingOf(x).strike) : t.strike && h;
@@ -208,6 +202,7 @@
     if (h.kind !== "noun" && v === "examine") {   // items and NPCs: the core's own lines (or a first-look close-up)
       const close = G.firstLook?.[h.id] && !S.nouns.seen.includes(h.id);
       react(h.id); return close ? (print(txt(G.firstLook[h.id])), true) : undefined; }
+    if (h.kind !== "noun" && (own(t.on, v) || own(own(G.kinds, t.kind), v))) return;   // its own reply, or its kind's: the core's
     if (h.kind !== "noun" && !MINE.has(v) && v !== "go") return;
     if (h.kind === "noun") noun = t;
     if (v === "examine") { say(pick(t.examine)); react(h.id); return true; }
@@ -231,7 +226,7 @@
     before(v, a) {
       if (v === "look" && (!a || ["around", "room", "here"].includes(a))) tails();
       // a checkpoint: anything that costs a turn and reached here fails it. Note why, and let CAUGHT say it
-      if (G.caught && test(G.caught.if) && !isFree(v)) return (S.nouns.notes.CAUGHT_BY ??= G.caught.by(v, a)), true;
+      if (G.caught && test(G.caught.if) && !isFree(v) && !((v === "ask" || v === "tell") && asked())) return (S.nouns.notes.CAUGHT_BY ??= G.caught.by(v, a)), true;
       if (mine(v)) return answer(v, LINE.said);   // the words as typed: particles stay ("examine down there")
     },
     // what was read in this room (for lookCloser), and the lines that shape the end of the turn
@@ -250,8 +245,8 @@
     afterTurn: endTurn,
     validate(need) {
       const check = (k, p) => k && k.split("&").forEach(x => { x = x.replace(/^!/, ""); need(x === "SOLVED" || own(G.conds, x), p, `no condition "${x}" in conds`); });
-      const walk = (L, p) => (L || []).forEach((l, i) => { check(l[0], `${p}[${i}]`); need(typeof l[1] === "string", `${p}[${i}]`, "needs text");
-        [...l[1].matchAll(/\[(\w+)\]/g)].forEach(m => need(thing(m[1]), `${p}[${i}]`, `[${m[1]}] is not an item or NPC`)); });
+      const walk = (L, p) => (L || []).forEach((l, i) => { check(l[0], `${p}[${i}]`); need(l[1] && (typeof l[1] === "string" || typeof l[1] === "object"), `${p}[${i}]`, "needs text");
+        [...JSON.stringify(l[1]).matchAll(/\[(\w+)\]/g)].forEach(m => need(thing(m[1]), `${p}[${i}]`, `[${m[1]}] is not an item or NPC`)); });
       for (const id in N) { const n = N[id];
         need(n.at === "any" || own(G.rooms, n.at), `nouns.${id}.at`, `no room "${n.at}"`);
         need(n.cat in CAT, `nouns.${id}.cat`, `no category "${n.cat}"`);

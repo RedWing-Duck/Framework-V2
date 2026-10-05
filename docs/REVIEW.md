@@ -160,7 +160,7 @@ same layer. All are in the core now, with tests (`tests/words/` is a small game 
 
 **Breaking changes for a game written for the third pass**
 - `it` no longer means a person. If a game relied on "talk to the guard", "x it", give the person `pronoun: "it"` (as damp-cell's rat has).
-- An event that moves a visible thing silently now prints a line. Set `messages: { arrives: "", leaves: "" }` to keep the old behavior; big-footprint does, so the differential test against v1 still passes, because its Don and Nando have their own lines.
+- An event that moves a visible thing silently now prints a line. Set `messages: { arrives: "", leaves: "" }` to keep the old behavior; big-footprint did, so the differential test against v1 still passed, because its Don and Nando have their own lines. (Its rev 4 gives every one of their moves a line instead, and uses the core's lines for its roaming animals; scripted playthroughs replaced the differential test.)
 - `put X in Y` with X on the floor now takes it first instead of failing.
 - Default messages use `{the}` instead of "the {it}". A game that reworded them is unaffected; the output only changes for a `proper` thing.
 
@@ -179,4 +179,4 @@ A read of the fourth pass found places where the word layer stepped around the r
 | Untested: `{dir}`, `article: "an"`/`"some"`, `proper` in "Which do you mean?" | Tests only; the code already worked | messages: {dir} in arrives/leaves; article an/some through {a}/{A}; proper names in 'Which do you mean?' |
 | Transcript download untested | `tools/headless.js` gets opt-in `downloads()` (Blob, URL, a link's click); the old no-download fallback test stays | transcript: saves '<title> transcript.txt' with every line printed, then says how many |
 | Hook order undocumented | `docs/ADDONS.md`: hooks run in `build.json` order; the first `before` that returns true stops the command | hook order: before hooks run in build.json order, and the first that answers stops the command |
-| Design files mixed into the release pack | GDD, Scripts (rev 1-3), build brief and QA focus moved to `games/big-footprint/design/`; links updated. `release/v1/big-footprint.html` stays (the differential test reads it) | (none: the whole suite, including the differential, still passes) |
+| Design files mixed into the release pack | GDD, Scripts (rev 1-3), build brief and QA focus moved to `games/big-footprint/design/`; links updated. `release/v1/big-footprint.html` stays (the differential test read it; since the game's rev 4 it is history) | (none: the whole suite, including the differential, still passes) |
