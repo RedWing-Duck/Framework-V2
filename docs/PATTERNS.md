@@ -184,7 +184,7 @@ order the player used. So the ticket can still have its own `give` reply ("Give 
 
 ```js
 attic: { name: "Attic", ..., up: "Rafters, and daylight through a missing tile.", down: "Dust, and a trail through it." },
-bat: { name: "bat", at: "attic", level: "up", desc: "Hanging upside down, one eye open." },
+bat: { name: "bat", at: "attic", level: "up", desc: "Hanging upside down, one eye open." },   // "The bat: Hanging upside down..."
 mouse: { name: "mouse", at: "attic", level: "down", desc: "It freezes. So do you." },
 on: { clap: [{ if: { level: { bat: "up" } }, level: { bat: "down" }, say: "The [bat] drops and flaps around your ankles." }] }
 ```

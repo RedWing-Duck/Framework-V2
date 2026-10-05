@@ -213,14 +213,14 @@ const T = {
     atrium: [[{ if: { flag: "escape" }, text: "The glass roof shivers with every thud. Lightning, and for a second, a huge shadow." }, "The glass roof, rain drumming on it."],
       "Pepita's pool, gold coins glinting under the water."],
     office: ["A ceiling fan, turning slowly, stirring the cigar smoke.", "A thick red rug, and one cigar ash nobody dared to sweep up."],
-    aviary: ["Fogged glass, and peacocks on every perch, all of them looking down at you.", "Scuffed tiles, the marks spaced a very long stride apart."],
-    terrace: ["Rain, lightning, and nothing between you and the sky.", "Forty floors down, the city. The empty lot next door is the one dark square."],
+    aviary: [[{ if: "OUT_PEACOCKS", text: "Fogged glass and empty perches, a few feathers still drifting down." }, "Fogged glass, and peacocks on every perch, all of them looking down at you."], "Scuffed tiles, the marks spaced a very long stride apart."],
+    terrace: [[{ if: { not: "OUT_GIRAFFE" }, text: "Rain, lightning, and the giraffe's head, high above her gate, chewing." }, "Rain, lightning, and nothing between you and the sky."], "Forty floors down, the city. The empty lot next door is the one dark square."],
     enclosure: ["The bars, bent outward high over your head. Whatever did that is tall.", "Footprints the size of snow shovels, pressed into the straw."] },
   animal: {   // [REV4] the loose animals, out of their pens and roaming the palace (items, kind "animal")
     giraffe: { random: ["Six meters of eyelashes and bad decisions, eating the Don's silk lilies one by one.", "She looks down at you from the ceiling, chewing, and decides you're not food. Probably."] },
     jaguar: { random: ["Black, silent, and very interested in the pozole on your sleeve.", "It sits like a statue and watches you like a bill collector."] },
-    reina: [{ if: { level: { reina: "up" } }, text: "Reina, up in the palms, tail hanging down like a stolen chandelier. She screams at you from above." },   // [REV5]
-      { random: ["Reina, the loudest of the Don's peacocks, tail fanned like a stolen chandelier.", "Reina screams at you personally. Then at a lamp. Then at you again."] }],
+    reina: [{ if: { level: { reina: "up" } }, text: "Up in the palms, tail hanging down like a stolen chandelier. She screams at you from above." },   // [REV5]
+      { random: ["The loudest of the Don's peacocks, tail fanned like a stolen chandelier.", "She screams at you personally. Then at a lamp. Then at you again."] }],
     take: "Faster than you, angrier than you, and not going in your jacket.",
     eat: "Absolutely not. In this house, the animals are family.",
     ride: { random: ["You picture riding {the} out of here. {The} pictures something else.", "{The} gives you a look. You'd make it about one step."] },

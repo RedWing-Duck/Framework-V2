@@ -4,6 +4,7 @@ Credits: **Retroment Gaming.** Week 01 was a process check (a dry run), so there
 
 ## Week 01 rev5: look up, look down; replies in slot order
 - **Look up / look down** in every room: the chandelier, the fresco, the glass roof, the city forty floors down, the footprints in the straw. The giraffe is up (six meters); the jaguar and Reina are down, except that Reina flies up into the atrium's palms when released and lands when she first moves. Free, like `look`.
+- **Named lines:** each thing at that level is named before its description ("The jaguar: Black, silent..."). Room tests found two lines that then read wrong, now fixed: Reina's descriptions began with her own name ("Reina: Reina, up in the palms"), and the aviary still had "peacocks on every perch" after they'd escaped. The terrace now shows the giraffe's head before she's let out.
 - **Slot order** is the engine's now: "give the Don the card" asks the Don first, as "give the card to the Don" always did, so the card and coin no longer need a "not to the Don" guard on their own lines.
 - Tests: up and down in big-footprint; the two-slot test covers "give the don the card". The walkthrough, clocks and endings are unchanged.
 

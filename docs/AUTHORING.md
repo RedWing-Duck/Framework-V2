@@ -109,15 +109,16 @@ key: { name: "iron key", desc: TEXT, at: "cell", aliases: ["rusty"], kind: "tool
 
 ```js
 hall: { name: "Hall", ..., up: "Cobwebs on the beams.", down: "Bare boards." },
-kite: { name: "kite", at: "hall", level: "up", desc: "A paper kite, caught on a beam." },
-hook: { name: "hook", at: "hall", fixed: true, hidden: true, level: [{ if: { flag: "fallen" }, text: "down" }, "up"], desc: "An iron hook." },
+kite: { name: "kite", at: "hall", level: "up", desc: "Paper, torn, caught on a beam." },
+hook: { name: "hook", at: "hall", fixed: true, hidden: true, level: [{ if: { flag: "fallen" }, text: "down" }, "up"], desc: "Rusted iron." },
 on: { shake: [{ if: { level: { kite: "up" } }, level: { kite: "down" }, say: "The kite drops." }, "Nothing falls."] }
 ```
 
 - `level` says where a thing is in its room: `"up"` (on a beam, a giraffe's head, a bat) or `"down"` (on the floor, a rat).
   Things without a level are neither, and `look up` / `look down` don't list them. TEXT variants let the level follow the state.
-- `look up` prints the room's `up` text, then the `desc` of every thing in sight here (not carried, not in a closed holder;
-  hidden scenery counts) whose level is `"up"`. `look down` the same for `"down"`. With neither, "Nothing special up there."
+- `look up` prints the room's `up` text, then every thing in sight here (not carried, not in a closed holder; hidden scenery
+  counts) whose level is `"up"`, named, with its `desc`: "The kite: Paper, torn, caught on a beam." (message `levelSee`,
+  `{The}: {text}`). Write those descriptions so they read after the name: not "A paper kite, caught..." or "Reina, up in...". `look down` the same for `"down"`. With neither, "Nothing special up there."
   (message `levelNone`, with `{dir}`). Each thing shown counts as examined. `look up at the beam` examines the beam.
 - The effect `level: { kite: "down" }` moves a thing up or down now, and the game remembers it (`S.level`, saved and undone
   with everything else); `level: { kite: null }` puts it back to its data. The condition `level: { kite: "up" }` tests it.
@@ -340,7 +341,7 @@ messages: { huh: { rotate: ["Huh?", "Say that again?"] }, cantGo: "No way throug
 | `firstTake` | (first taking {the}) |
 | `arrives`, `leaves` | {The} arrives. / {The} leaves. (`{dir}`: the exit it used, or empty) |
 | `noOops` | There's nothing to correct. |
-| `levelNone` | Nothing special {dir} there. (`{dir}`: up or down) |
+| `levelNone`, `levelSee` | Nothing special {dir} there. (`{dir}`: up or down) / {The}: {text} (a thing at that level and its desc) |
 | `brief`, `verbose` | Brief descriptions: a room you've seen shows its name and what's there. / Full descriptions: every room is described in full. |
 | `transcript`, `noTranscript` | Transcript saved: {n} lines. / This browser won't save files, so the transcript can't be saved here. |
 

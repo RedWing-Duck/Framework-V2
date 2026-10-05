@@ -22,8 +22,8 @@ const G = {
     map: { name: "honest map", article: "an", at: "study", desc: "It admits where it's wrong." },
     sugar: { name: "sugar", article: "some", at: "study", desc: "Sweet.",
       on: { take: "The sugar is caked to the shelf." } },   // a reply that refuses a take, typed or implicit
-    kite: { name: "kite", at: "hall", level: "up", desc: "A paper kite, caught on a beam." },   // up: "look up" shows it; dropped, it lands down
-    hook: { name: "hook", at: "hall", fixed: true, hidden: true, level: [{ if: { flag: "fallen" }, text: "down" }, "up"], desc: "An iron hook." },   // the level follows the state
+    kite: { name: "kite", at: "hall", level: "up", desc: "Paper, torn, caught on a beam." },   // up: "look up" shows it; dropped, it lands down
+    hook: { name: "hook", at: "hall", fixed: true, hidden: true, level: [{ if: { flag: "fallen" }, text: "down" }, "up"], desc: "Rusted iron." },   // the level follows the state
     toy: { name: "toy dog", aliases: ["dog"], at: "study", desc: "Stuffed." },
     lamp: { name: [{ if: { flag: "lit" }, text: "lit lamp" }, "unlit lamp"], at: "kitchen", desc: "Brass.",
       on: { light: [{ if: { flag: "lit" }, say: "It's already lit." }, { set: "lit", say: "{The} flickers on." }] } }

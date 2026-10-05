@@ -939,13 +939,17 @@ test("feature up and down: look up / look down in every room; the giraffe is up,
   const g = play(...TOUR, "s", "open aviary", "s"), t = g.get("S.count.turns");
   assert.equal(g.get("S.level.reina"), "up", "released: up in the palms");
   g.type("look up");
-  assert.ok(g.lines().slice(-2)[1].startsWith("Reina, up in the palms"));
+  assert.equal(g.lines().slice(-2)[1], "Reina: Up in the palms, tail hanging down like a stolen chandelier. She screams at you from above.", "named, then described");
   assert.equal(g.get("S.count.turns"), t, "looking is free");
   while (g.get("S.loc.reina === 'atrium'")) g.type("wait");
   assert.equal(g.get("S.level.reina ?? null"), null, "she lands when she moves: back to her data level");
   const l = play(...TOUR, "open giraffe gate", "s", "s", "s", "run", "e");
   while (l.get("S.loc.giraffe !== 'landing'")) l.type("wait");
   l.type("look up");
-  assert.ok(l.lines().some(x => /^(Six meters of eyelashes|She looks down at you from the ceiling)/.test(x)), "the giraffe is up");
+  assert.ok(l.lines().some(x => /^The giraffe: (Six meters of eyelashes|She looks down at you from the ceiling)/.test(x)), "the giraffe is up, named");
+  // wording: a thing's line never repeats its own name ("Reina: Reina, up in...")
+  const named = [...g.lines(), ...l.lines()].map(x => /^(?:The )?([^:]+): (.*)$/i.exec(x)).filter(m => m && ["Reina", "giraffe", "jaguar"].includes(m[1]));
+  assert.ok(named.length >= 2);
+  for (const [line, who, text] of named) assert.ok(!text.toLowerCase().startsWith(who.toLowerCase()) && !text.toLowerCase().startsWith("the " + who.toLowerCase()), line);
 });
 
