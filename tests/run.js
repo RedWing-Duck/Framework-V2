@@ -180,14 +180,15 @@ test("validator: reports broken references, typos in effects and unknown names",
   const broken = CELL.replace('east: "corridor", down', 'east: "corridr", down')
     .replace('if: { in: "yard" }', 'if: { in: "yard", inn: "yard" }')
     .replace('say: "The key turns', 'sey: "The key turns')
-    .replace('title: "The Damp Cell",', 'title: "The Damp Cell", messages: { nope: "x" }, conds: { A: { flog: "x" } },');
+    .replace('title: "The Damp Cell",', 'title: "The Damp Cell", conds: { A: { flog: "x" } },')
+    .replace('messages: { arrives:', 'messages: { nope: "x", arrives:');
   const g = load(broken).boot();
   assert.deepEqual(g.problems(), [
     'rooms.cell.exits.east: no room "corridr"',
     'items.key.on.use[0].sey: unknown effect "sey"',
     'conds.A.flog: unknown condition "flog"',
     'messages.nope: no engine message "nope"',
-    'events[3].if.inn: unknown condition "inn"'
+    'events[2].if.inn: unknown condition "inn"'
   ]);
   assert.equal(g.errors.length, 1, "problems are also logged to the console");
 });
@@ -272,8 +273,8 @@ test("validator: aliases and phrasal verbs must lead somewhere; named conditions
     .replace('if: { in: "yard" }', 'if: { in: "yard", not: "NOPE", any: ["NOPE2"] }');
   assert.deepEqual(load(bad).boot().problems(), [
     'aliases.press: no command "pushh"',
-    'events[3].if.not: no condition "NOPE" in conds',
-    'events[3].if.any[0]: no condition "NOPE2" in conds'
+    'events[2].if.not: no condition "NOPE" in conds',
+    'events[2].if.any[0]: no condition "NOPE2" in conds'
   ]);
 });
 
@@ -301,7 +302,7 @@ test("containers and surfaces: closed toolbox, put in, contents listed, take all
 test("put X on Y: a holder takes it; anything else is use X on Y (recipes answer)", () => {
   const g = newGame(SUN);
   g.type("s", "e", "open toolbox", "take all", "w", "n", "put mug on shelf");
-  assert.equal(g.last(), "You don't have that.");
+  assert.deepEqual(g.lines().slice(-2), ["(first taking the mug of coffee)", "You put the mug of coffee on the shelf."], "put takes the thing first");
   g.type("put plywood on window");
   assert.equal(g.last(), "You nail the plywood over the window. Solid.");
 });
@@ -364,3 +365,99 @@ test("validator: holders, at chains and open/close/inside targets", () => {
   ]);
 });
 require("./big-footprint");   // This Place Has a Big Footprint: the original regression suite
+
+// ---- the word layer (tests/words): two slots, pointing by a word, pronouns by kind, articles, moves you can see
+const WORDS = () => { const g = load(build("tests/words")).boot(); assert.deepEqual(g.problems(), []); g.click("bs"); return g; };
+
+test("two slots: give X to Y and give Y X fill what and with; {the:what} and {The:with} read them", () => {
+  const g = WORDS();
+  g.type("take letter", "show the letter to tony");
+  assert.equal(g.last(), "Big Tony reads the letter and goes pale.");
+  g.type("show tony the lamp");
+  assert.deepEqual(g.lines().slice(-2), ["(first taking the unlit lamp)", "Big Tony shrugs at the unlit lamp."], "a person named first is the second slot; carry:true takes it first");
+  g.type("hit tony with lamp");
+  assert.equal(g.last(), "You swing the unlit lamp at Big Tony.");
+  g.type("hit tony");
+  assert.equal(g.last(), "Hit it with what?", "with: fails when nothing fills the second slot");
+  g.type("drop letter", "e", "show the letter to ana");
+  assert.equal(g.last(), "You don't see that here.", "a first slot that names something out of reach");
+});
+
+test("pointing: a word narrows a name before asking, 'the other one', 'both', 'all except'", () => {
+  const g = WORDS();
+  g.type("take chipped cup");
+  assert.equal(g.last(), "Taken: white cup", "'chipped' fits one cup, so 'cup' doesn't ask");
+  g.type("take the other one");
+  assert.equal(g.last(), "Taken: cup of tea");
+  g.type("drop all", "take cup");
+  assert.equal(g.last(), "Which do you mean: the white cup or the cup of tea?");
+  const t = g.get("S.count.turns");
+  g.type("both");
+  assert.deepEqual(g.lines().slice(-2), ["Taken: white cup", "Taken: cup of tea"]);
+  assert.equal(g.get("S.count.turns"), t + 1, "'both' is one turn");
+  g.type("drop cup");
+  assert.equal(g.last(), "Which do you mean: the white cup or the cup of tea?", "both carried: drop still asks");
+  g.type("tea", "drop all", "take all except lamp and letter");
+  assert.deepEqual(g.get("Object.keys(S.loc).filter(k => S.loc[k] === 'player')").sort(), ["tea", "white"]);
+});
+
+test("pronouns by kind: it is the last item, him/her the last person by npcs.X.pronoun, them the last thing", () => {
+  const g = WORDS();
+  g.type("x letter", "x tony", "x it");
+  assert.equal(g.last(), "Sealed with red wax.", "it skips the person");
+  g.type("x him");
+  assert.equal(g.last(), "Big.");
+  g.type("x her");
+  assert.equal(g.last(), "You don't see that here.", "Tony is him, not her");
+  g.type("show it to him");
+  assert.ok(g.lines().includes("Big Tony reads the letter and goes pale."));
+});
+
+test("articles: proper names take none; {A} and {The}; a name can follow the state", () => {
+  const g = WORDS();
+  g.type("whistle", "z");
+  assert.equal(g.last(), "Ana arrives.", "proper: no 'The Ana'");
+  g.type("light lamp");
+  assert.equal(g.last(), "The lit lamp flickers on.");
+  g.type("take lit lamp", "i");
+  assert.equal(g.last(), "You carry: lit lamp");
+  const c = newGame();   // damp-cell: a silent event's move is narrated by messages.arrives / leaves
+  c.type("z", "z");
+  assert.ok(c.lines().includes("The rat scurries out."));
+  c.type("e");
+  assert.ok(c.lines().includes("Here: rat"));
+});
+
+test("moves you can see: an event that says nothing narrates things entering or leaving the room", () => {
+  const g = WORDS();
+  g.type("whistle", "z");
+  assert.equal(g.last(), "Ana arrives.");
+  g.type("z", "z");
+  assert.equal(g.last(), "Ana leaves.");
+  g.type("e");
+  assert.ok(g.lines().includes("Here: Ana"));
+  g.type("z");
+  assert.equal(g.last(), "Ana leaves.", "wherever the player is");
+});
+
+test("oops replaces the unknown word of the last line; brief and verbose; the transcript keeps every line", () => {
+  const st = storage(), g = load(build("tests/words"), { storage: st }).boot(); g.click("bs");
+  g.type("x lettr", "oops letter");
+  assert.equal(g.last(), "Sealed with red wax.");
+  g.type("tkae cup of tea", "oops take");
+  assert.equal(g.last(), "Taken: cup of tea");
+  g.type("oops");
+  assert.equal(g.last(), "There's nothing to correct.");
+  g.type("brief", "e", "w");
+  assert.ok(!g.lines().slice(-6).includes("A small kitchen."), "brief: a room seen before skips its description");
+  assert.equal(load(build("tests/words"), { storage: st }).boot().get("PREF.brief"), true, "a player setting: kept after a reload");
+  const t = g.get("S.count.turns");
+  g.type("verbose", "undo");
+  assert.equal(g.get("S.count.turns"), t - 1, "verbose is free (undo steps back past it)");
+  assert.equal(g.get("PREF.brief"), false, "undo doesn't change a setting");
+  for (let i = 0; i < 300; i++) g.type("z");
+  assert.equal(g.get("LOG[0]"), "Words", "the transcript keeps what the screen dropped");
+  assert.ok(g.get("LOG.length") > 600);
+  g.type("transcript");
+  assert.equal(g.last(), "This browser won't save files, so the transcript can't be saved here.");
+});

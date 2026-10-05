@@ -7,7 +7,7 @@ A tiny, dependency-free framework for text adventures, and a blueprint for new t
 - **Small.** No dependencies. Building and testing need only Node 18+.
 - **One file.** Each finished game is a single HTML file that runs anywhere, including offline.
 
-v2 folds what the first games kept rebuilding into the engine: verbs and replies on anything, a command reader (verb + things, with "Which do you mean?", pronouns, `all`), containers and surfaces, ask/tell topics, kinds, rotating and random text, named conditions, rewordable messages, undo/again/restart and saves that survive a reload. It also adds hooks, so add-ons never patch the engine. See [`docs/REVIEW.md`](docs/REVIEW.md) for what changed and why, and how to port a v1 game.
+v2 folds what the first games kept rebuilding into the engine: verbs and replies on anything, a command reader (verb + things, with "Which do you mean?", pronouns, `all`), containers and surfaces, ask/tell topics, kinds, rotating and random text, named conditions, rewordable messages, undo/again/restart and saves that survive a reload. It also adds hooks, so add-ons never patch the engine. The fourth pass finished the word layer: two slots ("give the bread to the guard"), pointing by a word ("the chipped cup", "the other one", "both", "all except"), pronouns by kind, articles and proper names, names that change, moves you can see, "(first taking...)", `oops`, `brief` and `transcript`. See [`docs/REVIEW.md`](docs/REVIEW.md) for what changed and why, and how to port a v1 game.
 
 ## What it is, and what it isn't
 

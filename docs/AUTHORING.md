@@ -9,14 +9,16 @@ Start from `template/game.js`. For complete examples, see `games/damp-cell/game.
 ```
 title, intro:TEXT, start (room id), status:TEXT (the line above the input), seed (fixed random rolls), version (ends old saves)
 rooms:  { id: { name, desc:TEXT, on:REPLIES, exits:{ dir: "roomId" | { to, if:COND, fail:TEXT, hidden:true } } } }
-items:  { id: { name, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES,
-          holds:"in" | "on" (a container or a surface), closed:true | false (can be opened and closed) } }
-npcs:   { id: { name, desc:TEXT, at, aliases:[], kind, on:REPLIES, topics:{ "a|b": REPLY, "*": REPLY },
+items:  { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES,
+          holds:"in" | "on" (a container or a surface), closed:true | false (can be opened and closed),
+          proper:true (no "the"), article:"an" | "some" | "" (instead of "a") } }
+npcs:   { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, proper, article, pronoun:"her" | "him" | "them" | "it",
+          on:REPLIES, topics:{ "a|b": REPLY, "*": REPLY },
           dialogue:{ nodeId:{ text:TEXT, options:[{ text, next, if:COND, ...EFFECT }] } } } }
 self:   { name, aliases:[], kind, on:REPLIES }   the player as a target: "smell me", "think"
 on:     REPLIES   the game's own replies, tried after the room's
 kinds:  { kind: REPLIES }   replies every thing of that kind shares ("eat" for every "tool")
-verbs:  { verb: { aliases:[], free:true, fail:TEXT, hidden:true } }
+verbs:  { verb: { aliases:[], free:true, fail:TEXT, hidden:true, carry:true (take the direct thing first) } }
 aliases:{ word: "verb" }   phrasal:{ "two words": "verb" }
 conds:  { NAME: COND }   named conditions: if:"NAME", or is:"NAME" next to other keys
 messages: { id: TEXT }   rewords any engine line (see Messages)
@@ -27,8 +29,9 @@ REPLIES: { verb: REPLY }   REPLY = a string, or a list of { if:COND, ...EFFECT }
 TEXT:   a string, or a list of variants: [ { if:COND, text:TEXT }, ..., "fallback" ]
         { rotate:[TEXT, ...] } shows the next line each time and loops; { ladder:[...] } stays on the last;
         { random:[TEXT, ...] } picks one at random.
-        [id] shows a thing's name, styled. {counter} shows a counter. {it} is the thing being acted on.
-COND:   { has, here, in, flag, is, seen, visited, open, inside:{ item:"holder" }, not:COND, any:[COND], all:[COND],
+        [id] shows a thing's name, styled. {counter} shows a counter. {it} is the thing being acted on,
+        {what} and {with} the two slots. {the}, {The}, {a}, {A} add an article to {it}; {the:with}, {A:what}... to a slot.
+COND:   { has, here, in, flag, is, seen, visited, open, inside:{ item:"holder" }, what, with, not:COND, any:[COND], all:[COND],
           min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, since:{ mark:n }, said:"a|b", chance:n }
         has/here/flag/is/seen/visited take one name or a list (all must pass); in takes a room or a list (any).
 EFFECT: { say:TEXT, set, unset, give, take, open, close (one or a list), move:{ id: where }, add:{ counter:n },
@@ -83,11 +86,20 @@ key: { name: "iron key", desc: TEXT, at: "cell", aliases: ["rusty"], kind: "tool
 - `fixed: true`: it can't be taken. `hidden: true`: it isn't listed in "You see:" (scenery mentioned by its aliases in the text).
 - `kind` groups things that share replies (see `kinds`).
 - The player names a thing by its id, its full name, an alias (multi-word aliases work) or any single word of its name. The longest phrase wins, so "iron key" beats "key" when both exist.
+  Words next to each other narrow one thing: with a "cup" whose alias is "chipped" and a "cup of tea", "chipped cup" is the first cup, and no question is asked.
+- `name` can be TEXT variants, so the name follows the state: `name: [{ if: { flag: "lit" }, text: "lit lamp" }, "unlit lamp"]`.
+  The player names it by its name now (and its aliases). Use `if` variants only: a `rotate` would move on every time the name is read.
+- Articles: messages say "the [mug]" and "a [mug]". `proper: true` drops the article ("Big Tony", not "the Big Tony"),
+  and `article` sets the indefinite one: `"an"` (an hour), `"some"` (some water), or `""`. Without it, "a" or "an" follows the first letter.
 - `examine` shows `desc`, and afterwards `seen: "id"` is true.
 - When a word fits several things equally ("coffee" for the mug of coffee and the can of coffee grounds), the engine asks
   "Which do you mean: the can of coffee grounds or the mug of coffee?" (free) and the next words that pick one finish the command.
-  `take` first rules out what's already carried, and `drop` what isn't. Give things distinct words and the question never comes up.
-- `it`, `them`, `him` and `her` mean the last thing acted on: "x radio", then "listen to it".
+  `take` first rules out what's already carried, and `drop` and `put` what isn't. A word elsewhere in the line that fits only one of them
+  picks it too. Give things distinct words and the question never comes up.
+- After a question (or a word that narrowed one), "the other one" is the other choice, and "both" (or "all") takes or drops both.
+- Pronouns: `it` is the last item acted on, `him` and `her` the last person, `them` the last thing of either kind. A person is
+  both `him` and `her` unless `pronoun` says which (`"her"`, `"him"`, `"them"`, or `"it"` for an animal).
+  "x letter", "x tony", "show it to him" shows the letter to Tony.
 
 ## Containers and surfaces
 
@@ -149,6 +161,28 @@ radio: { name: "radio", at: "cabin", fixed: true,
 
 A REPLY is a string, an effect object, or a list of them. The first entry whose `if` passes runs.
 
+### Two slots: "give the bread to the guard"
+
+A line can name two things in two roles. `LINE.what` is the direct thing and `LINE.with` the second one, after a role word
+(`to with on onto in into inside at about from for under behind`). The condition `what:` and `with:` test them, and `{what}`,
+`{with}`, `{the:what}`, `{The:with}` print them:
+
+```js
+guard: { ..., on: { give: [
+  { if: { what: "bread" }, take: "bread", give: "key", set: "fed", say: "He snatches it." },
+  "He doesn't want {the:what}." ] } },
+verbs: { give: { carry: true } }   // "(first taking the bread)" when it's lying here
+```
+
+- "give the bread to the guard", "give the guard the bread" and "give guard bread" all mean what = bread, with = guard:
+  with no role word, the first and last things named fill the slots, and a person named first is the second slot.
+- With nothing before the role word, the thing after it is the direct one: "talk to the guard", "listen to the radio".
+- "hit the rat with the stick": what = rat, with = stick. A reply on the stick, the rat, the room or the game can answer, and
+  `with: "stick"` tells "hit the rat" from "hit the rat with the stick".
+- A first slot that names something out of reach ("give the bread to him" with no bread here) answers "You don't see that here."
+- `put X in/on Y` uses the slots, and so does the craft add-on. `verbs.X.carry: true` takes the direct thing first, with a
+  "(first taking ...)" line (message `firstTake`), when it's here and can be taken; `put` does this on its own.
+
 When the player types a verb, the engine tries, in order, and stops at the first reply that answers:
 1. each thing the line names, last named first: its `on[verb]`, then `kinds[its kind][verb]`;
 2. the room's `on[verb]`;
@@ -175,6 +209,9 @@ events: [
 ```
 
 - Events are checked in list order after every command, and once at the start of a new game.
+- An event that moves something into or out of the player's sight and says nothing (no `say` or `end`) prints `arrives` or
+  `leaves`: "The [rat] arrives." Reword them in `messages` (`{dir}` is the exit it used from here, when there is one), or set them
+  to `""` to keep moves silent. An event with a `say` tells its own story, so it gets no extra line.
 - Each fires once, unless it has `repeat: true` (every time `if` passes) or `every: n` (on every nth turn, while `if` passes).
 - Earlier events' changes are visible to later events in the same turn. After an `end`, no further events run.
 
@@ -190,7 +227,9 @@ say:  { random: ["A crow caws.", "Wind.", "Somewhere, a bell."] }      // one at
 ```
 
 - `[id]` shows the item's or NPC's name, styled. The validator reports any `[id]` that doesn't exist.
-- `{counter}` shows a counter's value, such as `{turns}`. `{it}` becomes `[id]` for the thing being acted on.
+- `{counter}` shows a counter's value, such as `{turns}`. `{it}` becomes `[id]` for the thing being acted on, and `{what}` / `{with}` the two slots.
+- `{the}`, `{The}`, `{a}`, `{A}` put an article before `{it}`: "the [mug]", "A [rat]", or just "[Tony]" for `proper: true`.
+  `{the:with}` (or `{A:what}`, or `{the:to}` in a message's own values) does the same for another value.
 - A rotation's place is saved with the game.
 - Random rolls come from a generator kept in the game state, so Continue, `undo` and `again` replay the same roll instead of re-rolling.
 
@@ -213,6 +252,8 @@ All keys in an `if` must pass. `if: "NAME"` is short for `if: { is: "NAME" }`.
 | `since: { mark: n }` | at least n turns since the mark was set |
 | `said: "a\|b"` | the typed words contain one of the phrases |
 | `open: "box"` | that holder is open |
+| `what: "bread"` or a list | the direct thing of this command is one of them ("give **bread** to the guard") |
+| `with: "guard"` or a list | the second thing is one of them ("give the bread to the **guard**", "hit the rat with the **stick**") |
 | `inside: { coin: "box" }` | that thing is directly in or on that holder |
 | `chance: n` | a random roll passes, n times in 100. Rolled once per condition per command, so checking the same `if` twice in one turn gives the same answer |
 
@@ -263,9 +304,14 @@ messages: { huh: { rotate: ["Huh?", "Say that again?"] }, cantGo: "No way throug
 | `received`, `lost` | (Received: {it}) / (Lost: {it}) |
 | `noAgain`, `noUndo`, `undone` | There's nothing to do again yet. / There's nothing to undo. / Undone. |
 | `which`, `nothingAll` | Which do you mean: {list}? / There's nothing here to {verb}. |
-| `putIn`, `putOn`, `cantPut`, `isShut` | You put the {it} in the {to}. / You put the {it} on the {to}. / You can't put something inside itself. / The {it} is closed. |
-| `inIt`, `onIt` | In the {it}: {list}. / On the {it}: {list}. |
-| `opened`, `closed`, `alreadyOpen`, `alreadyClosed` | You open the {it}. / You close the {it}. / It's already open. / It's already closed. |
+| `putIn`, `putOn`, `cantPut`, `isShut` | You put {the} in {the:to}. / You put {the} on {the:to}. / You can't put something inside itself. / {The} is closed. |
+| `inIt`, `onIt` | In {the}: {list}. / On {the}: {list}. |
+| `opened`, `closed`, `alreadyOpen`, `alreadyClosed` | You open {the}. / You close {the}. / It's already open. / It's already closed. |
+| `firstTake` | (first taking {the}) |
+| `arrives`, `leaves` | {The} arrives. / {The} leaves. (`{dir}`: the exit it used, or empty) |
+| `noOops` | There's nothing to correct. |
+| `brief`, `verbose` | Brief descriptions: a room you've seen shows its name and what's there. / Full descriptions: every room is described in full. |
+| `transcript`, `noTranscript` | Transcript saved: {n} lines. / This browser won't save files, so the transcript can't be saved here. |
 
 Add-ons add their own ids (light: `dark`, `darkFalls`; craft: `combineWhat`, `combineNo`, `combineFail`; and so on).
 
@@ -275,22 +321,31 @@ Add-ons add their own ids (light: `dark`, `darkFalls`; craft: `combineWhat`, `co
 `open`, `close (shut)`, `inventory (i)`, `examine (x, look at)`, `use`, `talk (speak)`, `ask`, `tell`, `wait (z)`,
 `again (g)`, `undo`, `restart`, `help (h, ?)` and `menu (q, quit)`, plus every verb the game gives replies to.
 
+Also, all free:
+- `oops <word>`: runs the last line again with its unknown word replaced ("take lmap", "oops lamp"). With no unknown word, the last word is replaced.
+- `brief` / `verbose`: a room seen before shows only its name and lists, or the full description (the default). It's a player
+  setting: kept in the browser, and untouched by `undo` and `restart`.
+- `transcript`: saves every line of this session as a text file, including what scrolled off the screen. For playtests and bug reports.
+
 ### How a command is read
 
 The engine reads a **verb followed by the things it names**. It is a command reader, not a grammar parser:
 - The first word (or a two-word phrasal verb like "pick up") is the verb, after aliases. A direction alone means `go`.
 - Punctuation is ignored, so `north.` and `hello!` work. Input is capped at 200 characters.
 - Filler words (`a an the to at with on`) are dropped. Particles at either end of the object (`up down around under out off...`) are dropped too: "feel around", "put the hammer down".
-- The rest is scanned for things in reach, longest name first. Other words are kept for `said:` but otherwise ignored, so "use the key on the door" and "use key door" read the same.
-- `take` and `drop` accept `all` and `X and Y`. Pronouns stand for the last thing acted on. A name that fits several things asks "Which do you mean?".
+- The rest is scanned for things in reach, longest name first, and words next to each other narrow one thing ("chipped cup"). Other words are kept for `said:` but otherwise ignored.
+- The first role word (`to`, `with`, `on`, `at`, `about`...) splits the line into two slots (`what:` and `with:`). "use the key on the door" and "use key door" still read the same: without one, the first and last things named fill the slots.
+- `take` and `drop` accept `all`, `all except X`, `both` and `X and Y`. Pronouns stand for the last item (`it`), person (`him`, `her`) or thing (`them`); "the other one" for the other choice of the last question. A name that fits several things asks "Which do you mean?".
 - `look under/behind/in X` runs `search X` when the game has a `search` verb, and otherwise examines X.
 - The echo of what the player typed is printed as typed: `[key]` stays `[key]`.
 
 What it does **not** do (write a reply with `said:`, or an add-on with the `input` hook, if a game needs it):
 - several commands on one line ("take key then go north", "take key. go north");
-- `all except X`, or `all` for verbs other than `take` and `drop`;
-- prepositions as meaning: "put X under Y" and "put X behind Y" are not places, only `in` and `on` holders are;
+- `all` for verbs other than `take` and `drop`;
+- a third slot ("hit the rat with the stick on the head"): only the first role word splits the line;
+- prepositions as places: "put X under Y" fills the slots, but only `in` and `on` holders hold things;
 - adjectives as filters beyond names and aliases ("the red one" works only if "red" is in a name or alias);
+- "guard, open the gate" (orders to people) and "wait until dark": an `input` hook or a `said:` reply;
 - questions to people outside `ask/tell X about Y` and dialogue menus.
 
 ## Turns, saving, undo

@@ -19,7 +19,8 @@
     meta: ["with", "fail", "hint", "secret"],
     before(v, a, ids) {   // a recipe answers before any reply, for combine and for "use a on b"
       if (v !== "combine" && v !== "use") return;
-      const rs = recipes(ids.filter(id => own(G.items, id)).slice(0, 2)), r = rs.find(r => test(r.if));
+      const two = [LINE.what, LINE.with].every(id => own(G.items, id)) ? [LINE.what, LINE.with] : ids.filter(id => own(G.items, id)).slice(0, 2);   // the two slots first
+      const rs = recipes(two), r = rs.find(r => test(r.if));
       if (r) return run(r), true;
       if (rs.length) return print(txt(rs[0].fail) || msg("combineFail")), true;
     },

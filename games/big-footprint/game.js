@@ -652,6 +652,7 @@ const G = {
   status: [{ if: ESC, text: "Bigfoot clock: {clock} · Secrets: {secrets}/3" }, "The tour · Strikes: {strikes}/3"],   // v2: the status line
   messages: {   // the engine's own lines, reworded (ids: docs/AUTHORING.md)
     huh: HUH, cant: HUH, what: HUH,   // one rotation for every "I don't follow"
+    arrives: "", leaves: "",   // the Don's and Nando's moves are narrated by their own lines (as in v1)
     over: { rotate: T.overs },   // F3
     help: T.help,
     exits: [{ if: ESC, text: "" }, "Exits: {list}"],   // ESCAPE: exits are named by landmark in the room text

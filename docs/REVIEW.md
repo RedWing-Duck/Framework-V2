@@ -137,3 +137,31 @@ An outside reviewer read the package (docs and the two compiled games). Their ve
 | The zip has no source or tests | The review package now ships the whole repository: source, tools, tests and built games. |
 
 Then *This Place Has a Big Footprint*, the largest game made with v1, was rebuilt on the framework: see `games/big-footprint/PORT.md`. The port found eight general engine problems, all fixed for every game (listed there). The biggest: `game.js` and the engine shared one scope, so a game's helper could collide with an engine function. The build now gives each `game.js` its own scope.
+
+## Fourth pass: the word layer
+
+A second outside review asked what the command reader still couldn't say. Its answer: no genre is missing, but one sentence
+shape and one way of pointing are. A follow-up read of `engine.js` found a bug behind the second, and six smaller gaps at the
+same layer. All are in the core now, with tests (`tests/words/` is a small game that uses each one).
+
+| Gap | Change |
+|---|---|
+| **The second slot.** "give the bread to the guard" threw the role word away; `said:` couldn't tell "to the guard" from "the guard" | The first role word (`to with on at about in from...`) splits the line. `LINE.what` / `LINE.with`, conditions `what:` / `with:`, TEXT `{what}` / `{with}`. With no role word the first and last things fill the slots ("use key door"), and a person named first is the second slot ("give the guard the bread"). `put` and the craft add-on read the slots. |
+| **Pointing: a bug.** With "red" an alias of one mug, "red mug" matched "red" to that mug, then "mug" to both, and asked "Which do you mean?" anyway | `named()` reads words next to each other as one noun and narrows: each word keeps only the candidates that still fit. A word that fits none starts a new noun, as do "and" and role words. |
+| Pointing: "the other one", "both", "all except" | "other" is a pronoun for the last question (or the last narrowed name); "both" answers a question or means both of an ambiguous name; `take`/`drop all except X` (or `but X`). A word elsewhere in the line that fits one choice settles the question before it's asked. |
+| Pronouns pointed at one thing | `it` is the last item, `him`/`her` the last person (or `npcs.X.pronoun`), `them` the last thing. "x key, x guard, give it to him" works. |
+| "the Big Tony" | `proper: true` and `article`, and `{the}`/`{The}`/`{a}`/`{A}` (also `{the:with}`). Every engine message that said "the {it}" uses them now. |
+| A name couldn't change | `name` is TEXT: `[{ if: { flag: "lit" }, text: "lit lamp" }, "unlit lamp"]`. Matching uses the current name. |
+| Silent moves | An event that moves something into or out of view and says nothing prints `arrives` / `leaves` (`{dir}` available). damp-cell's rat went from two events to one. |
+| "You don't have that." for a key on the floor | `put`, and any verb with `verbs.X.carry: true`, takes the direct thing first: "(first taking the key)". |
+| Typos | `oops <word>` replays the last line with its unknown word replaced. |
+| Playtest logs lost past 500 lines | `transcript` saves the whole session as a text file. The screen still trims; the log doesn't. |
+| Revisits reprint everything | `brief` / `verbose`, a player setting kept in the browser and untouched by undo. |
+
+**Breaking changes for a game written for the third pass**
+- `it` no longer means a person. If a game relied on "talk to the guard", "x it", give the person `pronoun: "it"` (as damp-cell's rat has).
+- An event that moves a visible thing silently now prints a line. Set `messages: { arrives: "", leaves: "" }` to keep the old behavior; big-footprint does, so the differential test against v1 still passes, because its Don and Nando have their own lines.
+- `put X in Y` with X on the floor now takes it first instead of failing.
+- Default messages use `{the}` instead of "the {it}". A game that reworded them is unaffected; the output only changes for a `proper` thing.
+
+**Still not in the reader, on purpose:** several commands on one line, a third slot, orders to people ("guard, open the gate"), adjectives that aren't in a name. Each is an `input` hook or a `said:` reply in the game that needs it.

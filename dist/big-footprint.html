@@ -696,6 +696,7 @@ const G = {
   status: [{ if: ESC, text: "Bigfoot clock: {clock} · Secrets: {secrets}/3" }, "The tour · Strikes: {strikes}/3"],   // v2: the status line
   messages: {   // the engine's own lines, reworded (ids: docs/AUTHORING.md)
     huh: HUH, cant: HUH, what: HUH,   // one rotation for every "I don't follow"
+    arrives: "", leaves: "",   // the Don's and Nando's moves are narrated by their own lines (as in v1)
     over: { rotate: T.overs },   // F3
     help: T.help,
     exits: [{ if: ESC, text: "" }, "Exits: {list}"],   // ESCAPE: exits are named by landmark in the room text
@@ -1291,10 +1292,11 @@ return G;
    and never replace engine functions.
 
    How a typed line flows:
-     parse(raw)   clean the text, echo it, run "input" hooks
-     act(words)   dialogue numbers, phrasal verbs, aliases, directions;
-                  count the turn (and keep an undo snapshot)
-     exec(v, a)   "before" hooks -> replies (respond) -> the built-in
+     parse(raw)   clean the text, echo it, "oops" fixes, run "input" hooks
+     act(words)   dialogue numbers, phrasal verbs, aliases, directions,
+                  the two slots ("give X to Y"); count the turn (and keep an undo snapshot)
+     exec(v, a)   pronouns, the two slots, "before" hooks, "Which do you mean?",
+                  "(first taking...)" -> replies (respond) -> the built-in
                   command (CMDS) -> the verb's fail line
      then         events, "afterTurn" hooks, the status line, save
 
@@ -1314,10 +1316,13 @@ const ALIAS = tbl({ z: "wait", l: "look", i: "inventory", inv: "inventory", x: "
 const PHRASAL = tbl({ "pick up": "take", "look at": "examine", "put down": "drop", "look around": "look" });
 const FILLER = ["a", "an", "the", "to", "at", "with", "on"];
 const PARTICLES = ["up", "down", "around", "under", "out", "off", "over", "through", "into", "in", "inside", "from", "behind", "beneath"];
-const FREE = ["help", "menu", "restart", "again", "undo", "inventory"];   // commands that don't cost a turn
+const FREE = ["help", "menu", "restart", "again", "undo", "inventory", "transcript", "brief", "verbose"];   // commands that don't cost a turn
 const MULTI = ["take", "drop"];                         // commands that take "all" or "X and Y" (one turn for the lot)
-const PRONOUNS = ["it", "them", "him", "her"];          // stand for the last thing acted on
-const NOOBJ = ["inventory", "wait", "help", "again", "undo", "restart", "menu", "go"];   // never ask "Which do you mean?" for these
+const PRONOUNS = ["it", "them", "him", "her"];          // it: the last item; him/her: the last person (or by npcs.X.pronoun); them: the last thing
+const NOOBJ = ["inventory", "wait", "help", "again", "undo", "restart", "menu", "go", "transcript", "brief", "verbose"];   // never ask "Which do you mean?" for these
+// a word that opens the second slot: "give the bread TO the guard", "open the gate WITH the key" (LINE.what / LINE.with)
+const ROLES = ["to", "with", "on", "onto", "in", "into", "inside", "at", "about", "from", "for", "under", "behind"];
+const BREAK = ["and", "then", "except", "but", ...ROLES];   // words that end a noun phrase (see named())
 const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [] };
 // validator tables: REFS = add-on checks per data key; META = keys allowed next to effects;
 // MAPS = keys whose own keys are names ("def": each value is a definition, "data": each value is data, "map": a map of maps)
@@ -1326,12 +1331,18 @@ const REFS = tbl({}), META = ["if", "repeat", "every", "text", "next"], MAPS = t
 // S = the game state (plain JSON: saved, undone, restored). SAVE = the Continue snapshot, UNDO = one step back,
 // LAST = the last command's words (for "again"), VERBS = every verb the game's data answers, VER = the save version
 let S, SAVE = null, UNDO = null, LAST = null, VERBS = new Set(), VER = "";
-// S.loc: where each thing is; S.shut: closed holders; S.it: the last thing acted on (for "it");
+// S.loc: where each thing is; S.shut: closed holders; S.it: the last thing acted on; S.pro: what each pronoun means
+// ({ it, him, her, them }); S.pick: the last "Which do you mean?" set and the one chosen (for "the other one", "both");
 // S.ask: a command waiting for "Which do you mean?"; S.talk: a conversation waiting for an option
 const blank = () => ({ room: G.start, prev: null, loc: {}, shut: {}, flags: {}, count: { turns: 0 }, mark: {}, fired: {},
-  seen: {}, been: {}, seq: {}, seed: G.seed ?? Date.now() % 2147483647, it: null, ask: null, talk: null, over: false });
-// LINE = the command being answered (for said:, {verb} and {it}); TURN = whether this command costs a turn, and was refunded
-const LINE = { verb: "", said: "", it: null }, TURN = { cost: false, free: false };
+  seen: {}, been: {}, seq: {}, seed: G.seed ?? Date.now() % 2147483647, it: null, pro: {}, pick: null, ask: null, talk: null, over: false });
+// LINE = the command being answered: said: and {verb}; it = the thing answering ({it}); what = the direct thing and
+// with = the second one ("give WHAT to WITH", "use WHAT on WITH"). TURN = whether this command costs a turn, and was refunded.
+// ROLE = how the typed line splits around its role word, before filler words were dropped (see roles()).
+// LOG = every line printed this session (for "transcript"); PREF = player settings kept apart from the game (brief mode).
+const LINE = { verb: "", said: "", it: null, what: null, with: null }, TURN = { cost: false, free: false };
+let ROLE = null, PREV = null, ENTERING = false, PREF = {};
+const LOG = [];
 
 // ---- messages: every line the engine prints. A game rewords any of them in G.messages (TEXT, variants and rotate work).
 const MSG = tbl({
@@ -1345,10 +1356,13 @@ const MSG = tbl({
   see: "You see: {list}", people: "Here: {list}", exits: "Exits: {list}", received: "(Received: {it})", lost: "(Lost: {it})",
   noAgain: "There's nothing to do again yet.", noUndo: "There's nothing to undo.", undone: "Undone.",
   which: "Which do you mean: {list}?", nothingAll: "There's nothing here to {verb}.",
-  putIn: "You put the {it} in the {to}.", putOn: "You put the {it} on the {to}.", cantPut: "You can't put something inside itself.",
-  inIt: "In the {it}: {list}.", onIt: "On the {it}: {list}.", isShut: "The {it} is closed.",
-  opened: "You open the {it}.", closed: "You close the {it}.", alreadyOpen: "It's already open.", alreadyClosed: "It's already closed.",
-  noTopic: "No answer about that."
+  putIn: "You put {the} in {the:to}.", putOn: "You put {the} on {the:to}.", cantPut: "You can't put something inside itself.",
+  inIt: "In {the}: {list}.", onIt: "On {the}: {list}.", isShut: "{The} is closed.",
+  opened: "You open {the}.", closed: "You close {the}.", alreadyOpen: "It's already open.", alreadyClosed: "It's already closed.",
+  noTopic: "No answer about that.", firstTake: "(first taking {the})", arrives: "{The} arrives.", leaves: "{The} leaves.",
+  noOops: "There's nothing to correct.", brief: "Brief descriptions: a room you've seen shows its name and what's there.",
+  verbose: "Full descriptions: every room is described in full.", transcript: "Transcript saved: {n} lines.",
+  noTranscript: "This browser won't save files, so the transcript can't be saved here."
 });
 const msg = (k, vars) => txt(own(G.messages, k) ?? MSG[k], vars);
 
@@ -1360,21 +1374,40 @@ const load = k => { try { return JSON.parse(localStorage.getItem(G.title + ":" +
 const thing = id => own(G.items, id) || own(G.npcs, id) || (id === "self" ? G.self : undefined);
 const words = s => String(s).toLowerCase().replace(/-/g, " ").split(/\s+/).filter(Boolean);
 const clean = s => words(String(s).replace(/[^\p{L}\p{N}'\s-]+/gu, " "));   // words without punctuation: "north." and "Let me out!"
-const phrases = id => { const o = thing(id); return [id, o.name, ...(o.aliases || []), ...(id === "self" ? ["me", "myself", "self"] : [])].map(n => words(n).join(" ")); };
+// a thing's name now: a string, or TEXT variants ({ if, text }) so a name can follow the state ("unlit lamp", "lit lamp")
+const nm = id => pick(thing(id)?.name) || id;
+const phrases = id => { const o = thing(id); return [id, nm(id), ...(o.aliases || []), ...(id === "self" ? ["me", "myself", "self"] : [])].map(n => words(n).join(" ")); };
+// articles: "the [mug]" / "a [mug]", or just "[Tony]" for a proper name (proper:true). article:"an"/"some"/"" sets "a".
+const the = id => (thing(id)?.proper ? "" : "the ") + `[${id}]`;
+const a1 = id => { const o = thing(id), r = o?.proper ? "" : o?.article ?? (/^[aeiou]/i.test(nm(id)) ? "an" : "a"); return (r ? r + " " : "") + `[${id}]`; };
 // every thing in ids that the text names, in the order named. At each word, the longest phrase that is
 // an id, a full name or an alias wins ("iron key" before "key"); failing that, any single word of a name.
-// When a phrase fits more than one thing equally, the list carries .amb = { phrase, ids } (see "Which do you mean?").
+// Words next to each other narrow one noun: "red mug" is the mug whose words include "red", and "coffee mug" the
+// mug that is also coffee. A word that fits none of the candidates so far starts a new noun ("use key door"), and so
+// does a word like "and", "to" or "with". A noun that still fits several things carries .amb = { phrase, ids }
+// (see "Which do you mean?"); one that a later word narrowed carries .pick = { ids, id } (for "the other one").
 function named(a, ids) {
-  const w = words(a), hits = [], P = ids.map(id => [id, phrases(id), words(thing(id).name)]);
+  const w = words(a), hits = [], P = ids.map(id => [id, phrases(id), words(nm(id))]);
+  let run = null;   // the noun being read: { ids (still fitting), from (the first word's fits), start, end }
+  const close = () => {
+    if (!run) return;
+    if (run.ids.length > 1 && !hits.amb) hits.amb = { phrase: w.slice(run.start, run.end).join(" "), ids: run.ids };
+    if (run.ids.length === 1 && run.from.length > 1 && !hits.pick) hits.pick = { ids: run.from, id: run.ids[0] };
+    if (!hits.includes(run.ids[0])) hits.push(run.ids[0]);
+    run = null;
+  };
   for (let i = 0; i < w.length; i++) {
+    if (BREAK.includes(w[i])) { close(); continue; }
     let fit = [], end = i + 1;
     for (let j = w.length; j > i && !fit.length; j--) { const p = w.slice(i, j).join(" "); fit = P.filter(x => x[1].includes(p)); end = j; }
     if (!fit.length) { fit = P.filter(x => x[2].includes(w[i])); end = i + 1; }
-    if (!fit.length) continue;
-    if (fit.length > 1 && !hits.amb) hits.amb = { phrase: w.slice(i, end).join(" "), ids: fit.map(x => x[0]) };
-    if (!hits.includes(fit[0][0])) hits.push(fit[0][0]);
+    if (!fit.length) continue;   // a word that names nothing (an adjective not in any name) doesn't end the noun
+    const f = fit.map(x => x[0]), both = run ? run.ids.filter(id => f.includes(id)) : [];
+    if (both.length) Object.assign(run, { ids: both, end }, f.length > run.from.length && { from: f });
+    else { close(); run = { ids: f, from: f, start: i, end }; }
     i = end - 1;   // skip the words of the phrase just matched
   }
+  close();
   return hits;
 }
 const find = (a, ids) => named(a, ids)[0];
@@ -1405,9 +1438,9 @@ function print(t, c, plain) {
     if (!o) return p.append(i % 2 ? `[${s}]` : s);   // unknown id stays visible for the author
     const sp = document.createElement("span");
     sp.className = [own(G.npcs, s) ? "npc" : "item", ...HOOKS.tag.map(h => h(s))].filter(Boolean).join(" ");
-    sp.textContent = o.name; p.append(sp);
+    sp.textContent = nm(s); p.append(sp);
   });
-  out.append(p);
+  out.append(p); if (LOG.push(p.textContent) > 20000) LOG.shift();   // the transcript keeps what the screen drops
   while (out.children.length > 500) out.firstElementChild.remove();   // very long sessions stay fast
   out.scrollTop = out.scrollHeight;
 }
@@ -1437,17 +1470,24 @@ function pick(v) {
   return "";
 }
 const cap = s => s && s[0].toUpperCase() + s.slice(1);
-// {name} in a TEXT: a value passed in vars, else {it} (the thing acted on, as a tag), {verb}/{Verb} (the verb typed), else a counter
-function fill(k, vars) {
-  if (k in vars) return vars[k];
+// {name} in a TEXT: a value passed in vars, else {it} (the thing acted on, as a tag), {what}/{with} (the two slots),
+// {verb}/{Verb} (the verb typed), else a counter. {the}, {The}, {a}, {A} put an article before {it}, and {the:to}
+// before another value that is a tag: "the [mug]", "a [mug]", or "[Tony]" for a proper name.
+function fill(k, vars, of) {
+  if ((k in vars) && !of) return vars[k];
+  if (["the", "The", "a", "A"].includes(k)) {
+    const v = String(fill(of || "it", vars)), id = /^\[(\w+)\]$/.exec(v)?.[1], r = id && thing(id) ? (k.toLowerCase() === "the" ? the(id) : a1(id)) : v;
+    return k[0] === k[0].toUpperCase() ? cap(r) : r;
+  }
   if (k === "it") return LINE.it ? `[${LINE.it}]` : "it";
+  if (k === "what" || k === "with") return LINE[k] ? `[${LINE[k]}]` : "";
   if (k === "verb") return LINE.verb;
   if (k === "Verb") return cap(LINE.verb || "do");
   return S.count[k] || 0;
 }
-const txt = (v, vars = {}) => pick(v).replace(/\{(\w+)\}/g, (m, k) => fill(k, vars));
-// "the [a], the [b] or the [c]"
-const either = ids => ids.map(id => `the [${id}]`).join(", ").replace(/, ([^,]*)$/, " or $1");
+const txt = (v, vars = {}) => pick(v).replace(/\{(\w+)(?::(\w+))?\}/g, (m, k, of) => of && !/^(the|a)$/i.test(k) ? m : fill(k, vars, of));
+// "the [a], the [b] or the [c]" (no article for a proper name)
+const either = ids => ids.map(the).join(", ").replace(/, ([^,]*)$/, " or $1");
 
 // ---- conditions: every key in an "if" must pass. "if" can also be a name from G.conds.
 const COND = tbl({
@@ -1468,6 +1508,8 @@ const COND = tbl({
   said: p => list(p).every(q => q === "" ? !LINE.said : q.split("|").some(w => ` ${LINE.said} `.includes(` ${words(w).join(" ")} `))),
   inside: o => Object.entries(o).every(([id, h]) => S.loc[id] === h),   // inside:{ coin:"box" }: directly in or on that holder
   open: v => list(v).every(id => !S.shut[id]),
+  what: v => list(v).includes(LINE.what),                   // the direct thing is one of these: "give BREAD to the guard"
+  with: v => list(v).includes(LINE.with),                   // the second thing is one of these: "give the bread to the GUARD"
   chance: n => rand(100) < n                               // passes n times in 100 (test() rolls it once per command)
 });
 // chance is rolled once per condition per command, so checking the same "if" twice in a turn gives one answer
@@ -1481,8 +1523,10 @@ const EFFECT = tbl({
   unset: v => list(v).forEach(f => delete S.flags[f]),
   add: o => { for (const k in o) S.count[k] = (S.count[k] || 0) + o[k]; },
   mark: v => list(v).forEach(m => S.mark[m] = S.count.turns),
-  move: o => { for (const id in o) { const r = o[id];   // a list is a route: step to the next room
-    S.loc[id] = Array.isArray(r) ? r[(r.indexOf(S.loc[id]) + 1) % r.length] : r; } },
+  move: o => { for (const id in o) { const r = o[id], was = shown(id), from = where(id);   // a list is a route: step to the next room
+    S.loc[id] = Array.isArray(r) ? r[(r.indexOf(S.loc[id]) + 1) % r.length] : r;
+    // an event that moves something into or out of sight without saying so gets a line ("The [rat] arrives.")
+    if (TELL && was !== shown(id)) print(msg(was ? "leaves" : "arrives", { it: `[${id}]`, dir: exitTo(was ? where(id) : from) })); } },
   take: v => list(v).forEach(id => { S.loc[id] = null; print(msg("lost", { it: `[${id}]` }), "cmd"); }),
   give: v => list(v).forEach(id => { S.loc[id] = "player"; print(msg("received", { it: `[${id}]` }), "cmd"); }),
   open: v => list(v).forEach(id => delete S.shut[id]),
@@ -1496,6 +1540,10 @@ const EFFECT = tbl({
 const LAST_FX = ["say", "do", "goto", "end"];
 
 // ---- replies and events
+// visible in the player's room (listed, not hidden, not in a closed box); the exit from here that leads to room r
+const shown = id => !thing(id)?.hidden && (own(G.npcs, id) ? S.loc[id] === S.room : nested(at(G.items)).includes(id));
+const exitTo = r => Object.keys(G.rooms[S.room].exits || {}).find(k => dest(G.rooms[S.room].exits[k]) === r) || "";
+let TELL = false;   // true while an event that says nothing runs: its moves are narrated
 // run one effect object (a string is { say }); stops early once the game has ended
 function run(e = {}) {
   if (typeof e === "string") e = { say: e };
@@ -1514,7 +1562,7 @@ function events() {
   (G.events || []).forEach((e, i) => {
     if (S.over) return;
     const due = e.every ? tick && S.count.turns > 0 && S.count.turns % e.every === 0 : e.repeat || !S.fired[i];
-    if (due && test(e.if)) { S.fired[i] = true; run(e); }
+    if (due && test(e.if)) { S.fired[i] = true; TELL = !("say" in e || "end" in e); try { run(e); } finally { TELL = false; } }
   });
 }
 
@@ -1522,7 +1570,7 @@ function events() {
 function look() {
   const r = G.rooms[S.room], d = txt(r.desc), extra = T => at(T).filter(id => !T[id].hidden && !d.includes(`[${id}]`));
   const it = extra(G.items), np = extra(G.npcs), ex = Object.keys(r.exits || {}).filter(k => !r.exits[k].hidden);
-  print(r.name, "title"); print(d);
+  print(r.name, "title"); if (!ENTERING) print(d);   // brief mode: a room seen before shows only its name and lists
   if (it.length) print(msg("see", { list: names(it) }));
   contents(at(G.items));   // a hidden holder (scenery) still shows what's on it
   if (np.length) print(msg("people", { list: names(np) }));
@@ -1530,7 +1578,10 @@ function look() {
 }
 
 // entering shows the room, then marks it visited (so a desc can tell the first look from later ones), then runs "enter" hooks
-function enter(id) { S.prev = S.room; S.room = id; exec("look"); S.been[id] = (S.been[id] || 0) + 1; HOOKS.enter.forEach(h => S.over || h(id)); }
+function enter(id) {
+  S.prev = S.room; S.room = id; ENTERING = !!PREF.brief && !!S.been[id];
+  try { exec("look"); } finally { ENTERING = false; }
+  S.been[id] = (S.been[id] || 0) + 1; HOOKS.enter.forEach(h => S.over || h(id)); }
 const dest = x => typeof x === "string" ? x : x.to;
 const notHere = (k = "notHere") => { EFFECT.free(true); print(msg(k)); };   // naming something that isn't here costs no turn
 
@@ -1574,22 +1625,22 @@ const CMDS = tbl({
   look(a) { if (a && !["around", "room", "here"].includes(a)) return exec("examine", a); look(); },
   go,
   take(a, ids) {
-    const id = ids[0];   // "take the coin from the box": the first thing named
+    const id = LINE.what || ids[0];   // "take the coin from the box": the direct thing
     if (!id) return notHere();
     if (S.loc[id] === "player") return notHere("have");
     if (thing(id).fixed || !own(G.items, id)) return print(msg("fixed"));
     S.loc[id] = "player"; print(msg("taken", { it: `[${id}]` }));
   },
   drop(a, ids) {
-    if (ids.length > 1 && holder(ids.at(-1))) return exec("put", a);   // "drop the coin in the box"
-    const id = ids[0];
+    if (holder(LINE.with)) return exec("put", a);   // "drop the coin in the box"
+    const id = LINE.what || ids[0];
     if (!id || S.loc[id] !== "player") return notHere("notHave");
     S.loc[id] = S.room; print(msg("dropped", { it: `[${id}]` }));
   },
   // "put X in Y" / "put X on Y" (the holder decides which); "put X down" drops it; on a thing that
   // isn't a holder ("put the plywood on the window") it's "use X on Y", so recipes and replies answer
   put(a, ids) {
-    const [x, y] = [ids[0], ids.length > 1 ? ids.at(-1) : null];
+    const [x, y] = [LINE.what || ids[0], LINE.with];
     if (!x) return notHere();
     if (!y) return exec("drop", a);
     if (!holder(y)) return exec("use", a);
@@ -1635,6 +1686,17 @@ const CMDS = tbl({
   again() { if (!LAST) return print(msg("noAgain")); print("> " + LAST.join(" "), "cmd", true); act(LAST); },
   undo() { if (!UNDO) return print(msg("noUndo")); S = JSON.parse(UNDO); UNDO = null; print(msg("undone")); exec("look"); },
   restart: () => play(true),
+  brief() { PREF.brief = true; store("prefs", PREF); print(msg("brief")); },
+  verbose() { PREF.brief = false; store("prefs", PREF); print(msg("verbose")); },
+  // the whole session as a text file, for bug reports: every line printed, including what scrolled off the screen
+  transcript() {
+    try {
+      const u = URL.createObjectURL(new Blob([LOG.join("\n") + "\n"], { type: "text/plain" })), l = document.createElement("a");
+      l.href = u; l.download = `${G.title} transcript.txt`; document.body.append(l); l.click(); l.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 10000);
+      print(msg("transcript", { n: LOG.length }));
+    } catch { print(msg("noTranscript")); }
+  },
   menu
 });
 const isFree = v => FREE.includes(v) || !!own(G.verbs, v)?.free;
@@ -1654,15 +1716,30 @@ function respond(v, ids) {
 // then the command itself, then the verb's fail line. Hooks come before the question, so an add-on
 // with its own idea of what a word means (or darkness) answers first.
 function exec(v, a = "", said = a) {
-  if (S.it && thing(S.it) && words(a).some(x => PRONOUNS.includes(x))) {   // "it" is the last thing acted on: its id for
-    a = words(a).map(x => PRONOUNS.includes(x) ? S.it : x).join(" ");        // matching; said: keeps the words typed and
-    said = `${said} ${thing(S.it).name}`;                                     // adds the name ("play her song" still matches)
-  }
+  const role = ROLE?.a === a ? ROLE : roles(a), named2 = [];
+  // pronouns: "it" is the last item, "him"/"her" the last person, "them" the last thing, "other" the other one of the
+  // last "Which do you mean?". Their ids are used for matching; said: keeps the words typed and adds the name
+  // ("play her song" still matches)
+  const sub = t => words(t).map(x => { const id = ref(x); if (!id) return x; named2.push(nm(id)); return id; }).join(" ");
+  a = sub(a); if (named2.length) said = `${said} ${[...new Set(named2)].join(" ")}`;
   const keep = { ...LINE }, ids = named(a, reach());
-  Object.assign(LINE, { verb: v, said: words(said).join(" "), it: ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null });
+  // the two slots: the thing before the role word and the thing after it ("give the bread to the guard"); with no
+  // role word, the first and the last thing named ("use key door"), except that a person named first is the second
+  // slot ("give the guard the bread"). With nothing before the role word, the thing after it is the direct one
+  // ("talk to the guard", "listen to the radio").
+  let what = role ? named(sub(role.before), reach())[0] : ids[0], wth = role ? named(sub(role.after), reach())[0] : ids.length > 1 ? ids.at(-1) : null;
+  if (!role && wth && own(G.npcs, what) && !own(G.npcs, wth)) [what, wth] = [wth, what];
+  const before = role ? words(sub(role.before)).filter(x => !FILLER.includes(x)) : [];
+  if (!what && !before.length) [what, wth] = [wth, null];
+  if (what === wth) wth = null;
+  Object.assign(LINE, { verb: v, said: words(said).join(" "), what: what || null, with: wth || null,
+    it: ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null });
+  if (ids.pick) S.pick = ids.pick;
   try {
     if (HOOKS.before.some(h => h(v, a, ids))) return;
     if (ids.amb && !NOOBJ.includes(v) && !settle(v, a, said, ids.amb)) return;   // messages.which can read said:
+    if (!what && before.length && named(before.join(" "), Object.keys({ ...G.items, ...G.npcs })).length) return notHere();   // "give the bread to him", no bread here
+    carry(v);
     if (respond(v, ids)) return;
     LINE.it = ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null;
     if (own(CMDS, v)) return CMDS[v](a, ids);
@@ -1670,16 +1747,46 @@ function exec(v, a = "", said = a) {
     print(a ? txt(own(G.verbs, v)?.fail) || msg("cant") : msg("what"));
   } finally {
     if (v === "examine" && LINE.it) S.seen[LINE.it] = true;
+    [LINE.with, LINE.what, LINE.it].forEach(point);   // the thing acted on last, so plain "it" means it
     if (LINE.it && LINE.it !== "self") S.it = LINE.it;
     Object.assign(LINE, keep);
   }
 }
-// a name that fits several things: take wants one that isn't carried, drop one that is; if that leaves one,
+// what a pronoun stands for now (an id in reach), or undefined. "other" is the other choice of the last question.
+function ref(x) {
+  if (x === "other" && S.pick) { const o = S.pick.ids.filter(id => id !== S.pick.id && reach().includes(id)); return o.length === 1 ? o[0] : undefined; }
+  const id = PRONOUNS.includes(x) ? S.pro?.[x] : undefined;
+  return id && thing(id) ? id : undefined;
+}
+// remember a thing for the pronouns: an item is "it", a person is npcs.X.pronoun ("her", "him", "them", "it")
+// or else both "him" and "her"; anything is "them"
+function point(id) {
+  if (!id || id === "self" || !thing(id)) return;
+  const p = own(G.npcs, id) ? list(G.npcs[id].pronoun || ["him", "her"]) : ["it"];
+  for (const x of [...p, "them"]) S.pro[x] = id;
+}
+// "give the bread to the guard": the words before the first role word and after it, or null
+function roles(t) {
+  const w = words(t), i = w.findIndex(x => ROLES.includes(x));
+  return i < 0 ? null : { before: w.slice(0, i).join(" "), after: w.slice(i + 1).join(" "), prep: w[i] };
+}
+// "(first taking the key)": put, and any verb with verbs.X.carry, takes the direct thing first when it's here
+function carry(v) {
+  const id = LINE.what;
+  if (!(v === "put" ? holder(LINE.with) : own(G.verbs, v)?.carry) || !own(G.items, id) || G.items[id].fixed) return;
+  if (S.loc[id] === "player" || !nested(at(G.items)).includes(id) || (LINE.with && nested([id]).includes(LINE.with))) return;
+  S.loc[id] = "player"; print(msg("firstTake", { it: `[${id}]` }), "cmd");
+}
+// a name that fits several things: take wants one that isn't carried, drop and put one that is; if that leaves one,
 // use it (true). Otherwise ask "Which do you mean?", keep the command in S.ask, and refund the turn (false).
+// A word elsewhere in the line that fits only one of them picks it too ("take the mug, the red one").
 function settle(v, a, said, amb) {
-  const c = v === "take" ? amb.ids.filter(id => S.loc[id] !== "player") : v === "drop" ? amb.ids.filter(id => S.loc[id] === "player") : amb.ids;
-  if (c.length === 1) return exec(v, swap(a, amb.phrase, c[0]), swap(words(said).join(" "), amb.phrase, words(thing(c[0]).name).join(" "))), false;
-  S.ask = { v, a, said: words(said).join(" "), phrase: amb.phrase, ids: amb.ids };
+  let c = v === "take" ? amb.ids.filter(id => S.loc[id] !== "player") : v === "drop" || v === "put" ? amb.ids.filter(id => S.loc[id] === "player") : amb.ids;
+  if (!c.length) c = amb.ids;
+  const rest = words(a).filter(x => !words(amb.phrase).includes(x)), by = c.filter(id => rest.some(x => phrases(id).some(p => words(p).includes(x))));
+  if (by.length === 1) c = by;
+  if (c.length === 1) return S.pick = { ids: amb.ids, id: c[0] }, exec(v, swap(a, amb.phrase, c[0]), swap(words(said).join(" "), amb.phrase, words(nm(c[0])).join(" "))), false;
+  S.ask = { v, a, said: words(said).join(" "), phrase: amb.phrase, ids: amb.ids }; S.pick = { ids: amb.ids, id: null };
   EFFECT.free(true); print(msg("which", { list: either(amb.ids) }));
   return false;
 }
@@ -1699,10 +1806,12 @@ function act(w) {
   }
   if (S.ask) {   // the answer to "Which do you mean?": words that name one of the choices finish the waiting command
     const q = S.ask, c = named(w.join(" "), q.ids); S.ask = null;
-    if (c.length === 1 && !c.amb && !known(w[0])) { turn(q.v, swap(q.a, q.phrase, c[0]), swap(q.said, q.phrase, words(thing(c[0]).name).join(" "))); return; }   // said: names the choice
+    if (c.length === 1 && !c.amb && !known(w[0])) { S.pick = { ids: q.ids, id: c[0] }; turn(q.v, swap(q.a, q.phrase, c[0]), swap(q.said, q.phrase, words(nm(c[0])).join(" "))); return; }   // said: names the choice
+    if (MULTI.includes(q.v) && !known(w[0]) && w.some(x => x === "both" || x === "all")) { turn(q.v, "both", q.said); return; }   // "both": each of the choices
   }
   const two = w.slice(0, 2).join(" "), ph = own(G.phrasal, two) || own(PHRASAL, two);
   if (ph) w = [...words(ph), ...w.slice(2)];
+  ROLE = roles(w.slice(1).join(" "));   // before filler words go: "give bread TO guard" keeps its role word
   w = w.filter(x => !FILLER.includes(x));
   if (!w.length) return print(msg("huh"));
   let [v, ...r] = w; v = own(ALIAS, v) || v;
@@ -1715,6 +1824,7 @@ function act(w) {
   if (v !== "again" && v !== "undo") LAST = w;
   while (v !== "go" && r.length > 1 && PARTICLES.includes(r[0])) r.shift();   // "feel around the wall", "look under the rug"
   while (v !== "go" && r.length && PARTICLES.includes(r.at(-1))) r.pop();      // "put the hammer down", "feel around"
+  if (ROLE) ROLE.a = r.join(" ");   // exec uses ROLE only for this exact line
   turn(v, r.join(" "), v === "go" ? r.join(" ") : w.slice(1).join(" "));   // said: for go is the direction, spelled out
 }
 // one command, one turn (unless it's free): "take all" and "take X and Y" run it for each thing, still one turn
@@ -1726,11 +1836,16 @@ function turn(v, a, said) {
   if (!each.length) return EFFECT.free(true), print(msg("nothingAll", { verb: v }));
   each.forEach(id => exec(v, id));
 }
-// the things "all"/"everything" or "X and Y" stand for, or null for a single thing
+// the things "all"/"everything" (less "except X" / "but X"), "both" or "X and Y" stand for, or null for a single thing
 function many(v, a) {
-  const w = words(a);
+  const all = words(a), x = all.findIndex(t => t === "except" || t === "but"), w = x < 0 ? all : all.slice(0, x);
+  const not = x < 0 ? [] : named(all.slice(x + 1).join(" "), reach());
   if (w.includes("all") || w.includes("everything"))
-    return v === "take" ? nested(at(G.items)).filter(id => !G.items[id].fixed && !G.items[id].hidden) : inv();
+    return (v === "take" ? nested(at(G.items)).filter(id => !G.items[id].fixed && !G.items[id].hidden) : inv()).filter(id => !not.includes(id));
+  if (w.includes("both")) {   // "take both mugs", or "both" for the last "Which do you mean?"
+    const n = named(w.join(" "), reach()), ids = n.amb ? n.amb.ids : n.length > 1 ? n : (S.pick?.ids || []).filter(id => reach().includes(id));
+    return ids.length > 1 ? ids : null;
+  }
   const ids = w.includes("and") ? named(a, reach()) : [];
   return ids.length > 1 ? ids : null;
 }
@@ -1741,10 +1856,26 @@ function parse(raw) {
   if (!w.length && raw.trim() === "?") w = ["help"];
   if (!w.length) return;
   print("> " + raw, "cmd", true);                             // the echo stays literal: "[key]" is not a tag
-  TURN.free = TURN.cost = false; ROLLS.clear();
+  TURN.free = TURN.cost = false; ROLLS.clear(); ROLE = null;
+  if (w[0] === "oops" && S.talk == null) {   // "oops lamp" after "take lmap": the last line again, with its unknown word replaced
+    if (!PREV || w.length < 2) return print(msg("noOops")), save();
+    w = oops(PREV, w.slice(1));
+  }
+  PREV = w;
   for (const h of HOOKS.input) { const r = h(w, raw); if (r === true) return save(); if (Array.isArray(r)) w = r; }
   if (act(w) !== "meta" && !S.talk) { events(); HOOKS.afterTurn.forEach(h => S.over || h()); }
   status(); save();
+}
+
+// the first word of a line the game doesn't know (or else its last word), replaced by fix
+function oops(line, fix) {
+  const V = new Set([...FILLER, ...PARTICLES, ...PRONOUNS, ...BREAK, "all", "everything", "both", "one", "ones", "other", "back", "me", "myself", "self"]);
+  for (const id of [...Object.keys(G.items || {}), ...Object.keys(G.npcs || {}), ...(G.self ? ["self"] : [])]) phrases(id).forEach(p => words(p).forEach(x => V.add(x)));
+  for (const r in G.rooms) words(G.rooms[r].name).forEach(x => V.add(x));
+  for (const n in G.npcs) for (const k in G.npcs[n].topics || {}) words(k.replace(/\|/g, " ")).forEach(x => V.add(x));
+  const k = line.findIndex((x, i) => i ? !V.has(x) && !known(x) : !known(x) && !own(G.phrasal, `${x} ${line[1]}`) && !own(PHRASAL, `${x} ${line[1]}`));
+  const i = k < 0 ? line.length - 1 : k;
+  return [...line.slice(0, i), ...fix, ...line.slice(i + 1)];
 }
 
 // the status line above the input: G.status, a TEXT shown after every command (score, health, time...); hidden when empty
@@ -1798,7 +1929,7 @@ function validate() {
         if (k === "if" || k === "not") conds(x, q);
         if (k === "any" || k === "all") list(x).forEach((c, i) => conds(c, `${q}[${i}]`));
         if (["has", "give", "take"].includes(k)) list(x).forEach(id => need(own(G.items, id), q, `no item "${id}"`));
-        if (k === "here" || k === "seen") list(x).forEach(id => need(isThing(id), q, `no item or NPC "${id}"`));
+        if (k === "here" || k === "seen" || k === "what" || k === "with") list(x).forEach(id => need(isThing(id), q, `no item or NPC "${id}"`));
         if (["in", "goto", "to", "visited"].includes(k)) list(x).forEach(r => need(room(r), q, `no room "${r}"`));
         if (k === "is") list(x).forEach(n => need(own(G.conds, n), q, `no condition "${n}" in conds`));
         if (k === "move") for (const id in x) { need(isThing(id), q, `no item or NPC "${id}"`);
@@ -1821,7 +1952,7 @@ function validate() {
   for (const r in G.rooms) for (const d in G.rooms[r].exits || {}) need(room(dest(G.rooms[r].exits[d])), `rooms.${r}.exits.${d}`, `no room "${dest(G.rooms[r].exits[d])}"`);
   for (const T of ["items", "npcs"]) for (const id in G[T]) { const a = G[T][id].at;
     need(a == null || a === "player" || room(a) || (T === "items" && holder(a)), `${T}.${id}.at`, `no room or holder "${a}"`);
-    need(typeof G[T][id].name === "string", `${T}.${id}.name`, "needs a name"); }
+    const n = G[T][id].name; need(typeof n === "string" || (n && typeof n === "object"), `${T}.${id}.name`, "needs a name (a string, or TEXT variants)"); }
   for (const id in G.items) need(!own(G.npcs, id), `items.${id}`, "same id as an NPC");
   for (const id in G.items) { const h = G.items[id].holds; need(h == null || h === "in" || h === "on", `items.${id}.holds`, 'must be "in" or "on"'); }
   for (const id in G.items) { let p = G.items[id].at, n = 0; while (holder(p) && n++ < 50) p = G.items[p].at;   // at: chains must end in a room
@@ -1870,7 +2001,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // the save version: a save made with other rooms, items, NPCs, events or G.version won't Continue.
   // Text and flag changes keep saves; bump G.version when a content patch should end runs in progress.
   VER = [G.version ?? "", Object.keys(G.rooms), Object.keys(G.items || {}), Object.keys(G.npcs || {}), (G.events || []).length].join("|");
-  inp.maxLength = 200;
+  inp.maxLength = 200; PREF = load("prefs") || {};
   $("f").onsubmit = e => { e.preventDefault(); parse(inp.value); inp.value = ""; };
   $("bs").onclick = () => SAVE ? ($("bs").hidden = $("bc").hidden = true, $("ask").hidden = false, $("bn").focus()) : play(true);
   $("by").onclick = () => play(true);
