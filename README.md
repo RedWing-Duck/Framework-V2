@@ -36,6 +36,8 @@ node tests/run.js               # headless tests against the built files
 
 ## Make a new game
 
+The Purpose of this Repo is to be copied completely to the new game's repo and used as the base, so that this framework is left untouched. Do this first, then-
+
 1. `cp -r template games/my-game`
 2. Edit `games/my-game/game.js`. [`docs/AUTHORING.md`](docs/AUTHORING.md) documents every key.
 3. List any add-ons in `games/my-game/build.json`, for example `{ "addons": ["light"] }`.
