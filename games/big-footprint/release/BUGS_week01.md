@@ -80,7 +80,7 @@ Root cause for the suite: the extended coverage test now tries every info and Ti
 ## Polish build: playtest QA round 3, Bartle graph (`qa/PLAYTEST_QA_round3_bartle_week01.txt`)
 | Bug ID | Sev | Summary | Status | Fix (one line) |
 |---|---|---|---|---|
-| BG-01 | P2 | The "every corner" W2 tease couldn't be earned | Fixed | The six escape-only nouns (R5 lemur, R9 papers, R12's four) count as "Bonus finds: n of 6"; "Things examined" and the tease use the main total (100) |
+| BG-01 | P2 | The "every corner" W2 tease couldn't be earned | Fixed | The six escape-only nouns (R5 lemur, R9 papers, R12's four) count as "Bonus finds: n of 6"; "Things examined" and the tease use the main total (100; 103 since rev 4, which added three lines for the loose animals) |
 | BG-02 | P2 | Nouns read in examine and dialogue text had no description | Fixed | QA's aliases, to the entry that mentions each noun |
 | BG-03 | P2 | Talking to an animal got "Nobody by that name around." | Fixed | ANIMAL talk default plus QA's lines for Pepita (the Don adds his line on the tour), the peacocks, giraffe, jaguar and lemurs; free, no strike |
 | BG-04 | P2 | Lemurs or Big Tony as an alibi got "No animal. No noise." | Fixed | Still CAUGHT, with QA's openers for lemurs, Tony / Bigfoot and the hippo / Pepita |

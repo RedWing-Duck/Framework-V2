@@ -1,6 +1,6 @@
 # Data patterns
 
-Recipes for `game.js` that need no new code. They come from the games built on v1 (a-quick-nap, big-footprint) and the Code-Block-Reference repo, rewritten for v2. `games/sundown/game.js` uses most of them.
+Recipes for `game.js` that need no new code. They come from the games built on v1 (a-quick-nap, big-footprint) and the Code-Block-Reference repo, rewritten for v2. `games/sundown/game.js` uses many of them; `games/big-footprint/game.js` uses the rest at full scale.
 
 ## Countdown with timed warnings
 

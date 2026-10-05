@@ -1,6 +1,6 @@
 # This Place Has a Big Footprint, rebuilt on Framework v2
 
-The original game ran on the v1 engine with four add-ons (`restart`, `verbs`, `nouns`, `messages`), three of which replaced engine functions to work. This folder is the same game on v2, with the engine untouched.
+The original game ran on the v1 engine with four add-ons (`restart`, `verbs`, `nouns`, `messages`), three of which replaced engine functions to work. This folder is the same game on v2, with no game-specific engine changes (the general fixes the port found are listed below).
 
 ## What moved where
 
@@ -22,7 +22,7 @@ The original game ran on the v1 engine with four add-ons (`restart`, `verbs`, `n
 The game's design documents (GDD, Scripts rev 1-3, the polish build brief and QA focus) are in [`design/`](design/); the
 release pack (walkthrough, bug list, changelog, QA reports, and the original v1 build) is in [`release/`](release/).
 
-`game.js` keeps the Script's own data formats (line tables, noun words, categories): they are this game's authoring format, and `./nouns.js` reads them. The data changes are only the ones in the table.
+`game.js` keeps the Script's own data formats (line tables, noun words, categories): they are this game's authoring format, and `./nouns.js` reads them. The port itself changed only what the table lists; rev 4 and rev 5 (at the end of this file) then changed the game on purpose.
 
 ## How "the same game" is checked
 

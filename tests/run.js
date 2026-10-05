@@ -1,5 +1,6 @@
 // Headless tests against the BUILT files, so bundling is tested too.
-//   node tools/build.js damp-cell && node tools/build.js sundown && node tests/run.js
+//   node tools/build.js damp-cell && node tools/build.js sundown && node tools/build.js big-footprint && node tests/run.js
+// The word layer runs against tests/words/, game-local add-ons against tests/local-addon/; big-footprint's suite is tests/big-footprint.js.
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), path = require("node:path");
 const { load, storage, downloads } = require("../tools/headless"), { build } = require("../tools/build");

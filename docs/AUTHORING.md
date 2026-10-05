@@ -1,8 +1,10 @@
 # Authoring a game
 
 A game is one data object, `G`, in `games/<name>/game.js`. The engine reads it and never changes per game.
-Start from `template/game.js`. For complete examples, see `games/damp-cell/game.js` (small, core only) and
-`games/sundown/game.js` (a countdown that uses every core feature and five add-ons).
+Start from `template/game.js`. For complete examples, see `games/damp-cell/game.js` (small: a person with topics
+and a menu, a moving rat, and the light add-on's dark cellar), `games/sundown/game.js` (a countdown: replies, kinds, containers, randomness and five
+add-ons) and `games/big-footprint/` (a full game that uses every word-layer feature; its `design/GDD_week01_rev4.md`, sections 12
+and 13, maps each feature to where the player meets it).
 
 ## Quick reference
 
@@ -71,10 +73,9 @@ corridor: { name: "Corridor", desc: TEXT,
 - An exit is a room id or `{ to, if, fail, hidden }`. When `if` fails, the player sees `fail` (default: "Something blocks the way."). `hidden: true` leaves it out of the "Exits:" line.
 - Directions: `north`…`down` and `northeast`…`southwest`, typed in full or as `n s e w u d ne nw se sw`. Any other word, like `in` or `portal`, works through `go <word>`.
 - `go <room name>` takes the exit that leads there (`go to the yard`), and `go back` returns to the previous room.
-- Rooms never list their contents. Things say where they are (see `at`).
+- A room's data never lists what's in it: each thing says where it is (see `at`), and `look` lists them.
 - `look` prints the name, `desc`, then "You see:" (items), "Here:" (NPCs) and "Exits:". Things tagged `[id]` in the description, and things with `hidden: true`, are left out of the lists.
-- `up` and `down` (TEXT) are what the player sees on `look up` and `look down` (also `look above/overhead`, `look below`). After it,
-  each thing in sight here whose level is that one shows its `desc`, hidden scenery too (see Up and down).
+- `up` and `down` (TEXT) are what the player sees on `look up` and `look down`, followed by the things up or down here (see Up and down).
 - `visited: "room"` is false during the first look at a room and true afterwards, so a description can have a first-visit variant:
   `desc: [{ if: { visited: "shed" }, text: "The shed again." }, "A lean-to shed, full of cobwebs..."]`
 
@@ -116,10 +117,12 @@ on: { shake: [{ if: { level: { kite: "up" } }, level: { kite: "down" }, say: "Th
 
 - `level` says where a thing is in its room: `"up"` (on a beam, a giraffe's head, a bat) or `"down"` (on the floor, a rat).
   Things without a level are neither, and `look up` / `look down` don't list them. TEXT variants let the level follow the state.
-- `look up` prints the room's `up` text, then every thing in sight here (not carried, not in a closed holder; hidden scenery
-  counts) whose level is `"up"`, named, with its `desc`: "The kite: Paper, torn, caught on a beam." (message `levelSee`,
-  `{The}: {text}`). Write those descriptions so they read after the name: not "A paper kite, caught..." or "Reina, up in...". `look down` the same for `"down"`. With neither, "Nothing special up there."
-  (message `levelNone`, with `{dir}`). Each thing shown counts as examined. `look up at the beam` examines the beam.
+- `look up` (also `look above`, `look overhead`) prints the room's `up` text, then every thing in sight here whose level is
+  `"up"`: not carried, not in a closed holder, hidden scenery included. Each is named, then described:
+  "The kite: Paper, torn, caught on a beam." (message `levelSee`, `{The}: {text}`), and counts as examined.
+  So write those descriptions to read after the name: not "A paper kite, caught..." or "Reina, up in the palms...".
+- `look down` (also `look below`) does the same for `"down"`. With no text and nothing there: "Nothing special up there."
+  (message `levelNone`, with `{dir}`). `look up at the beam` examines the beam. Looking costs what `look` costs.
 - The effect `level: { kite: "down" }` moves a thing up or down now, and the game remembers it (`S.level`, saved and undone
   with everything else); `level: { kite: null }` puts it back to its data. The condition `level: { kite: "up" }` tests it.
 - A thing with a level that the player drops lands `"down"`.
@@ -322,7 +325,7 @@ messages: { huh: { rotate: ["Huh?", "Say that again?"] }, cantGo: "No way throug
 |---|---|
 | `huh` | I don't understand that. Type 'help'. |
 | `over` | The game is over. Type 'restart', 'undo' or 'menu'. |
-| `help` | Commands: {cmds}.\nDirections: n, s, e, w, u, d, or back (one step: the room you just left).\nFree actions: {free}. |
+| `help` | Commands: {cmds}.\nDirections: n, s, e, w, u, d, or back (one step: the room you just left).\nAlso: look up, look down, oops <word> (fixes a typo).\nFree actions: {free}. |
 | `cantGo`, `blocked`, `goWhere` | You can't go that way. / Something blocks the way. / Go where? |
 | `notHere`, `notHave` | You don't see that here. / You don't have that. |
 | `what`, `cant` | {Verb} what? / You can't {verb} that. |
@@ -341,7 +344,7 @@ messages: { huh: { rotate: ["Huh?", "Say that again?"] }, cantGo: "No way throug
 | `firstTake` | (first taking {the}) |
 | `arrives`, `leaves` | {The} arrives. / {The} leaves. (`{dir}`: the exit it used, or empty) |
 | `noOops` | There's nothing to correct. |
-| `levelNone`, `levelSee` | Nothing special {dir} there. (`{dir}`: up or down) / {The}: {text} (a thing at that level and its desc) |
+| `levelNone`, `levelSee` | Nothing special {dir} there. (`{dir}`: up or down) / {The}: {text} (a thing at that level, then its desc) |
 | `brief`, `verbose` | Brief descriptions: a room you've seen shows its name and what's there. / Full descriptions: every room is described in full. |
 | `transcript`, `noTranscript` | Transcript saved: {n} lines. / This browser won't save files, so the transcript can't be saved here. |
 
@@ -383,7 +386,7 @@ What it does **not** do (write a reply with `said:`, or an add-on with the `inpu
 
 ## Turns, saving, undo
 
-- `turns` goes up by one for every command, except free ones: `help`, `menu`, `inventory`, `again`, `undo`, `restart`, free verbs and add-on free commands. A reply with `free: true` refunds its turn, and naming something that isn't here costs nothing.
+- `turns` goes up by one for every command, except free ones: `help`, `menu`, `inventory`, `again`, `undo`, `restart`, `brief`, `verbose`, `transcript`, free verbs and add-on free commands. `look` (with `look up` / `look down`) costs a turn unless the game makes it free (`verbs: { look: { free: true } }`). A reply with `free: true` refunds its turn, and naming something that isn't here costs nothing.
 - **Continue** restores a snapshot taken after every command. It's also kept in the browser's localStorage, so it survives a reload. A finished game can't be continued.
 - A save belongs to one shape of the game: its room, item and NPC ids, its number of events, and `G.version`. Change any of those and old saves are ignored. Editing text, replies or conditions keeps them, so you can fix wording without wiping players' progress. When a content patch should end runs in progress (a puzzle's solution changed, say), bump `version`.
 - `undo` steps back one turn-costing command, even after an ending. `again` repeats the last command.
@@ -400,6 +403,7 @@ When the page loads, `validate()` checks the data. Every problem is listed on th
 - flags, marks and counters that are checked but never set;
 - verb aliases that clash with another command, and `aliases` / `phrasal` entries that lead to no command;
 - containers: `holds` must be `"in"` or `"on"`, `at` chains must end in a room, `open`/`close`/`inside` need openable holders;
+- levels: a thing's `level`, and the `level` effect and condition, take `"up"` or `"down"` (the effect also `null`);
 - add-on checks, such as a dark room with no light, or a `log` with no journal entry.
 
 A clean build prints `Validator: no problems`.

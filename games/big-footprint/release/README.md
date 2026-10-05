@@ -7,7 +7,7 @@ Everything for review, saved together with the build.
 | [`../design/GDD_week01_rev4.md`](../design/GDD_week01_rev4.md) | GDD, revision 4: rev 2 plus the Framework v2 showcase, marked [REV4], with a feature -> where table; section 13 adds rev 5 (look up/down, slot order) |
 | [`../design/GDD_week01_rev2.md`](../design/GDD_week01_rev2.md) | GDD, revision 2: rev 1 plus every decision and QA fix, marked [REV2] |
 | [`../design/SCRIPT_week01_rev2.txt`](../design/SCRIPT_week01_rev2.txt) | Script, revision 2, generated from the build's text table, so it matches the game word for word; changes tagged [CHANGED]/[NEW] with the bug id |
-| [`WALKTHROUGH_week01.txt`](WALKTHROUGH_week01.txt) | Verified walkthrough (W1 + W2 branch); automated in `tests/run.js` |
+| [`WALKTHROUGH_week01.txt`](WALKTHROUGH_week01.txt) | Verified walkthrough (W1 + W2 branch); automated in `tests/big-footprint.js` (run by `node tests/run.js`) |
 | [`BUGS_week01.md`](BUGS_week01.md) | Merged bug list with status (34/34 fixed) |
 | [`CHANGELOG_week01.md`](CHANGELOG_week01.md) | Changelog and known issues |
 | [`qa/`](qa/) | The three original QA reports and the four playtest QA rounds |

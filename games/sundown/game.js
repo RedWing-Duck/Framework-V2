@@ -1,5 +1,5 @@
 // Game data reference: docs/AUTHORING.md
-// A countdown sample that uses every core feature and the craft, journal, endings, tags and hints add-ons.
+// A countdown sample: replies, kinds, containers, randomness, look up/down, and the craft, journal, endings, tags and hints add-ons.
 // Things to try: "open toolbox", "take all", "put nails in toolbox", "take coffee" (two things fit), "x radio" then "listen to it".
 const SUNSET = 30;
 const BOARD = { move: { plywood: null }, set: "boarded", log: "boarded", say: "You nail the [plywood] over the [window]. Solid." };   // shared by a recipe and a verb

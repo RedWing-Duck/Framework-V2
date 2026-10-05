@@ -7,15 +7,15 @@ A tiny, dependency-free framework for text adventures, and a blueprint for new t
 - **Small.** No dependencies. Building and testing need only Node 18+.
 - **One file.** Each finished game is a single HTML file that runs anywhere, including offline.
 
-v2 folds what the first games kept rebuilding into the engine: verbs and replies on anything, a command reader (verb + things, with "Which do you mean?", pronouns, `all`), containers and surfaces, ask/tell topics, kinds, rotating and random text, named conditions, rewordable messages, undo/again/restart and saves that survive a reload. It also adds hooks, so add-ons never patch the engine. The fourth pass finished the word layer: two slots ("give the bread to the guard"), pointing by a word ("the chipped cup", "the other one", "both", "all except"), pronouns by kind, articles and proper names, names that change, moves you can see, "(first taking...)", `oops`, `brief` and `transcript`. See [`docs/REVIEW.md`](docs/REVIEW.md) for what changed and why, and how to port a v1 game.
+v2 folds what the first games kept rebuilding into the engine: verbs and replies on anything, a command reader (verb + things, with "Which do you mean?", pronouns, `all`), containers and surfaces, ask/tell topics, kinds, rotating and random text, named conditions, rewordable messages, undo/again/restart and saves that survive a reload. It also adds hooks, so add-ons never patch the engine. Later passes finished the word layer: two slots ("give the bread to the guard"), answered in slot order, so the guard replies whichever way it's said; pointing by a word ("the chipped cup", "the other one", "both", "all except"); pronouns by kind; articles and proper names; names that change; moves you can see; "(first taking...)"; `oops`, `brief` and `transcript`. The sixth pass added up and down: `look up` / `look down`, with things that sit up or down in a room and can move between the two. See [`docs/REVIEW.md`](docs/REVIEW.md) for what changed and why, and how to port a v1 game.
 
 ## What it is, and what it isn't
 
-**It is** a blueprint for short-to-medium authored parser games in one HTML file: exploration, puzzles, people to talk to, a clock, a story that remembers what you did. `games/` has three: a tutorial (damp-cell), a countdown (sundown), and *This Place Has a Big Footprint*, the largest game built on v1 (a guided tour, guard checkpoints, strikes, a clock and five endings), rebuilt on v2 with the engine untouched ([`games/big-footprint/PORT.md`](games/big-footprint/PORT.md)).
+**It is** a blueprint for short-to-medium authored parser games in one HTML file: exploration, puzzles, people to talk to, a clock, a story that remembers what you did. `games/` has three: a tutorial (damp-cell), a countdown (sundown), and *This Place Has a Big Footprint*, the largest game built on v1 (a guided tour, guard checkpoints, strikes, a clock and five endings), rebuilt on v2 without game-specific engine changes ([`games/big-footprint/PORT.md`](games/big-footprint/PORT.md)). It is also the showcase: every word-layer feature appears somewhere a player meets it naturally, mapped in its [GDD, sections 12 and 13](games/big-footprint/design/GDD_week01_rev4.md).
 
 **It isn't**, out of the box:
 - a natural-language parser. It reads a verb and the things you name; [`docs/AUTHORING.md`](docs/AUTHORING.md#how-a-command-is-read) lists exactly what it does and doesn't understand.
-- a systems engine. There is no combat, economy, NPC schedule, spatial model beyond rooms and in/on, or skill check. Counters, `rand`, `status` and hooks are the parts you build those from, as an add-on, and none of them is written yet.
+- a systems engine. There is no combat, economy, NPC schedule, skill check, or spatial model beyond rooms, in/on and up/down. Counters, `rand`, `status` and hooks are the parts you build those from, as an add-on, and none of them is written yet.
 
 ## Review package
 
@@ -50,10 +50,11 @@ To add a new mechanic, first check it isn't data already, then write an add-on: 
 ```
 engine/      shell.html, style.css, engine.js   (shared; never edited per game)
 addons/      shared optional mechanics: light, craft, journal, endings, tags, hints
-games/       one folder per game: game.js + build.json (+ the game's own add-ons, "./name" in build.json)
+games/       one folder per game: game.js + build.json (+ the game's own add-ons, "./name" in build.json);
+             big-footprint/ also keeps its design docs (design/) and release pack (release/)
 template/    blank starter game
 tools/       build.js (bundler), headless.js (DOM stub for Node)
-tests/       run.js (node:test)
+tests/       run.js (node:test; loads big-footprint.js), words/ and local-addon/ (small test games)
 docs/        AUTHORING.md, ADDONS.md, PATTERNS.md, REVIEW.md
 dist/        built, playable single-file games
 ```

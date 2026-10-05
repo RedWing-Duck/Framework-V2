@@ -63,7 +63,10 @@ Also new in the core:
 
 ## Lines of code
 
-| | v1 + all add-ons the two games needed | v2 |
+Counted at the first pass. The engine has grown since, as later passes moved more into the core (containers, topics, the
+word layer, up and down): 770 lines at the sixth pass, with the shared add-ons at 197.
+
+| | v1 + all add-ons the two games needed | v2 (first pass) |
 |---|---|---|
 | engine | 239 | 410 |
 | add-ons replaced by the core | 354 (actions 122, verbs 92, history 37, quips 35, messages 26, save 19, help 14, restart 9), plus the overlapping parts of nouns | 0 |
@@ -86,7 +89,7 @@ Also new in the core:
 
 ## Porting big-footprint
 
-Done in the third pass: see `games/big-footprint/PORT.md`. The game kept its Script data formats. The core replaced `restart`, `messages` and most of `verbs`, and the game's own mechanics went into two game-local add-ons that use only hooks. The original 43 tests pass, and a differential test checks every command's output and state against the original build.
+Done in the third pass: see `games/big-footprint/PORT.md`. The game kept its Script data formats. The core replaced `restart`, `messages` and most of `verbs`, and the game's own mechanics went into two game-local add-ons that use only hooks. The original 43 tests pass, and a differential test checked every command's output and state against the original build (until the game's rev 4 showcase, when scripted playthroughs replaced it).
 
 ## Open questions for the next pass
 
