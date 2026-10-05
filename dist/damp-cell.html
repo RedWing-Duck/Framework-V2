@@ -831,7 +831,8 @@ function validate() {
   (G.events || []).forEach((e, i) => fx(e, `events[${i}]`));
   for (const c in G.conds || {}) conds(G.conds[c], `conds.${c}`);
   for (const k in G.messages || {}) need(k in MSG, `messages.${k}`, `no engine message "${k}"`);
-  for (const v in G.verbs || {}) for (const w of G.verbs[v].aliases || []) need(!own(ALIAS, w) || ALIAS[w] === v, `verbs.${v}.aliases`, `"${w}" is already a command or alias`);
+  for (const v in G.verbs || {}) for (const w of G.verbs[v].aliases || [])   // an alias may not take over a command, a built-in alias or another verb
+    need((!own(ALIAS, w) || ALIAS[w] === v) && !own(CMDS, w) && (w === v || !VERBS.has(w)) && !isDir(w), `verbs.${v}.aliases`, `"${w}" is already a command or alias`);
   // an alias or phrasal verb must lead to a command the game understands (a built-in, an add-on's, or a verb with replies)
   const known = c => !!own(CMDS, c) || VERBS.has(c) || isDir(c);
   for (const T of ["aliases", "phrasal"]) for (const w in G[T] || {}) need(known(words(G[T][w])[0]), `${T}.${w}`, `no command "${G[T][w]}"`);
@@ -847,7 +848,9 @@ function menu() { document.body.classList.remove("playing"); $("bs").hidden = fa
 // fresh: a new game. Otherwise Continue: the snapshot, over a blank state so a key it lacks (an older save) has its default
 function play(fresh) {
   document.body.classList.add("playing"); out.innerHTML = "";
-  if (fresh) start(); else { S = Object.assign(blank(), JSON.parse(SAVE), { talk: null }); UNDO = LAST = null; exec("look"); status(); }
+  if (fresh) start(); else { S = Object.assign(blank(), JSON.parse(SAVE), { talk: null });
+    for (const a of ADDONS) if (a.state && !own(S, a.name)) S[a.name] = JSON.parse(JSON.stringify(a.state));   // an add-on added since the save
+    UNDO = LAST = null; exec("look"); status(); }
   inp.focus();
 }
 

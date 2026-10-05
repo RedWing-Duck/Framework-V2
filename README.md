@@ -39,7 +39,9 @@ node tests/run.js               # headless tests against the built files
 1. `cp -r template games/my-game`
 2. Edit `games/my-game/game.js`. [`docs/AUTHORING.md`](docs/AUTHORING.md) documents every key.
 3. List any add-ons in `games/my-game/build.json`, for example `{ "addons": ["light"] }`.
-4. Run `node tools/build.js my-game` and fix anything the validator reports.
+4. Run `node tools/build.js my-game` and fix anything the validator reports. The file is written even when there are problems
+   (the command then exits with an error), so don't commit it until it says `Validator: no problems`. Run `node tests/run.js`
+   too: it checks that every game's `dist/` file matches its sources.
 5. Commit `dist/my-game.html`. That file is the whole game.
 
 Recipes for common designs (countdowns, ranked endings, hidden things, hint ladders...) are in [`docs/PATTERNS.md`](docs/PATTERNS.md).

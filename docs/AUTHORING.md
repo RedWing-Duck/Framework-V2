@@ -227,8 +227,9 @@ So "use key on door" asks the door first, then the key, and "give the bread to t
 
 - `said: "a|b"` passes when the words typed after the verb contain any of the phrases (whole words). A list means all of them. `said: ""` means nothing was typed. Directions are spelled out for `go` (`d` is `down`).
 - `kinds: { tool: { eat: "You'd chip a tooth on the {it}." } }` gives every `kind: "tool"` the same reply.
-- `verbs: { smell: { free: true, aliases: ["sniff"], fail: "Nothing smells.", hidden: true } }`: `free` verbs don't cost a turn, `aliases` are more words for the verb, `fail` answers when nothing else does, and `hidden` keeps the verb out of `help`.
-- `aliases: { quit: "menu", press: "push" }` and `phrasal: { "knock over": "break" }` add words for any command.
+- `verbs: { smell: { free: true, aliases: ["sniff"], fail: "Nothing smells.", hidden: true } }`: `free` verbs don't cost a turn, `aliases` are more words for the verb (the validator refuses one that's already a command, a direction, a built-in alias or another verb), `fail` answers when the player typed words after the verb and nothing else answered (the verb alone gets "{Verb} what?", message `what`), and `hidden` keeps the verb out of `help`.
+- `aliases: { quit: "menu", press: "push" }` and `phrasal: { "knock over": "break" }` add words for any command. These win over
+  the built-in aliases on purpose (big-footprint makes `insert` mean `use`), so check before reusing `x`, `l`, `i`, `z`, `g`, `q` or `h`.
 - Reply verb names are just names. `take`, `in` or `set` as a verb won't be read as an effect or condition.
 
 ## Events
@@ -294,20 +295,23 @@ Add-ons add more, such as `dark` (light), `logged` (journal).
 
 ## EFFECT
 
-These run in table order, except `say`, `do`, `goto` and `end`, which always run last, in that order.
+Whatever order you write them in, the effects of one entry run in the order of this table. Add-ons' effects (`log`, `ending`,
+`hints`...) run after `free` and before `say`. So `take` runs before `give` ("swap the bread for the key" works), and `say`
+reads the state after everything else changed.
 
 | Key | Does |
 |---|---|
 | `set` / `unset: "flag"` or a list | turns flags on or off |
-| `give` / `take: "item"` or a list | moves items into or out of the inventory, with a "(Received: …)" or "(Lost: …)" line |
-| `move: { id: where }` | where is a room, `"player"`, a holder, `null` (offstage), or a list (a route: the next room in it, looping) |
-| `open` / `close: "box"` or a list | opens or closes a holder, silently |
-| `level: { id: "up" }` | moves a thing up or down in its room; `null` puts it back to its data `level` |
 | `add: { counter: n }` | adds n (negative subtracts) |
 | `mark: "name"` | stamps the current turn, for `since` |
+| `move: { id: where }` | where is a room, `"player"`, a holder, `null` (offstage), or a list (a route: the next room in it, looping) |
+| `take: "item"` or a list | sends it offstage from wherever it is, with a "(Lost: …)" line (message `lost`; reword it to `""` to hide it) |
+| `give: "item"` or a list | puts it in the inventory, with a "(Received: …)" line (message `received`) |
+| `open` / `close: "box"` or a list | opens or closes a holder, silently |
+| `level: { id: "up" }` | moves a thing up or down in its room; `null` puts it back to its data `level` |
 | `free: true` | this command costs no turn |
 | `say: TEXT` | prints the text. The variant is picked after the other effects ran |
-| `do: "command"` | runs a command, as if typed: `do: "look"` |
+| `do: "command"` | runs one command: a verb and its words, as the engine names them (`do: "look"`, `do: "go north"`, `do: "examine coin"`). Aliases, directions alone and phrasal verbs aren't read here: not `do: "x coin"` or `do: "north"` |
 | `goto: "room"` | moves the player there and shows the room |
 | `end: TEXT` | prints the text and ends the game |
 
@@ -352,10 +356,10 @@ Add-ons add their own ids (light: `dark`, `darkFalls`; craft: `combineWhat`, `co
 
 ## Player commands
 
-`look (l)`, `go <dir>` or just the direction, `take (get, grab, pick up)`, `drop (put down)`, `put (place, insert)`,
-`open`, `close (shut)`, `inventory (i)`, `examine (x, look at)`, `use`, `talk (speak)`, `ask`, `tell`, `wait (z)`,
+`look (l, look around)`, `go <dir> (walk)` or just the direction, `take (get, grab, pick up)`, `drop (put down)`, `put (place, insert)`,
+`open`, `close (shut)`, `inventory (i, inv)`, `examine (x, look at)`, `use`, `talk (speak)`, `ask`, `tell`, `wait (z)`,
 `again (g)`, `undo`, `restart`, `help (h, ?)` and `menu (q, quit)`, plus every verb the game gives replies to.
-`look up` / `look down` (also `above`, `overhead`, `below`) show what's above and below you (see Up and down).
+`look up` / `look down` (also `look u` / `look d`, `above`, `overhead`, `upward`, `below`, `downward`) show what's above and below you (see Up and down).
 
 Also, all free:
 - `oops <word>`: runs the last line again with its unknown word replaced ("take lmap", "oops lamp"). With no unknown word, the last word is replaced.
@@ -388,6 +392,7 @@ What it does **not** do (write a reply with `said:`, or an add-on with the `inpu
 
 - `turns` goes up by one for every command, except free ones: `help`, `menu`, `inventory`, `again`, `undo`, `restart`, `brief`, `verbose`, `transcript`, free verbs and add-on free commands. `look` (with `look up` / `look down`) costs a turn unless the game makes it free (`verbs: { look: { free: true } }`). A reply with `free: true` refunds its turn, and naming something that isn't here costs nothing.
 - **Continue** restores a snapshot taken after every command. It's also kept in the browser's localStorage, so it survives a reload. A finished game can't be continued.
+- Adding an add-on to a game with saves in the wild is safe: Continue gives the new add-on its starting `state`.
 - A save belongs to one shape of the game: its room, item and NPC ids, its number of events, and `G.version`. Change any of those and old saves are ignored. Editing text, replies or conditions keeps them, so you can fix wording without wiping players' progress. When a content patch should end runs in progress (a puzzle's solution changed, say), bump `version`.
 - `undo` steps back one turn-costing command, even after an ending. `again` repeats the last command.
 
@@ -402,7 +407,7 @@ When the page loads, `validate()` checks the data. Every problem is listed on th
 - ids used by both an item and an NPC, and things with no name;
 - flags, marks and counters that are checked but never set;
 - verb aliases that clash with another command, and `aliases` / `phrasal` entries that lead to no command;
-- containers: `holds` must be `"in"` or `"on"`, `at` chains must end in a room, `open`/`close`/`inside` need openable holders;
+- containers: `holds` must be `"in"` or `"on"`, `at` chains must end in a room, `inside` needs a holder, `open`/`close` need an openable one (`closed: true` or `false`);
 - levels: a thing's `level`, and the `level` effect and condition, take `"up"` or `"down"` (the effect also `null`);
 - add-on checks, such as a dark room with no light, or a `log` with no journal entry.
 

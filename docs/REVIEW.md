@@ -196,3 +196,14 @@ Two engine changes, asked for after the big-footprint showcase, for every game. 
 The three games use it: damp-cell (the cell's window and trapdoor, the straw and the rat on the floor), sundown (the rafters,
 the pines at dusk, the rug and the crowbar it hides), big-footprint (every room, the giraffe up, the jaguar down, and Reina,
 who flies up when released and lands when she first moves).
+
+A final check of the docs against the code found two engine gaps, fixed for every game with tests, and a set of doc corrections:
+- A verb alias that was already a command (`look`), a built-in alias (`x`), a direction or another verb passed the validator and
+  silently took the word over. The validator now reports it.
+- Adding an add-on with `state` to a game crashed Continue on older saves (the state was missing). Continue now gives it its
+  starting state.
+- `tests/run.js` checks every game's `dist/` file, not only the samples'.
+- AUTHORING: the real order effects run in (and where add-on effects fit), what `do:` accepts, when `verbs.X.fail` answers, what
+  the `take` effect does, `inside` vs `open`/`close` targets, the missing aliases, and that game aliases override built-in ones.
+  PATTERNS: where the honk gag goes, and when "give her the ticket" works. README: the build writes `dist/` even with problems.
+

@@ -12,7 +12,7 @@ const newGame = (h = CELL, opts) => { const g = load(h, opts).boot(); g.click("b
 const TO_KEY = ["d", "u", "e", "take lantern", "w", "d", "take bread", "u", "e", "talk guard", "1", "use key"];
 const TO_BOARD = ["s", "e", "open toolbox", "take hammer", "take nails", "take plywood", "w", "n", "use plywood on window"];
 
-for (const name of ["damp-cell", "sundown"])
+for (const name of fs.readdirSync(path.join(__dirname, "../games")).filter(n => fs.existsSync(path.join(__dirname, `../games/${n}/game.js`))))   // every game, new ones too
   test(`dist/${name}.html is up to date with the sources`, () => assert.equal(dist(name), build(`games/${name}`), `run: node tools/build.js ${name}`));
 
 test("damp-cell: escape through the gate", t => {
@@ -199,6 +199,10 @@ test("validator: verb names and data fields are names, not effects or conditions
     .replace('rug: { name: "rug",', 'rug: { in: "nowhere", name: "rug",');
   assert.notEqual(ok, SUN);
   assert.deepEqual(load(ok).boot().problems(), []);
+  for (const w of ["look", "x", "north", "listen"]) {   // a verb alias can't take over a command, a built-in alias, a direction or another verb
+    const p = load(SUN.replace('aliases: ["ponder"]', `aliases: ["ponder", "${w}"]`)).boot().problems();
+    assert.ok(p.some(l => l.startsWith("verbs.think.aliases") && l.includes(`"${w}"`)), w + ": " + p.join("; "));
+  }
 });
 
 test("template builds, validates clean, and can be finished", () => {
@@ -238,12 +242,13 @@ test("continue: a save missing newer state keys still loads", () => {
   const st = storage(), g = newGame(SUN, { storage: st });
   g.type("listen radio");
   const k = "Sundown:save", d = JSON.parse(st.map.get(k)), s = JSON.parse(d.s);
-  delete s.seq; delete s.seed; d.s = JSON.stringify(s); st.map.set(k, JSON.stringify(d));
+  delete s.seq; delete s.seed; delete s.journal; d.s = JSON.stringify(s); st.map.set(k, JSON.stringify(d));   // journal: as if the add-on came later
   const g2 = load(SUN, { storage: st }).boot();
   g2.click("bc");
-  g2.type("listen radio", "s", "listen");
+  g2.type("listen radio", "s", "listen", "n", "drink mug", "journal");
   assert.equal(g2.errors.length, 0);
-  assert.equal(g2.get("S.room"), "yard");
+  assert.equal(g2.get("S.room"), "cabin");
+  assert.deepEqual(g2.get("S.journal"), ["coffee"], "a missing add-on state starts fresh");
 });
 
 test("random: seeded rolls repeat exactly, and undo can't re-roll", () => {

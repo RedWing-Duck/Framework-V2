@@ -24,7 +24,7 @@ const G = {
     keeper: { name: "Gatekeeper", at: "gate", desc: "Arms folded, palm out.",
       dialogue: {                            // "start" is the first node
         start: { text: "Toll's one coin.", options: [
-          { text: "Pay the toll.", if: { has: "coin" }, take: "coin", set: "paid", next: "thanks" },
+          { text: "Pay the toll.", if: { has: "coin" }, take: "coin", set: "paid", next: "thanks" },   // shown once you "take coin"
           { text: "Maybe later." } ] },       // no "next" ends the conversation
         thanks: { text: "Pleasure doing business." } } }
   },

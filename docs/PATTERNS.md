@@ -113,7 +113,8 @@ self: { name: "yourself", on: { smell: [{ if: { flag: "drenched" }, say: "Coffee
 
 ## A gag with a small cost
 
-The first honk costs 5 extra turns; later ones rotate lines and are free.
+The first honk costs 5 extra turns; later ones rotate lines and are free. Put it in the game's `on` so a bare "honk" works anywhere
+(on the horn's own `on`, only "honk horn" would reach it).
 
 ```js
 honk: [{ if: { not: { flag: "honked" } }, set: "honked", add: { turns: 5 }, say: "HWAAANK. A thousand heads turn." },
@@ -176,7 +177,7 @@ npcs: { clerk: { ..., pronoun: "her", on: {
   show: [{ if: { what: "badge" }, set: "trusted", say: "She nods you through." }, "She glances at {the:what}. \"So?\""] } } }
 ```
 
-"give the ticket to the clerk", "give her the ticket" and "show badge to clerk" all work, and the item is picked up first if it's lying
+"give the ticket to the clerk", "show badge to clerk", and "give her the ticket" once she's been named, all work, and the item is picked up first if it's lying
 here. The reply sits on the person, who is asked first because the second slot answers before the direct thing, whichever
 order the player used. So the ticket can still have its own `give` reply ("Give it to whom?") for when nobody's named.
 
