@@ -809,6 +809,10 @@ test("random commands: consistent state, and an ending is always reachable", t =
 test("feature two slots: give/show/put with what: and with:, {the:what}/{The:with}, carry", () => {
   const g = play("n", "show card to don");
   assert.match(g.last(), /^He glances at it and hands it back/, "the Don's reply, by what:");
+  g.type("give the don the card");
+  assert.match(g.last(), /^He glances at it and hands it back/, "slot order: the Don, not the card's own line, whichever way it's said");
+  g.type("use card");
+  assert.equal(g.last(), "That won't help. The card is for reading, not for handing to anyone.", "the card's own reply, with no one in the second slot");
   g.type("drop card", "show the card to the don");
   assert.equal(g.lines().at(-2), "(first taking the BRIEFING CARD)", "carry: picked up first");
   const q = play(...TOUR.slice(0, 10), "show card to don");
@@ -928,3 +932,20 @@ test("feature kinds: every loose animal refuses take, eat, ride and pet, and hea
   assert.equal(g.get("S.count.turns"), t, "talking is free");
   assert.notEqual(g.get("S.loc.reina"), "player");
 });
+test("feature up and down: look up / look down in every room; the giraffe is up, Reina flies up and lands", () => {
+  const rooms = bigfoot().get("Object.keys(G.rooms).filter(r => G.rooms[r].up && G.rooms[r].down)");
+  assert.equal(rooms.length, 12, "every room has a view up and down");
+  assert.equal(play("look down").last(), "Gold carpet with the Don's initials woven in. You're standing on his name.");
+  const g = play(...TOUR, "s", "open aviary", "s"), t = g.get("S.count.turns");
+  assert.equal(g.get("S.level.reina"), "up", "released: up in the palms");
+  g.type("look up");
+  assert.ok(g.lines().slice(-2)[1].startsWith("Reina, up in the palms"));
+  assert.equal(g.get("S.count.turns"), t, "looking is free");
+  while (g.get("S.loc.reina === 'atrium'")) g.type("wait");
+  assert.equal(g.get("S.level.reina ?? null"), null, "she lands when she moves: back to her data level");
+  const l = play(...TOUR, "open giraffe gate", "s", "s", "s", "run", "e");
+  while (l.get("S.loc.giraffe !== 'landing'")) l.type("wait");
+  l.type("look up");
+  assert.ok(l.lines().some(x => /^(Six meters of eyelashes|She looks down at you from the ceiling)/.test(x)), "the giraffe is up");
+});
+

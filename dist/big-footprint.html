@@ -51,7 +51,7 @@ const G = (() => {
 // ---- All player-facing text, keyed by Script id. Logic lives in G below.
 const T = {
   intro: "A Retroment Gaming production.\n\nYour client wants three secrets from Don Chava's penthouse. Your cover: Walter Pryce, bookstore investor, carrying a plaque proposal and a smile. The Don will give you the grand tour himself. Listen to everything. Touch nothing. Get out with at least two.\n\nType HELP for commands.",
-  help: "Move: north, south, east, west, up, down (or n, s, e, w, u, d).\nLook around: look. Look at something: examine [\u200bthing] (or x).\nTake, drop, use [\u200bitem] on [\u200bthing], give or show [\u200bitem] to [\u200bperson], open, push, play, read.\nTalk: talk to [\u200bperson], ask [\u200bperson] about [\u200bthing]. Answer: say [\u200bwords].\nIn a tight spot: run (works once).\nOther: inventory (i), status, hint, quit. Typo? oops [\u200bword] fixes the last line.\nShort rooms you've seen: brief (verbose for full). Save the story so far: transcript.\nFree anytime: look, examine, inventory, status, help, hint, brief, transcript. Once the chaos starts, everything else costs time.",   // [REV4] two slots, topics, oops, brief, transcript   // \u200b: shown as [thing], not read as an [id] tag
+  help: "Move: north, south, east, west, up, down (or n, s, e, w, u, d).\nLook around: look (look up, look down). Look at something: examine [\u200bthing] (or x).\nTake, drop, use [\u200bitem] on [\u200bthing], give or show [\u200bitem] to [\u200bperson], open, push, play, read.\nTalk: talk to [\u200bperson], ask [\u200bperson] about [\u200bthing]. Answer: say [\u200bwords].\nIn a tight spot: run (works once).\nOther: inventory (i), status, hint, quit. Typo? oops [\u200bword] fixes the last line.\nShort rooms you've seen: brief (verbose for full). Save the story so far: transcript.\nFree anytime: look, examine, inventory, status, help, hint, brief, transcript. Once the chaos starts, everything else costs time.",   // [REV4] two slots, topics, oops, brief, transcript   // \u200b: shown as [thing], not read as an [id] tag
   huh: ["You try that. The universe gives you a look usually reserved for bad checks.",
     "That doesn't make sense, even for a guy pitching a bookstore to a kingpin.",
     "Nice try, detective. Say it plain."],
@@ -242,17 +242,36 @@ const T = {
     giraffe: "You lift the latch. The giraffe ducks out and ambles off toward the stairs, curious about everything. Perfect alibi: GIRAFFE.",
     jaguar: "You swing the gate open and flatten yourself against the wall. The jaguar pours past like smoke and disappears downstairs. Perfect alibi: JAGUAR.",
     already: "It's already open. That animal's somebody else's problem now." },
+  // [REV5] "look up" / "look down": what's above and below you in each room (core rooms.X.up / down); things with a
+  // level (the giraffe up, the jaguar and Reina down) add their own lines
+  updown: {
+    elevator: ["A mirrored ceiling. Six of you look back down, all of them sweating.", "Gold carpet with the Don's initials woven in. You're standing on his name."],
+    foyer: [[{ if: { flag: "escape" }, text: "The chandelier sways on its chain. Something heavy is walking around up there." }, "A chandelier the size of a small car, and the landing where both staircases meet."],
+      "The gold compass rose. All four points read \"CHAVA.\""],
+    trophy: ["Spotlights, every one aimed at a case, like the guns are the guests of honor.", "Carpet so thick your shoes disappear into it."],
+    salon: ["The fresco: clouds, cherubs, and one angel with a very familiar mustache.", "The piano's pedals, polished by one pair of feet."],
+    dining: ["A crystal chandelier over the long table, bright enough to read a contract by.",
+      [{ if: { flag: "escape" }, text: "Silverware, napkins, and a lemur eating the place cards." }, "Not a crumb on the floor. Someone sweeps between courses."]],
+    landing: ["A painted sky, with a gold sun that looks a lot like the Don.", "The foyer, far below: the compass rose, both staircases, and a long way down."],
+    gallery: ["A brass picture light over every Don.", "A long runner, worn down the middle by one man's pacing."],
+    atrium: [[{ if: { flag: "escape" }, text: "The glass roof shivers with every thud. Lightning, and for a second, a huge shadow." }, "The glass roof, rain drumming on it."],
+      "Pepita's pool, gold coins glinting under the water."],
+    office: ["A ceiling fan, turning slowly, stirring the cigar smoke.", "A thick red rug, and one cigar ash nobody dared to sweep up."],
+    aviary: ["Fogged glass, and peacocks on every perch, all of them looking down at you.", "Scuffed tiles, the marks spaced a very long stride apart."],
+    terrace: ["Rain, lightning, and nothing between you and the sky.", "Forty floors down, the city. The empty lot next door is the one dark square."],
+    enclosure: ["The bars, bent outward high over your head. Whatever did that is tall.", "Footprints the size of snow shovels, pressed into the straw."] },
   animal: {   // [REV4] the loose animals, out of their pens and roaming the palace (items, kind "animal")
     giraffe: { random: ["Six meters of eyelashes and bad decisions, eating the Don's silk lilies one by one.", "She looks down at you from the ceiling, chewing, and decides you're not food. Probably."] },
     jaguar: { random: ["Black, silent, and very interested in the pozole on your sleeve.", "It sits like a statue and watches you like a bill collector."] },
-    reina: { random: ["Reina, the loudest of the Don's peacocks, tail fanned like a stolen chandelier.", "Reina screams at you personally. Then at a lamp. Then at you again."] },
+    reina: [{ if: { level: { reina: "up" } }, text: "Reina, up in the palms, tail hanging down like a stolen chandelier. She screams at you from above." },   // [REV5]
+      { random: ["Reina, the loudest of the Don's peacocks, tail fanned like a stolen chandelier.", "Reina screams at you personally. Then at a lamp. Then at you again."] }],
     take: "Faster than you, angrier than you, and not going in your jacket.",
     eat: "Absolutely not. In this house, the animals are family.",
     ride: { random: ["You picture riding {the} out of here. {The} pictures something else.", "{The} gives you a look. You'd make it about one step."] },
     pet: "{The} gives you a look that ends the idea.",
     talk: "You make your case. {The} hears you out, then goes back to being somebody else's problem.",
     here: { giraffe: "The giraffe is in here with you, browsing the ceiling.", jaguar: "The jaguar is in here with you. You make no sudden moves.",
-      reina: "Reina struts past your ankles, screaming at nothing." } },
+      reina: "Reina is in here with you, screaming at nothing." } },
   guard: {   // E4 R7 (gallery) lines; run keeps rev 2's
     peacocks: "\"The peacocks are out! The Don wants them rounded up!\" As if on cue, a scream echoes down the hall. Nando sprints toward it.",
     giraffe: "\"The giraffe is loose, and she's heading for the stairs!\" Nando swears and runs past you toward the balcony, already yelling into his radio.",
@@ -366,9 +385,11 @@ const secret = (flag, item, text) => ({ set: flag, add: { secrets: 1 }, give: it
 const CLEAR = { unset: "checkpoint", add: { cleared: 1 }, move: { nando: null } };
 const alibi = (a, words = a) => ({ if: { flag: "checkpoint", said: words, min: { [a]: 1 }, max: { [a]: 1 } }, ...CLEAR, add: { [a]: 1, cleared: 1 }, say: [{ if: { in: "foyer" }, text: T.foyerGuard[a] }, T.guard[a]] });
 // [REV4] a released animal is a thing that roams two rooms (events below; the core says when it comes and goes)
-const LOOSE = { peacocks: { id: "reina", route: ["atrium", "gallery"], every: 5 }, giraffe: { id: "giraffe", route: ["landing", "gallery"], every: 3 },
+// [REV5] flies: up (S.level) when released, back down (its data level) when it first moves
+const LOOSE = { peacocks: { id: "reina", route: ["atrium", "gallery"], every: 5, flies: true }, giraffe: { id: "giraffe", route: ["landing", "gallery"], every: 3 },
   jaguar: { id: "jaguar", route: ["dining", "foyer"], every: 4 } };
-const release = (a, words) => [{ if: { said: words, max: { [a]: 0 } }, add: { [a]: 1 }, move: { [LOOSE[a].id]: LOOSE[a].route[0] }, say: T.alibi[a] },
+const release = (a, words) => [{ if: { said: words, max: { [a]: 0 } }, add: { [a]: 1 }, move: { [LOOSE[a].id]: LOOSE[a].route[0] },
+  ...(LOOSE[a].flies && { level: { [LOOSE[a].id]: "up" } }), say: T.alibi[a] },
   { if: { said: words }, say: T.alibi.already }];
 const unused = (a, name) => [{ if: { min: { [a]: 1 }, max: { [a]: 1 } }, text: name }];
 
@@ -790,8 +811,8 @@ const G = {
 
   items: {
     card: { name: "BRIEFING CARD", cat: "OWN", at: "player", aliases: ["briefing"], desc: [{ if: { flag: "q2" }, text: T.item.card.look.replace(/"Smile\. Don't touch anything\."$/, T.item.card.q2) }, T.item.card.look],
-      on: { take: [{ if: { has: "card" }, say: T.item.card.take }], use: [{ if: { has: "card", not: { with: "don" } }, say: T.item.card.use }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
-    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look], on: { use: [{ if: { has: "coin", not: { with: "don" } }, say: T.item.coin.use }] } },   // PT-10                                                          // I2
+      on: { take: [{ if: { has: "card" }, say: T.item.card.take }], use: [{ if: { has: "card" }, say: T.item.card.use }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
+    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look], on: { use: [{ if: { has: "coin" }, say: T.item.coin.use }] } },   // PT-10                                                          // I2
     ledger: { name: "LEDGER", cat: "OWN", at: "tray", desc: T.item.ledger.look, on: { use: T.item.evidence } },                                                         // I3
     manifest: { name: "SHIPPING MANIFEST", cat: "OWN", at: "mouth", desc: T.item.manifest.look, on: { use: T.item.evidence } },                                         // I4
     photos: { name: "DEAL PHOTOS", cat: "OWN", aliases: ["photo"], desc: T.item.photos.look, on: { use: T.item.evidence } },                              // I5
@@ -825,9 +846,9 @@ const G = {
     aviary: { name: [{ if: "OUT_PEACOCKS", text: "EMPTY AVIARY" }, "AVIARY"],   // [REV4] names follow the state
       cat: "FIXTURE", at: "aviary", fixed: true, aliases: ["door", "keypad"], desc: T.item.aviary },
     // [REV4] the loose animals: offstage until released, then roaming (kind "animal": take, eat, ride, pet)
-    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["mariposa", "neck"], desc: T.animal.giraffe },
-    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], desc: T.animal.jaguar },
-    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], desc: T.animal.reina },
+    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["mariposa", "neck"], level: "up", desc: T.animal.giraffe },   // [REV5] six meters: look up
+    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], level: "down", desc: T.animal.jaguar },
+    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], level: "down", desc: T.animal.reina },   // up while S.level says so
     giraffegate: { name: [{ if: "OUT_GIRAFFE", text: "OPEN GIRAFFE GATE" }, "GIRAFFE GATE"], aliases: ["giraffe gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.giraffegate },
     jaguargate: { name: [{ if: "OUT_JAGUAR", text: "OPEN JAGUAR GATE" }, "JAGUAR GATE"], aliases: ["jaguar gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.jaguargate }
   },
@@ -925,7 +946,7 @@ const G = {
     { if: { min: { cleared: 1 } }, set: "cp7_done" },
     { if: { min: { cleared: 2 } }, set: "cp2_done" },
     // [REV4] loose animals roam, costing nothing; with no say, the core tells you when one comes or goes
-    ...Object.entries(LOOSE).map(([a, { id, route, every }]) => ({ every, if: { min: { [a]: 1 } }, move: { [id]: route } })),
+    ...Object.entries(LOOSE).map(([a, { id, route, every, flies }]) => ({ every, if: { min: { [a]: 1 } }, move: { [id]: route }, ...(flies && { level: { [id]: null } }) })),
     // ESC_REVISIT: this room already seen during ESCAPE
     ...Object.keys(ROOM).map(r => ({ if: { in: r, ...ESC }, set: `escbeen_${r}` })),
     // REVISIT text after the first look at each room
@@ -1065,7 +1086,7 @@ for (const r in ROOM_VERBS) G.rooms[r].verbs = ROOM_VERBS[r];
 const WORDS = { elevator: ["elevator"], foyer: ["foyer"], trophy: ["trophy room", "trophies"], salon: ["salon", "music salon", "piano room"],
   dining: ["dining hall", "dining room"], landing: ["landing"], gallery: ["gallery", "hall"], atrium: ["atrium"], office: ["office"],
   aviary: ["aviary"], terrace: ["terrace", "roof"], enclosure: ["enclosure", "pen"] };
-for (const r in WORDS) Object.assign(G.rooms[r], { words: WORDS[r], again: AGAIN[r], revisit: T.room[ROOM[r]].revisit });
+for (const r in WORDS) Object.assign(G.rooms[r], { words: WORDS[r], again: AGAIN[r], revisit: T.room[ROOM[r]].revisit, up: T.updown[r][0], down: T.updown[r][1] });
 G.rooms.terrace.again = terrace.map(t => [null, t.text]).slice(0, 1);   // R11: rev 2 REVISIT (built from animal state)
 
 // ---- Script rev 3 batch 4 / B: state text (nouns add-on)
@@ -1388,11 +1409,11 @@ const REFS = tbl({}), META = ["if", "repeat", "every", "text", "next"], MAPS = t
 // S = the game state (plain JSON: saved, undone, restored). SAVE = the Continue snapshot, UNDO = one step back,
 // LAST = the last command's words (for "again"), VERBS = every verb the game's data answers, VER = the save version
 let S, SAVE = null, UNDO = null, LAST = null, VERBS = new Set(), VER = "";
-// S.loc: where each thing is; S.shut: closed holders; S.it: the last thing acted on; S.pro: what each pronoun means
-// ({ it, him, her, them }); S.pick: the last "Which do you mean?" set and the one chosen (for "the other one", "both");
+// S.loc: where each thing is; S.shut: closed holders; S.level: things moved up or down (the level effect);
+// S.it: the last thing acted on; S.pro: what each pronoun means ({ it, him, her, them }); S.pick: the last "Which do you mean?" set and the one chosen (for "the other one", "both");
 // S.ask: a command waiting for "Which do you mean?"; S.talk: a conversation waiting for an option
 const blank = () => ({ room: G.start, prev: null, loc: {}, shut: {}, flags: {}, count: { turns: 0 }, mark: {}, fired: {},
-  seen: {}, been: {}, seq: {}, seed: G.seed ?? Date.now() % 2147483647, it: null, pro: {}, pick: null, ask: null, talk: null, over: false });
+  seen: {}, been: {}, seq: {}, level: {}, seed: G.seed ?? Date.now() % 2147483647, it: null, pro: {}, pick: null, ask: null, talk: null, over: false });
 // LINE = the command being answered: said: and {verb}; it = the thing answering ({it}); what = the direct thing and
 // with = the second one ("give WHAT to WITH", "use WHAT on WITH"). TURN = whether this command costs a turn, and was refunded.
 // ROLE = how the typed line splits around its role word, before filler words were dropped (see roles()).
@@ -1417,7 +1438,7 @@ const MSG = tbl({
   inIt: "In {the}: {list}.", onIt: "On {the}: {list}.", isShut: "{The} is closed.",
   opened: "You open {the}.", closed: "You close {the}.", alreadyOpen: "It's already open.", alreadyClosed: "It's already closed.",
   noTopic: "No answer about that.", firstTake: "(first taking {the})", arrives: "{The} arrives.", leaves: "{The} leaves.",
-  noOops: "There's nothing to correct.", brief: "Brief descriptions: a room you've seen shows its name and what's there.",
+  noOops: "There's nothing to correct.", levelNone: "Nothing special {dir} there.", brief: "Brief descriptions: a room you've seen shows its name and what's there.",
   verbose: "Full descriptions: every room is described in full.", transcript: "Transcript saved: {n} lines.",
   noTranscript: "This browser won't save files, so the transcript can't be saved here."
 });
@@ -1565,6 +1586,7 @@ const COND = tbl({
   said: p => list(p).every(q => q === "" ? !LINE.said : q.split("|").some(w => ` ${LINE.said} `.includes(` ${words(w).join(" ")} `))),
   inside: o => Object.entries(o).every(([id, h]) => S.loc[id] === h),   // inside:{ coin:"box" }: directly in or on that holder
   open: v => list(v).every(id => !S.shut[id]),
+  level: o => Object.entries(o).every(([id, l]) => levelOf(id) === l),   // level:{ bat: "up" }: where it is now (see "up and down")
   what: v => list(v).includes(LINE.what),                   // the direct thing is one of these: "give BREAD to the guard"
   with: v => list(v).includes(LINE.with),                   // the second thing is one of these: "give the bread to the GUARD"
   chance: n => rand(100) < n                               // passes n times in 100 (test() rolls it once per command)
@@ -1587,6 +1609,7 @@ const EFFECT = tbl({
   take: v => list(v).forEach(id => { S.loc[id] = null; print(msg("lost", { it: `[${id}]` }), "cmd"); }),
   give: v => list(v).forEach(id => { S.loc[id] = "player"; print(msg("received", { it: `[${id}]` }), "cmd"); }),
   open: v => list(v).forEach(id => delete S.shut[id]),
+  level: o => { for (const id in o) o[id] == null ? delete S.level[id] : S.level[id] = o[id]; },   // null: back to its data
   close: v => list(v).forEach(id => S.shut[id] = true),
   free: v => { if (v && !TURN.free && TURN.cost) { TURN.free = true; S.count.turns--; } },   // this command costs no turn
   say: v => print(txt(v)),
@@ -1634,6 +1657,18 @@ function look() {
   if (ex.length) print(msg("exits", { list: ex.join(", ") }));
 }
 
+// up and down: a thing's level ("up" or "down", or TEXT variants) says where it is in the room; the level effect moves
+// it and S.level remembers that. "look up" / "look down" shows the room's up/down text, then every thing in sight there.
+const LEVELS = tbl({ up: "up", u: "up", above: "up", upward: "up", upwards: "up", overhead: "up",
+  down: "down", d: "down", below: "down", downward: "down", downwards: "down" });
+const levelOf = id => own(S.level, id) ?? (pick(thing(id)?.level) || null);
+function lookAt(l) {
+  const t = txt(own(G.rooms[S.room], l)), ids = [...nested(at(G.items)), ...at(G.npcs)].filter(id => levelOf(id) === l);
+  if (t) print(t);
+  for (const id of ids) { print(txt(thing(id).desc) || msg("plain")); S.seen[id] = true; point(id); }
+  if (!t && !ids.length) print(msg("levelNone", { dir: l }));
+}
+
 // entering shows the room, then marks it visited (so a desc can tell the first look from later ones), then runs "enter" hooks
 function enter(id) {
   S.prev = S.room; S.room = id; S.pick = null; ENTERING = !!PREF.brief && !!S.been[id];   // "the other one" stays in its room
@@ -1679,7 +1714,7 @@ function topic(a) {
 
 // ---- commands: each gets the rest of the typed line and the things it names (in reach)
 const CMDS = tbl({
-  look(a) { if (a && !["around", "room", "here"].includes(a)) return exec("examine", a); look(); },
+  look(a) { if (own(LEVELS, a)) return lookAt(LEVELS[a]); if (a && !["around", "room", "here"].includes(a)) return exec("examine", a); look(); },
   go,
   take(a, ids) {
     const id = LINE.what || ids[0];   // "take the coin from the box": the direct thing
@@ -1692,7 +1727,8 @@ const CMDS = tbl({
     if (holder(LINE.with)) return exec("put", a);   // "drop the coin in the box"
     const id = LINE.what || ids[0];
     if (!id || S.loc[id] !== "player") return notHere("notHave");
-    S.loc[id] = S.room; print(msg("dropped", { it: `[${id}]` }));
+    S.loc[id] = S.room; if (levelOf(id)) S.level[id] = "down";   // a thing with a level lands on the floor
+    print(msg("dropped", { it: `[${id}]` }));
   },
   // "put X in Y" / "put X on Y" (the holder decides which); "put X down" drops it; on a thing that
   // isn't a holder ("put the plywood on the window") it's "use X on Y", so recipes and replies answer
@@ -1758,10 +1794,13 @@ const CMDS = tbl({
 });
 const isFree = v => FREE.includes(v) || !!own(G.verbs, v)?.free;
 
-// replies that can answer verb v: the named things' (last named first) and their kind's, then the room's,
-// then (when nothing is named) the player's own (G.self: "think", "dance"), then the game's
+// replies that can answer verb v: the named things' (in slot order, below) and their kind's, then the room's,
+// then (when nothing is named) the player's own (G.self: "think", "dance"), then the game's.
+// The things a line names, in the order they answer: the second slot, the direct thing, then the rest, last named first
+// ("give the bread to the guard" and "give the guard the bread" both ask the guard first)
+const bySlot = ids => [LINE.with, LINE.what, ...[...ids].reverse()].filter((id, i, a) => id && a.indexOf(id) === i);
 function respond(v, ids) {
-  for (const id of [...ids].reverse()) {
+  for (const id of bySlot(ids)) {
     const o = thing(id); LINE.it = id;
     if (reply(own(o.on, v)) || reply(own(own(G.kinds, o.kind), v))) return true;
   }
@@ -1789,8 +1828,8 @@ function exec(v, a = "", said = a) {
   const before = role ? words(sub(role.before)).filter(x => !FILLER.includes(x)) : [];
   if (!what && !before.length) [what, wth] = [wth, null];
   if (what === wth) wth = null;
-  Object.assign(LINE, { verb: v, said: words(said).join(" "), what: what || null, with: wth || null,
-    it: ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null });
+  Object.assign(LINE, { verb: v, said: words(said).join(" "), what: what || null, with: wth || null });
+  LINE.it = bySlot(ids).find(id => own(thing(id).on, v)) || ids[0] || null;
   if (S.pick && ids.some(id => !S.pick.ids.includes(id))) S.pick = null;   // naming something else ends "the other one"
   if (ids.pick) S.pick = ids.pick;
   try {
@@ -1799,7 +1838,7 @@ function exec(v, a = "", said = a) {
     if (!what && before.length && named(before.join(" "), Object.keys({ ...G.items, ...G.npcs })).length) return notHere();   // "give the bread to him", no bread here
     if (!carry(v)) return;
     if (respond(v, ids)) return;
-    LINE.it = ids.filter(id => own(thing(id).on, v)).at(-1) || ids[0] || null;
+    LINE.it = bySlot(ids).find(id => own(thing(id).on, v)) || ids[0] || null;
     if (own(CMDS, v)) return CMDS[v](a, ids);
     if (a && !ids.length && named(a, Object.keys({ ...G.items, ...G.npcs })).length) return notHere();
     print(a ? txt(own(G.verbs, v)?.fail) || msg("cant") : msg("what"));
@@ -1896,7 +1935,7 @@ function act(w) {
   if (!own(CMDS, v) && !VERBS.has(v)) return print(msg("huh"));
   if (v !== "again" && v !== "undo") LAST = w;
   while (v !== "go" && r.length > 1 && PARTICLES.includes(r[0])) r.shift();   // "feel around the wall", "look under the rug"
-  while (v !== "go" && r.length && PARTICLES.includes(r.at(-1))) r.pop();      // "put the hammer down", "feel around"
+  while (v !== "go" && r.length && PARTICLES.includes(r.at(-1)) && !(v === "look" && r.length === 1 && own(LEVELS, r[0]))) r.pop();   // "put the hammer down", "feel around"; "look up" stays
   if (ROLE) ROLE.a = r.join(" ");   // exec uses ROLE only for this exact line
   turn(v, r.join(" "), v === "go" ? r.join(" ") : w.slice(1).join(" "));   // said: for go is the direction, spelled out
 }
@@ -2007,6 +2046,8 @@ function validate() {
         if (k === "is") list(x).forEach(n => need(own(G.conds, n), q, `no condition "${n}" in conds`));
         if (k === "move") for (const id in x) { need(isThing(id), q, `no item or NPC "${id}"`);
           list(x[id]).forEach(r => need(r === null || r === "player" || room(r) || holder(r), q, `no room or holder "${r}"`)); }
+        if (k === "level" && x && typeof x === "object") for (const id in x) { need(isThing(id), q, `no item or NPC "${id}"`);
+          need(x[id] === null || x[id] === "up" || x[id] === "down", q, `"${x[id]}": a level is "up", "down" (or null, in an effect)`); }
         if (k === "inside") typeof x === "object" && x ? Object.keys(x).forEach(id => need(own(G.items, id) && holder(x[id]), q, `"${id}" in "${x[id]}": needs an item and a holder`))
           : need(false, q, 'inside takes { item: "holder" }');
         if (["open", "close"].includes(k) && typeof x !== "object") list(x).forEach(id => need(own(G.items, id) && "closed" in G.items[id], q, `"${id}" can't open or close (give it closed:true or false)`));
@@ -2018,7 +2059,7 @@ function validate() {
         if (["min", "max", "eq"].includes(k)) for (const c in x) used.counter[c] = q;
         if (own(REFS, k)) REFS[k](x, (ok, m) => need(ok, q, m));
       }
-      if (!["add", "min", "max", "eq", "since", "move"].includes(k)) walk(x, q, "data");   // their keys are names
+      if (!["add", "min", "max", "eq", "since", "move", "level"].includes(k)) walk(x, q, "data");   // their keys are names
     }
   };
   need(room(G.start), "start", `no room "${G.start}"`);
@@ -2027,6 +2068,8 @@ function validate() {
     need(a == null || a === "player" || room(a) || (T === "items" && holder(a)), `${T}.${id}.at`, `no room or holder "${a}"`);
     const n = G[T][id].name; need(typeof n === "string" || (n && typeof n === "object"), `${T}.${id}.name`, "needs a name (a string, or TEXT variants)"); }
   for (const id in G.items) need(!own(G.npcs, id), `items.${id}`, "same id as an NPC");
+  const levels = v => typeof v === "string" ? [v] : list(v).flatMap(x => typeof x === "string" ? [x] : x?.text != null ? levels(x.text) : []);
+  for (const T of ["items", "npcs"]) for (const id in G[T]) levels(G[T][id].level ?? []).forEach(l => need(l === "up" || l === "down", `${T}.${id}.level`, `"${l}": a level is "up" or "down"`));
   for (const id in G.items) { const h = G.items[id].holds; need(h == null || h === "in" || h === "on", `items.${id}.holds`, 'must be "in" or "on"'); }
   for (const id in G.items) { let p = G.items[id].at, n = 0; while (holder(p) && n++ < 50) p = G.items[p].at;   // at: chains must end in a room
     need(n < 50, `items.${id}.at`, "holders hold each other in a loop");

@@ -8,11 +8,12 @@ Start from `template/game.js`. For complete examples, see `games/damp-cell/game.
 
 ```
 title, intro:TEXT, start (room id), status:TEXT (the line above the input), seed (fixed random rolls), version (ends old saves)
-rooms:  { id: { name, desc:TEXT, on:REPLIES, exits:{ dir: "roomId" | { to, if:COND, fail:TEXT, hidden:true } } } }
+rooms:  { id: { name, desc:TEXT, on:REPLIES, exits:{ dir: "roomId" | { to, if:COND, fail:TEXT, hidden:true } },
+          up:TEXT, down:TEXT ("look up" / "look down") } }
 items:  { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES,
           holds:"in" | "on" (a container or a surface), closed:true | false (can be opened and closed),
-          proper:true (no "the"), article:"an" | "some" | "" (instead of "a") } }
-npcs:   { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, proper, article, pronoun:"her" | "him" | "them" | "it",
+          proper:true (no "the"), article:"an" | "some" | "" (instead of "a"), level:"up" | "down" (or TEXT variants) } }
+npcs:   { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, proper, article, level, pronoun:"her" | "him" | "them" | "it",
           on:REPLIES, topics:{ "a|b": REPLY, "*": REPLY },
           dialogue:{ nodeId:{ text:TEXT, options:[{ text, next, if:COND, ...EFFECT }] } } } }
 self:   { name, aliases:[], kind, on:REPLIES }   the player as a target: "smell me", "think"
@@ -31,10 +32,10 @@ TEXT:   a string, or a list of variants: [ { if:COND, text:TEXT }, ..., "fallbac
         { random:[TEXT, ...] } picks one at random.
         [id] shows a thing's name, styled. {counter} shows a counter. {it} is the thing being acted on,
         {what} and {with} the two slots. {the}, {The}, {a}, {A} add an article to {it}; {the:with}, {A:what}... to a slot.
-COND:   { has, here, in, flag, is, seen, visited, open, inside:{ item:"holder" }, what, with, not:COND, any:[COND], all:[COND],
+COND:   { has, here, in, flag, is, seen, visited, open, inside:{ item:"holder" }, level:{ id:"up" }, what, with, not:COND, any:[COND], all:[COND],
           min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, since:{ mark:n }, said:"a|b", chance:n }
         has/here/flag/is/seen/visited take one name or a list (all must pass); in takes a room or a list (any).
-EFFECT: { say:TEXT, set, unset, give, take, open, close (one or a list), move:{ id: where }, add:{ counter:n },
+EFFECT: { say:TEXT, set, unset, give, take, open, close (one or a list), move:{ id: where }, level:{ id:"up" | "down" | null }, add:{ counter:n },
           mark, free:true, do:"command", goto:"roomId", end:TEXT }
 ```
 
@@ -72,6 +73,8 @@ corridor: { name: "Corridor", desc: TEXT,
 - `go <room name>` takes the exit that leads there (`go to the yard`), and `go back` returns to the previous room.
 - Rooms never list their contents. Things say where they are (see `at`).
 - `look` prints the name, `desc`, then "You see:" (items), "Here:" (NPCs) and "Exits:". Things tagged `[id]` in the description, and things with `hidden: true`, are left out of the lists.
+- `up` and `down` (TEXT) are what the player sees on `look up` and `look down` (also `look above/overhead`, `look below`). After it,
+  each thing in sight here whose level is that one shows its `desc`, hidden scenery too (see Up and down).
 - `visited: "room"` is false during the first look at a room and true afterwards, so a description can have a first-visit variant:
   `desc: [{ if: { visited: "shed" }, text: "The shed again." }, "A lean-to shed, full of cobwebs..."]`
 
@@ -101,6 +104,24 @@ key: { name: "iron key", desc: TEXT, at: "cell", aliases: ["rusty"], kind: "tool
 - Pronouns: `it` is the last item acted on, `him` and `her` the last person, `them` the last thing of either kind. A person is
   both `him` and `her` unless `pronoun` says which (`"her"`, `"him"`, `"them"`, or `"it"` for an animal).
   "x letter", "x tony", "show it to him" shows the letter to Tony.
+
+### Up and down
+
+```js
+hall: { name: "Hall", ..., up: "Cobwebs on the beams.", down: "Bare boards." },
+kite: { name: "kite", at: "hall", level: "up", desc: "A paper kite, caught on a beam." },
+hook: { name: "hook", at: "hall", fixed: true, hidden: true, level: [{ if: { flag: "fallen" }, text: "down" }, "up"], desc: "An iron hook." },
+on: { shake: [{ if: { level: { kite: "up" } }, level: { kite: "down" }, say: "The kite drops." }, "Nothing falls."] }
+```
+
+- `level` says where a thing is in its room: `"up"` (on a beam, a giraffe's head, a bat) or `"down"` (on the floor, a rat).
+  Things without a level are neither, and `look up` / `look down` don't list them. TEXT variants let the level follow the state.
+- `look up` prints the room's `up` text, then the `desc` of every thing in sight here (not carried, not in a closed holder;
+  hidden scenery counts) whose level is `"up"`. `look down` the same for `"down"`. With neither, "Nothing special up there."
+  (message `levelNone`, with `{dir}`). Each thing shown counts as examined. `look up at the beam` examines the beam.
+- The effect `level: { kite: "down" }` moves a thing up or down now, and the game remembers it (`S.level`, saved and undone
+  with everything else); `level: { kite: null }` puts it back to its data. The condition `level: { kite: "up" }` tests it.
+- A thing with a level that the player drops lands `"down"`.
 
 ## Containers and surfaces
 
@@ -189,14 +210,16 @@ verbs: { give: { carry: true } }   // "(first taking the bread)" when it's lying
   thing, and "show the letter to Ana to Tony" splits at the second `to`.
 
 When the player types a verb, the engine tries, in order, and stops at the first reply that answers:
-1. each thing the line names, last named first: its `on[verb]`, then `kinds[its kind][verb]`;
+1. each thing the line names, in slot order: the second slot (`with`), then the direct thing (`what`), then any other, last
+   named first. For each: its `on[verb]`, then `kinds[its kind][verb]`;
 2. the room's `on[verb]`;
 3. when nothing was named: `self.on[verb]` (so "think" or "dance" alone can answer);
 4. the game's `on[verb]`;
 5. the built-in command, if there is one (`take`, `use`, `examine`...);
 6. `verbs[verb].fail`, or "You can't {verb} that." / "{Verb} what?".
 
-So "use key on door" asks the door first, then the key. A reply on a built-in verb (like `on.take` or `on.go`) only replaces the built-in when one of its entries passes. A room's `on.go` with `if: { said: "down" }` can guard one direction.
+So "use key on door" asks the door first, then the key, and "give the bread to the guard", "give the guard the bread" and
+"give him the bread" all ask the guard first: a reply on the bread only answers when the guard's doesn't. A reply on a built-in verb (like `on.take` or `on.go`) only replaces the built-in when one of its entries passes. A room's `on.go` with `if: { said: "down" }` can guard one direction.
 
 - `said: "a|b"` passes when the words typed after the verb contain any of the phrases (whole words). A list means all of them. `said: ""` means nothing was typed. Directions are spelled out for `go` (`d` is `down`).
 - `kinds: { tool: { eat: "You'd chip a tooth on the {it}." } }` gives every `kind: "tool"` the same reply.
@@ -260,6 +283,7 @@ All keys in an `if` must pass. `if: "NAME"` is short for `if: { is: "NAME" }`.
 | `what: "bread"` or a list | the direct thing of this command is one of them ("give **bread** to the guard") |
 | `with: "guard"` or a list | the second thing is one of them ("give the bread to the **guard**", "hit the rat with the **stick**") |
 | `inside: { coin: "box" }` | that thing is directly in or on that holder |
+| `level: { kite: "up" }` | that thing's level now is `"up"` (or `"down"`) |
 | `chance: n` | a random roll passes, n times in 100. Rolled once per condition per command, so checking the same `if` twice in one turn gives the same answer |
 
 Add-ons add more, such as `dark` (light), `logged` (journal).
@@ -274,6 +298,7 @@ These run in table order, except `say`, `do`, `goto` and `end`, which always run
 | `give` / `take: "item"` or a list | moves items into or out of the inventory, with a "(Received: …)" or "(Lost: …)" line |
 | `move: { id: where }` | where is a room, `"player"`, a holder, `null` (offstage), or a list (a route: the next room in it, looping) |
 | `open` / `close: "box"` or a list | opens or closes a holder, silently |
+| `level: { id: "up" }` | moves a thing up or down in its room; `null` puts it back to its data `level` |
 | `add: { counter: n }` | adds n (negative subtracts) |
 | `mark: "name"` | stamps the current turn, for `since` |
 | `free: true` | this command costs no turn |
@@ -315,6 +340,7 @@ messages: { huh: { rotate: ["Huh?", "Say that again?"] }, cantGo: "No way throug
 | `firstTake` | (first taking {the}) |
 | `arrives`, `leaves` | {The} arrives. / {The} leaves. (`{dir}`: the exit it used, or empty) |
 | `noOops` | There's nothing to correct. |
+| `levelNone` | Nothing special {dir} there. (`{dir}`: up or down) |
 | `brief`, `verbose` | Brief descriptions: a room you've seen shows its name and what's there. / Full descriptions: every room is described in full. |
 | `transcript`, `noTranscript` | Transcript saved: {n} lines. / This browser won't save files, so the transcript can't be saved here. |
 
@@ -325,6 +351,7 @@ Add-ons add their own ids (light: `dark`, `darkFalls`; craft: `combineWhat`, `co
 `look (l)`, `go <dir>` or just the direction, `take (get, grab, pick up)`, `drop (put down)`, `put (place, insert)`,
 `open`, `close (shut)`, `inventory (i)`, `examine (x, look at)`, `use`, `talk (speak)`, `ask`, `tell`, `wait (z)`,
 `again (g)`, `undo`, `restart`, `help (h, ?)` and `menu (q, quit)`, plus every verb the game gives replies to.
+`look up` / `look down` (also `above`, `overhead`, `below`) show what's above and below you (see Up and down).
 
 Also, all free:
 - `oops <word>`: runs the last line again with its unknown word replaced ("take lmap", "oops lamp"). With no unknown word, the last word is replaced.
@@ -337,7 +364,7 @@ Also, all free:
 The engine reads a **verb followed by the things it names**. It is a command reader, not a grammar parser:
 - The first word (or a two-word phrasal verb like "pick up") is the verb, after aliases. A direction alone means `go`.
 - Punctuation is ignored, so `north.` and `hello!` work. Input is capped at 200 characters.
-- Filler words (`a an the to at with on`) are dropped, except inside a name of something in reach ("the letter to Ana"). Particles at either end of the object (`up down around under out off...`) are dropped too: "feel around", "put the hammer down".
+- Filler words (`a an the to at with on`) are dropped, except inside a name of something in reach ("the letter to Ana"). Particles at either end of the object (`up down around under out off...`) are dropped too: "feel around", "put the hammer down". `look up` and `look down` keep theirs.
 - The rest is scanned for things in reach, longest name first, and words next to each other narrow one thing ("chipped cup"). Other words are kept for `said:` but otherwise ignored.
 - The first role word (`to`, `with`, `on`, `at`, `about`...) outside a name splits the line into two slots (`what:` and `with:`). "use the key on the door" and "use key door" still read the same: without one, the first and last things named fill the slots.
 - `take` and `drop` accept `all`, `all except X`, `both` and `X and Y`. Pronouns stand for the last item (`it`), person (`him`, `her`) or thing (`them`); "the other one" for the other choice of the last question. A name that fits several things asks "Which do you mean?".

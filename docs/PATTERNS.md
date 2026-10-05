@@ -177,7 +177,20 @@ npcs: { clerk: { ..., pronoun: "her", on: {
 ```
 
 "give the ticket to the clerk", "give her the ticket" and "show badge to clerk" all work, and the item is picked up first if it's lying
-here. The reply sits on the person: each thing named is asked in turn, so it answers whichever order the player used.
+here. The reply sits on the person, who is asked first because the second slot answers before the direct thing, whichever
+order the player used. So the ticket can still have its own `give` reply ("Give it to whom?") for when nobody's named.
+
+## Something up high, something underfoot
+
+```js
+attic: { name: "Attic", ..., up: "Rafters, and daylight through a missing tile.", down: "Dust, and a trail through it." },
+bat: { name: "bat", at: "attic", level: "up", desc: "Hanging upside down, one eye open." },
+mouse: { name: "mouse", at: "attic", level: "down", desc: "It freezes. So do you." },
+on: { clap: [{ if: { level: { bat: "up" } }, level: { bat: "down" }, say: "The [bat] drops and flaps around your ankles." }] }
+```
+
+`look up` shows the rafters and the bat; `look down` the dust and the mouse. The clap moves the bat down for good (the game
+remembers it), and `level: { bat: null }` would send it back up. A level can also follow the state with TEXT variants.
 
 ## Gotchas
 

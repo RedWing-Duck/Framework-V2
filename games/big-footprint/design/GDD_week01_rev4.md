@@ -227,3 +227,12 @@ Cut, and why:
 - The clock warnings (6, 3, 1) stay word for word, not `random`: QA tests and the turn-feedback rules match them exactly.
 - `pet her` doesn't find Reina: things are "it"; only people take `pronoun`.
 
+## 13. [REV5] Up and down, and replies in slot order
+Two engine changes (for every game) after rev 4, and how this game uses them:
+- **Look up / look down.** Every room has a view up and down (`rooms.X.up` / `down`). The giraffe's level is up, the jaguar's and Reina's down; releasing the peacocks puts Reina up in the atrium's palms (the `level` effect), and her first move brings her back down. Free, like `look`. No new rooms, items or turns.
+- **Slot order.** The second slot answers first, whichever way the line is said, so "give the Don the card" reaches the Don. The rev 4 workaround (the card's and coin's own lines skipped the Don) is gone.
+
+| Feature | Where the player meets it | Data |
+|---|---|---|
+| `look up` / `look down`, `level` | Any room; the giraffe on the landing and in the gallery (up); Reina in the atrium palms right after release (up), then down | `rooms.X.up` / `down` (`T.updown`), `items.giraffe/jaguar/reina.level`, `release()` and the roaming event |
+

@@ -383,6 +383,39 @@ test("two slots: give X to Y and give Y X fill what and with; {the:what} and {Th
   assert.equal(g.last(), "You don't see that here.", "a first slot that names something out of reach");
 });
 
+test("slot order: the second slot answers first, whichever way the line is said", () => {
+  const g = WORDS();
+  g.type("take letter", "show the letter");
+  assert.equal(g.last(), "You wave the letter around. Nobody reads it.", "no second slot: the letter's own reply");
+  for (const c of ["show the letter to tony", "show tony the letter", "show him the letter"]) {
+    g.type(c); assert.equal(g.last(), "Big Tony reads the letter and goes pale.", c); }
+});
+
+test("up and down: look up / look down show the room's view and the things at that level; level effect, condition, drop", () => {
+  const g = WORDS();
+  g.type("look up");
+  assert.equal(g.last(), "Nothing special up there.");
+  g.type("e", "look up");
+  assert.deepEqual(g.lines().slice(-3), ["Cobwebs on the beams.", "A paper kite, caught on a beam.", "An iron hook."], "the room, then each thing up, hidden scenery too");
+  g.type("look down");
+  assert.equal(g.last(), "Bare boards.");
+  g.type("shake beam", "look down");
+  assert.deepEqual(g.lines().slice(-2), ["Bare boards.", "A paper kite, caught on a beam."], "the level effect moved it");
+  assert.equal(g.get("S.level.kite"), "down");
+  g.type("yank hook", "look below");
+  assert.equal(g.last(), "An iron hook.", "a level can follow the state (TEXT variants); below = down");
+  g.type("look up");
+  assert.equal(g.last(), "Cobwebs on the beams.");
+  g.type("take kite", "look down");
+  assert.ok(!g.lines().slice(-2).includes("A paper kite, caught on a beam."), "carried things aren't up or down");
+  g.type("w", "drop kite", "look down");
+  assert.equal(g.last(), "A paper kite, caught on a beam.", "a thing with a level lands on the floor");
+  g.type("look up at the ceiling");
+  assert.equal(g.last(), "You don't see that here.", "look up at X examines X");
+  const v = load(build("tests/words").replace('level: "up", desc: "A paper kite', 'level: "sideways", desc: "A paper kite')).boot().problems();
+  assert.ok(v.some(p => p.startsWith("items.kite.level")), v.join("\n"));
+});
+
 test("pointing: a word narrows a name before asking, 'the other one', 'both', 'all except'", () => {
   const g = WORDS();
   g.type("take chipped cup");

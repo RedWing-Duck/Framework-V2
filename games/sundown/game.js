@@ -16,14 +16,16 @@ const G = {
   on: { pray: "Couldn't hurt.", sleep: [{ if: "DUSK", say: "Not now. Not with the light going." }, "You're not tired. You're terrified."] },
 
   rooms: {
-    cabin: { name: "Cabin", exits: { south: "yard" },
+    cabin: { name: "Cabin", exits: { south: "yard" }, up: "Bare rafters, and an empty wasp nest from last summer.",   // "look up" / "look down"
       desc: [{ if: "DUSK", text: "Orange light slants through the [window]. The [rug] looks like a pool of shadow. The [radio] hisses on the shelf." },
         "A one-room cabin. A bare [window] faces the woods, a braided [rug] covers the floor, and a [radio] sits on the shelf. The yard is south."],
       on: { listen: [{ if: "DUSK", say: "The crickets have stopped." }, "Wind in the pines."], smell: "Pine and old coffee." } },
     yard: { name: "Front Yard", exits: { north: "cabin", east: "shed" },
+      up: [{ if: "DUSK", text: "The sky over the pines is going orange, then bruise-purple." }, "Tall pines, and a sky that's running out of daylight."],
+      down: "Pine needles, and in them, prints much bigger than your boots.",
       desc: "Pine needles and long shadows. The cabin is north, the shed east.",
       on: { listen: { say: { random: ["Something big moves, far off in the trees.", "A branch cracks. Then nothing.", "Wind, and under it, breathing?"] } } } },
-    shed: { name: "Tool Shed", exits: { west: "yard" },
+    shed: { name: "Tool Shed", exits: { west: "yard" }, up: "Cobwebs in every corner of the roof.", down: "Oil stains on a dirt floor.",
       desc: [{ if: { visited: "shed" }, text: "The shed, smelling of oil. A [toolbox] on the bench. The yard is west." },
         "A lean-to shed that smells of oil and rust. Cobwebs in every corner, and a [toolbox] on the bench. The yard is west."] }
   },
@@ -33,8 +35,8 @@ const G = {
       desc: [{ if: { flag: "boarded" }, text: "Plywood, nailed tight." }, "Bare glass. It won't stop anything."],
       on: { board: [{ if: { flag: "boarded" }, free: true, say: "It's already boarded." },
         { if: { has: ["hammer", "nails", "plywood"] }, ...BOARD }, "You need plywood, a hammer and nails."] } },
-    rug: { name: "rug", at: "cabin", fixed: true, kind: "fixture", desc: "Braided rag rug. One corner is lumpy.",
-      on: { search: [{ if: { not: { flag: "lifted" } }, set: "lifted", move: { crowbar: "cabin" }, say: "Under the rug: a [crowbar]." }, "Just floorboards now."] } },
+    rug: { name: "rug", at: "cabin", fixed: true, kind: "fixture", level: "down", desc: "Braided rag rug. One corner is lumpy.",
+      on: { search: [{ if: { not: { flag: "lifted" } }, set: "lifted", move: { crowbar: "cabin" }, level: { crowbar: "down" }, say: "Under the rug: a [crowbar]." }, "Just floorboards now."] } },
     radio: { name: "radio", at: "cabin", fixed: true, kind: "fixture", desc: "A battered transistor radio.",
       on: { listen: { say: { rotate: ["\"...stay indoors after dark...\"", "Static, then a hymn.", "\"...repeat, stay indoors...\""] } } } },
     hammer: { name: "claw hammer", at: "shed", kind: "tool", desc: "Heavy, reliable." },
@@ -43,7 +45,7 @@ const G = {
     shelf: { name: "shelf", at: "cabin", fixed: true, hidden: true, holds: "on", desc: "A plank on two brackets." },        // a surface: what's on it is listed under the room
     grounds: { name: "can of coffee grounds", at: "shelf", kind: "food", aliases: ["can"], desc: "Half full. Smells like mornings." },
     plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window." },
-    crowbar: { name: "crowbar", kind: "tool", desc: "Cold iron. Better than nothing." },   // no "at": offstage until the rug is searched
+    crowbar: { name: "crowbar", kind: "tool", desc: "Cold iron. Better than nothing." },   // the rug's level effect puts it on the floor   // no "at": offstage until the rug is searched
     mug: { name: "mug of coffee", at: "shelf", kind: "food", desc: "Cold. This morning's.",
       on: { drink: [{ if: { not: { flag: "drank" } }, set: "drank", log: "coffee", say: "Cold, bitter, heroic." }, "The mug is empty."] } }
   },

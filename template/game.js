@@ -7,6 +7,7 @@ const G = {
 
   rooms: {
     gate: { name: "Toll Gate", exits: {},    // exits: { north: "otherRoom" }
+      up: "A gull circles over the gate.",   // "look up" (and down: for "look down"); a thing with level: "up" shows here too
       // A text variant: the first entry whose "if" passes is shown; a plain string is the fallback.
       // [id] tags an item or NPC by id so it shows up highlighted.
       desc: [

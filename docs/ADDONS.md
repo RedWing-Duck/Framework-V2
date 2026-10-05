@@ -69,7 +69,8 @@ Engine helpers add-ons may use: `G`, `S`, `print(text, cls)`, `msg(id, vars)`, `
 `names(ids)`, `list(v)`, `own(obj, key)`, `notHere(msgId)` (prints it, costs no turn), `MULTI` (verbs that take "all"),
 `isFree(verb)`, `isDir(word)`, `words(text)`, `LINE` (the command being answered: `LINE.verb`, `LINE.said` (the words as
 typed, filler dropped, particles kept), `LINE.it` (the thing answering), `LINE.what` and `LINE.with` (the two slots: "give WHAT
-to WITH")), `nm(id)` (a thing's current name), `the(id)` / `a1(id)` ("the [id]", "a [id]", or "[id]" for a proper name), `TURN` (`TURN.cost`: this command costs a turn; `TURN.free`: it was refunded),
+to WITH")), `nm(id)` (a thing's current name), `levelOf(id)` ("up", "down" or null: where it is in its room), `bySlot(ids)` (the order
+replies are asked in: the second slot, the direct thing, then the rest), `the(id)` / `a1(id)` ("the [id]", "a [id]", or "[id]" for a proper name), `TURN` (`TURN.cost`: this command costs a turn; `TURN.free`: it was refunded),
 `store(key, value)` / `load(key)` (browser storage, namespaced by the game's title), `rand(n)` (a whole number
 from 0 to n-1, from the seeded generator in `S`: use it, never `Math.random`, so undo and saves stay honest), `$`, `out`.
 Reusing a name that's already taken is reported as a problem on the start menu.

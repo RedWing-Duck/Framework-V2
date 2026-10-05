@@ -5,26 +5,27 @@ const G = {
   start: "cell",
   rooms: {
     cell: { name: "Cell", exits: { east: "corridor", down: "cellar" },
+      up: "Wet stone, and a slit of a window far too high to reach.", down: "The trapdoor in the corner, its iron ring cold with damp.",   // "look up" / "look down"
       desc: "A cramped stone cell, damp [straw] on the floor. A trapdoor in the corner leads down. The iron door to the east hangs open a crack." },
-    cellar: { name: "Cellar", dark: true, exits: { up: "cell" }, desc: [   // "dark" comes from the light add-on
+    cellar: { name: "Cellar", dark: true, exits: { up: "cell" }, up: "The underside of the trapdoor, and a faint grey square of light.", desc: [   // "dark" comes from the light add-on
       { if: { here: "bread" }, text: "A low cellar that reeks of mold. A heel of [bread] sits on a shelf." },
       "A low cellar that reeks of mold. Empty shelves line the walls." ] },
-    corridor: { name: "Corridor", desc: [
+    corridor: { name: "Corridor", up: "Torch smoke, blackening the ceiling.", desc: [
       { if: { flag: "gate_open" }, text: "A torchlit corridor. The gate to the north stands wide open." },
       { if: { here: "guard" }, text: "A torchlit corridor. A [guard] slouches beside a heavy gate to the north." },
       "A torchlit corridor. A heavy gate blocks the way north." ],
       exits: { west: "cell", north: { to: "yard", if: { flag: "gate_open" }, fail: "The gate is locked tight." } } },
-    yard: { name: "Courtyard", desc: "Fresh night air. The walls are behind you." }
+    yard: { name: "Courtyard", desc: "Fresh night air. The walls are behind you.", up: "Stars. More of them than you remember." }
   },
   items: {
     bread: { name: "stale bread", at: "cellar", aliases: ["loaf", "heel"], desc: "Hard as a rock, but food is food." },
-    straw: { name: "straw", at: "cell", fixed: true, desc: "Damp and useless." },
+    straw: { name: "straw", at: "cell", fixed: true, level: "down", desc: "Damp and useless." },   // level: "look down" shows it
     lantern: { name: "lantern", at: "corridor", light: true, desc: "An oil lantern, burning steadily." },
     key: { name: "iron key", desc: "Heavy and rusted. It might fit the gate.",
       on: { use: [{ if: { in: "corridor", not: { flag: "gate_open" } }, say: "The key turns with a groan. The gate swings open.", set: "gate_open", mark: "gate" }] } }
   },
   npcs: {
-    rat: { name: "rat", at: "cell", pronoun: "it", desc: "Fat, grey, and entirely unbothered by you." },   // "it", not "him"/"her"
+    rat: { name: "rat", at: "cell", pronoun: "it", level: "down", desc: "Fat, grey, and entirely unbothered by you." },   // "it", not "him"/"her"
     guard: { name: "Guard", at: "corridor", pronoun: "him", desc: [
       { if: { flag: "fed" }, text: "Crumbs on his chin. He looks almost friendly." },
       { if: { has: "bread" }, text: "Bored and clearly hungry. He keeps eyeing your [bread]." },

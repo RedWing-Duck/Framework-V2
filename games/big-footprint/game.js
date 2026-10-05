@@ -7,7 +7,7 @@
 // ---- All player-facing text, keyed by Script id. Logic lives in G below.
 const T = {
   intro: "A Retroment Gaming production.\n\nYour client wants three secrets from Don Chava's penthouse. Your cover: Walter Pryce, bookstore investor, carrying a plaque proposal and a smile. The Don will give you the grand tour himself. Listen to everything. Touch nothing. Get out with at least two.\n\nType HELP for commands.",
-  help: "Move: north, south, east, west, up, down (or n, s, e, w, u, d).\nLook around: look. Look at something: examine [\u200bthing] (or x).\nTake, drop, use [\u200bitem] on [\u200bthing], give or show [\u200bitem] to [\u200bperson], open, push, play, read.\nTalk: talk to [\u200bperson], ask [\u200bperson] about [\u200bthing]. Answer: say [\u200bwords].\nIn a tight spot: run (works once).\nOther: inventory (i), status, hint, quit. Typo? oops [\u200bword] fixes the last line.\nShort rooms you've seen: brief (verbose for full). Save the story so far: transcript.\nFree anytime: look, examine, inventory, status, help, hint, brief, transcript. Once the chaos starts, everything else costs time.",   // [REV4] two slots, topics, oops, brief, transcript   // \u200b: shown as [thing], not read as an [id] tag
+  help: "Move: north, south, east, west, up, down (or n, s, e, w, u, d).\nLook around: look (look up, look down). Look at something: examine [\u200bthing] (or x).\nTake, drop, use [\u200bitem] on [\u200bthing], give or show [\u200bitem] to [\u200bperson], open, push, play, read.\nTalk: talk to [\u200bperson], ask [\u200bperson] about [\u200bthing]. Answer: say [\u200bwords].\nIn a tight spot: run (works once).\nOther: inventory (i), status, hint, quit. Typo? oops [\u200bword] fixes the last line.\nShort rooms you've seen: brief (verbose for full). Save the story so far: transcript.\nFree anytime: look, examine, inventory, status, help, hint, brief, transcript. Once the chaos starts, everything else costs time.",   // [REV4] two slots, topics, oops, brief, transcript   // \u200b: shown as [thing], not read as an [id] tag
   huh: ["You try that. The universe gives you a look usually reserved for bad checks.",
     "That doesn't make sense, even for a guy pitching a bookstore to a kingpin.",
     "Nice try, detective. Say it plain."],
@@ -198,17 +198,36 @@ const T = {
     giraffe: "You lift the latch. The giraffe ducks out and ambles off toward the stairs, curious about everything. Perfect alibi: GIRAFFE.",
     jaguar: "You swing the gate open and flatten yourself against the wall. The jaguar pours past like smoke and disappears downstairs. Perfect alibi: JAGUAR.",
     already: "It's already open. That animal's somebody else's problem now." },
+  // [REV5] "look up" / "look down": what's above and below you in each room (core rooms.X.up / down); things with a
+  // level (the giraffe up, the jaguar and Reina down) add their own lines
+  updown: {
+    elevator: ["A mirrored ceiling. Six of you look back down, all of them sweating.", "Gold carpet with the Don's initials woven in. You're standing on his name."],
+    foyer: [[{ if: { flag: "escape" }, text: "The chandelier sways on its chain. Something heavy is walking around up there." }, "A chandelier the size of a small car, and the landing where both staircases meet."],
+      "The gold compass rose. All four points read \"CHAVA.\""],
+    trophy: ["Spotlights, every one aimed at a case, like the guns are the guests of honor.", "Carpet so thick your shoes disappear into it."],
+    salon: ["The fresco: clouds, cherubs, and one angel with a very familiar mustache.", "The piano's pedals, polished by one pair of feet."],
+    dining: ["A crystal chandelier over the long table, bright enough to read a contract by.",
+      [{ if: { flag: "escape" }, text: "Silverware, napkins, and a lemur eating the place cards." }, "Not a crumb on the floor. Someone sweeps between courses."]],
+    landing: ["A painted sky, with a gold sun that looks a lot like the Don.", "The foyer, far below: the compass rose, both staircases, and a long way down."],
+    gallery: ["A brass picture light over every Don.", "A long runner, worn down the middle by one man's pacing."],
+    atrium: [[{ if: { flag: "escape" }, text: "The glass roof shivers with every thud. Lightning, and for a second, a huge shadow." }, "The glass roof, rain drumming on it."],
+      "Pepita's pool, gold coins glinting under the water."],
+    office: ["A ceiling fan, turning slowly, stirring the cigar smoke.", "A thick red rug, and one cigar ash nobody dared to sweep up."],
+    aviary: ["Fogged glass, and peacocks on every perch, all of them looking down at you.", "Scuffed tiles, the marks spaced a very long stride apart."],
+    terrace: ["Rain, lightning, and nothing between you and the sky.", "Forty floors down, the city. The empty lot next door is the one dark square."],
+    enclosure: ["The bars, bent outward high over your head. Whatever did that is tall.", "Footprints the size of snow shovels, pressed into the straw."] },
   animal: {   // [REV4] the loose animals, out of their pens and roaming the palace (items, kind "animal")
     giraffe: { random: ["Six meters of eyelashes and bad decisions, eating the Don's silk lilies one by one.", "She looks down at you from the ceiling, chewing, and decides you're not food. Probably."] },
     jaguar: { random: ["Black, silent, and very interested in the pozole on your sleeve.", "It sits like a statue and watches you like a bill collector."] },
-    reina: { random: ["Reina, the loudest of the Don's peacocks, tail fanned like a stolen chandelier.", "Reina screams at you personally. Then at a lamp. Then at you again."] },
+    reina: [{ if: { level: { reina: "up" } }, text: "Reina, up in the palms, tail hanging down like a stolen chandelier. She screams at you from above." },   // [REV5]
+      { random: ["Reina, the loudest of the Don's peacocks, tail fanned like a stolen chandelier.", "Reina screams at you personally. Then at a lamp. Then at you again."] }],
     take: "Faster than you, angrier than you, and not going in your jacket.",
     eat: "Absolutely not. In this house, the animals are family.",
     ride: { random: ["You picture riding {the} out of here. {The} pictures something else.", "{The} gives you a look. You'd make it about one step."] },
     pet: "{The} gives you a look that ends the idea.",
     talk: "You make your case. {The} hears you out, then goes back to being somebody else's problem.",
     here: { giraffe: "The giraffe is in here with you, browsing the ceiling.", jaguar: "The jaguar is in here with you. You make no sudden moves.",
-      reina: "Reina struts past your ankles, screaming at nothing." } },
+      reina: "Reina is in here with you, screaming at nothing." } },
   guard: {   // E4 R7 (gallery) lines; run keeps rev 2's
     peacocks: "\"The peacocks are out! The Don wants them rounded up!\" As if on cue, a scream echoes down the hall. Nando sprints toward it.",
     giraffe: "\"The giraffe is loose, and she's heading for the stairs!\" Nando swears and runs past you toward the balcony, already yelling into his radio.",
@@ -322,9 +341,11 @@ const secret = (flag, item, text) => ({ set: flag, add: { secrets: 1 }, give: it
 const CLEAR = { unset: "checkpoint", add: { cleared: 1 }, move: { nando: null } };
 const alibi = (a, words = a) => ({ if: { flag: "checkpoint", said: words, min: { [a]: 1 }, max: { [a]: 1 } }, ...CLEAR, add: { [a]: 1, cleared: 1 }, say: [{ if: { in: "foyer" }, text: T.foyerGuard[a] }, T.guard[a]] });
 // [REV4] a released animal is a thing that roams two rooms (events below; the core says when it comes and goes)
-const LOOSE = { peacocks: { id: "reina", route: ["atrium", "gallery"], every: 5 }, giraffe: { id: "giraffe", route: ["landing", "gallery"], every: 3 },
+// [REV5] flies: up (S.level) when released, back down (its data level) when it first moves
+const LOOSE = { peacocks: { id: "reina", route: ["atrium", "gallery"], every: 5, flies: true }, giraffe: { id: "giraffe", route: ["landing", "gallery"], every: 3 },
   jaguar: { id: "jaguar", route: ["dining", "foyer"], every: 4 } };
-const release = (a, words) => [{ if: { said: words, max: { [a]: 0 } }, add: { [a]: 1 }, move: { [LOOSE[a].id]: LOOSE[a].route[0] }, say: T.alibi[a] },
+const release = (a, words) => [{ if: { said: words, max: { [a]: 0 } }, add: { [a]: 1 }, move: { [LOOSE[a].id]: LOOSE[a].route[0] },
+  ...(LOOSE[a].flies && { level: { [LOOSE[a].id]: "up" } }), say: T.alibi[a] },
   { if: { said: words }, say: T.alibi.already }];
 const unused = (a, name) => [{ if: { min: { [a]: 1 }, max: { [a]: 1 } }, text: name }];
 
@@ -746,8 +767,8 @@ const G = {
 
   items: {
     card: { name: "BRIEFING CARD", cat: "OWN", at: "player", aliases: ["briefing"], desc: [{ if: { flag: "q2" }, text: T.item.card.look.replace(/"Smile\. Don't touch anything\."$/, T.item.card.q2) }, T.item.card.look],
-      on: { take: [{ if: { has: "card" }, say: T.item.card.take }], use: [{ if: { has: "card", not: { with: "don" } }, say: T.item.card.use }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
-    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look], on: { use: [{ if: { has: "coin", not: { with: "don" } }, say: T.item.coin.use }] } },   // PT-10                                                          // I2
+      on: { take: [{ if: { has: "card" }, say: T.item.card.take }], use: [{ if: { has: "card" }, say: T.item.card.use }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
+    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look], on: { use: [{ if: { has: "coin" }, say: T.item.coin.use }] } },   // PT-10                                                          // I2
     ledger: { name: "LEDGER", cat: "OWN", at: "tray", desc: T.item.ledger.look, on: { use: T.item.evidence } },                                                         // I3
     manifest: { name: "SHIPPING MANIFEST", cat: "OWN", at: "mouth", desc: T.item.manifest.look, on: { use: T.item.evidence } },                                         // I4
     photos: { name: "DEAL PHOTOS", cat: "OWN", aliases: ["photo"], desc: T.item.photos.look, on: { use: T.item.evidence } },                              // I5
@@ -781,9 +802,9 @@ const G = {
     aviary: { name: [{ if: "OUT_PEACOCKS", text: "EMPTY AVIARY" }, "AVIARY"],   // [REV4] names follow the state
       cat: "FIXTURE", at: "aviary", fixed: true, aliases: ["door", "keypad"], desc: T.item.aviary },
     // [REV4] the loose animals: offstage until released, then roaming (kind "animal": take, eat, ride, pet)
-    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["mariposa", "neck"], desc: T.animal.giraffe },
-    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], desc: T.animal.jaguar },
-    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], desc: T.animal.reina },
+    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["mariposa", "neck"], level: "up", desc: T.animal.giraffe },   // [REV5] six meters: look up
+    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], level: "down", desc: T.animal.jaguar },
+    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], level: "down", desc: T.animal.reina },   // up while S.level says so
     giraffegate: { name: [{ if: "OUT_GIRAFFE", text: "OPEN GIRAFFE GATE" }, "GIRAFFE GATE"], aliases: ["giraffe gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.giraffegate },
     jaguargate: { name: [{ if: "OUT_JAGUAR", text: "OPEN JAGUAR GATE" }, "JAGUAR GATE"], aliases: ["jaguar gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.jaguargate }
   },
@@ -881,7 +902,7 @@ const G = {
     { if: { min: { cleared: 1 } }, set: "cp7_done" },
     { if: { min: { cleared: 2 } }, set: "cp2_done" },
     // [REV4] loose animals roam, costing nothing; with no say, the core tells you when one comes or goes
-    ...Object.entries(LOOSE).map(([a, { id, route, every }]) => ({ every, if: { min: { [a]: 1 } }, move: { [id]: route } })),
+    ...Object.entries(LOOSE).map(([a, { id, route, every, flies }]) => ({ every, if: { min: { [a]: 1 } }, move: { [id]: route }, ...(flies && { level: { [id]: null } }) })),
     // ESC_REVISIT: this room already seen during ESCAPE
     ...Object.keys(ROOM).map(r => ({ if: { in: r, ...ESC }, set: `escbeen_${r}` })),
     // REVISIT text after the first look at each room
@@ -1021,7 +1042,7 @@ for (const r in ROOM_VERBS) G.rooms[r].verbs = ROOM_VERBS[r];
 const WORDS = { elevator: ["elevator"], foyer: ["foyer"], trophy: ["trophy room", "trophies"], salon: ["salon", "music salon", "piano room"],
   dining: ["dining hall", "dining room"], landing: ["landing"], gallery: ["gallery", "hall"], atrium: ["atrium"], office: ["office"],
   aviary: ["aviary"], terrace: ["terrace", "roof"], enclosure: ["enclosure", "pen"] };
-for (const r in WORDS) Object.assign(G.rooms[r], { words: WORDS[r], again: AGAIN[r], revisit: T.room[ROOM[r]].revisit });
+for (const r in WORDS) Object.assign(G.rooms[r], { words: WORDS[r], again: AGAIN[r], revisit: T.room[ROOM[r]].revisit, up: T.updown[r][0], down: T.updown[r][1] });
 G.rooms.terrace.again = terrace.map(t => [null, t.text]).slice(0, 1);   // R11: rev 2 REVISIT (built from animal state)
 
 // ---- Script rev 3 batch 4 / B: state text (nouns add-on)

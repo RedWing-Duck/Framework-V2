@@ -80,3 +80,7 @@ Changed in `./nouns.js` so core things can answer:
 
 Kept: strikes, checkpoints, the run report, bands, feedback, close looks, categories and `./verbs.js` (bare words, one at a time, `ways`, "drop X in Y", `only`, `line`, and the reply order).
 
+## Rev 5: up and down, slot order
+
+Both are engine changes for every game. The game gives every room an `up` and `down` view, gives the loose animals a `level`, and lets Reina fly (`level: { reina: "up" }` on release, `null` when she moves). The card's and coin's `not: { with: "don" }` guards are gone: the engine asks the second slot first now.
+

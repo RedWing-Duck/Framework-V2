@@ -2,6 +2,11 @@
 Build: `dist/big-footprint.html` (single file, runs offline). Branch `claude/penthouse-heist-game-o7k6w5`.
 Credits: **Retroment Gaming.** Week 01 was a process check (a dry run), so there are no chat contributors.
 
+## Week 01 rev5: look up, look down; replies in slot order
+- **Look up / look down** in every room: the chandelier, the fresco, the glass roof, the city forty floors down, the footprints in the straw. The giraffe is up (six meters); the jaguar and Reina are down, except that Reina flies up into the atrium's palms when released and lands when she first moves. Free, like `look`.
+- **Slot order** is the engine's now: "give the Don the card" asks the Don first, as "give the card to the Don" always did, so the card and coin no longer need a "not to the Don" guard on their own lines.
+- Tests: up and down in big-footprint; the two-slot test covers "give the don the card". The walkthrough, clocks and endings are unchanged.
+
 ## Week 01 rev4: Framework v2 showcase
 Same game, same size: 12 rooms, 3 puzzles, 3 NPCs, 5 items, 5 endings; W1 and W2 take the same commands and end with 7 and 4 turns to spare. Design: [`../design/GDD_week01_rev4.md`](../design/GDD_week01_rev4.md) (section 12 maps each feature to where you meet it).
 - **Two slots.** "Show the card to the Don" (in his office it answers Q2), "give the coin to the Don", "give the coin to the hippo", "put the coin in the hippo's mouth". Showing a secret to Nando is refused, free, and the checkpoint stays open. Something lying here is picked up first.

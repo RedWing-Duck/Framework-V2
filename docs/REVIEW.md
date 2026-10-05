@@ -180,3 +180,16 @@ A read of the fourth pass found places where the word layer stepped around the r
 | Transcript download untested | `tools/headless.js` gets opt-in `downloads()` (Blob, URL, a link's click); the old no-download fallback test stays | transcript: saves '<title> transcript.txt' with every line printed, then says how many |
 | Hook order undocumented | `docs/ADDONS.md`: hooks run in `build.json` order; the first `before` that returns true stops the command | hook order: before hooks run in build.json order, and the first that answers stops the command |
 | Design files mixed into the release pack | GDD, Scripts (rev 1-3), build brief and QA focus moved to `games/big-footprint/design/`; links updated. `release/v1/big-footprint.html` stays (the differential test read it; since the game's rev 4 it is history) | (none: the whole suite, including the differential, still passes) |
+
+## Sixth pass: slot order and up/down
+
+Two engine changes, asked for after the big-footprint showcase, for every game. Tests in `tests/run.js` use the `tests/words/` game.
+
+| Item | Change | Test |
+|---|---|---|
+| Replies went last-named first, so "give the guard the bread" asked the bread before the guard ("give the bread to the guard" didn't) | `bySlot()`: the second slot answers first, then the direct thing, then the rest (last named first). `LINE.it` follows the same order. big-footprint's `not: { with: "don" }` guards on the card and coin are gone | slot order: the second slot answers first, whichever way the line is said |
+| No sense of up and down in a room | `rooms.X.up` / `down` (TEXT), `items.X.level` / `npcs.X.level` (`"up"`, `"down"`, or TEXT variants), effect and condition `level`, `S.level` (saved, undone). `look up` / `look down` (and `above`, `overhead`, `below`) show the room's view and the `desc` of each thing in sight at that level; message `levelNone`. A dropped thing with a level lands down. The validator checks level values. The trailing-particle rule keeps "up"/"down" after `look` | up and down: look up / look down show the room's view and the things at that level; level effect, condition, drop |
+
+The three games use it: damp-cell (the cell's window and trapdoor, the straw and the rat on the floor), sundown (the rafters,
+the pines at dusk, the rug and the crowbar it hides), big-footprint (every room, the giraffe up, the jaguar down, and Reina,
+who flies up when released and lands when she first moves).
