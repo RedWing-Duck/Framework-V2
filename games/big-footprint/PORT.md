@@ -84,3 +84,13 @@ Kept: strikes, checkpoints, the run report, bands, feedback, close looks, catego
 
 Both are engine changes for every game. The game gives every room an `up` and `down` view, gives the loose animals a `level`, and lets Reina fly (`level: { reina: "up" }` on release, `null` when she moves). The card's and coin's `not: { with: "don" }` guards are gone: the engine asks the second slot first now.
 
+
+## Rev 6: script polish
+
+A continuity and flow pass over every player-facing line. No logic changed. 23 lines were reworded:
+- **Facts that contradicted play.** The card's own `use` line said it wasn't for handing to anyone, but showing it to the Don answers his question. The run checkpoint line had Nando chasing a peacock even when the peacocks were still caged. The escape gallery line assumed you already had secrets. The CAUGHT ending said "Nando doesn't buy it" after openers where you never told him a story, and its ITEM opener zip-tied you twice.
+- **Voice.** The narrator calls you "detective" everywhere else, so the Don's `lie` line no longer calls you "Walter." The narrator now uses feet (the giraffe is eighteen feet); the Don still says six meters.
+- **Repeats.** "Snow shovels" was in three places, and several other phrases each appeared twice: "something heavy is walking around up there," "stolen chandelier," "the Don is watching your eyes," "a very long week," and "whatever mattered... the Don took." Each now appears once.
+- **Rhythm.** Smoother wording for the Don's exits from the salon and the aviary, the help text's `brief` line, a hint-ladder line, the balcony, and the office revisit.
+
+The full Script is now generated from `game.js`: `node games/big-footprint/design/make-script.js` writes [`design/SCRIPT_week01_rev6.txt`](design/SCRIPT_week01_rev6.txt). A test fails if the file and the game disagree, so the Script can't drift again. Scripts rev 1-3 stay in `design/` as history.

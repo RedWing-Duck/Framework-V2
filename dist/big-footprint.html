@@ -51,7 +51,7 @@ const G = (() => {
 // ---- All player-facing text, keyed by Script id. Logic lives in G below.
 const T = {
   intro: "A Retroment Gaming production.\n\nYour client wants three secrets from Don Chava's penthouse. Your cover: Walter Pryce, bookstore investor, carrying a plaque proposal and a smile. The Don will give you the grand tour himself. Listen to everything. Touch nothing. Get out with at least two.\n\nType HELP for commands.",
-  help: "Move: north, south, east, west, up, down (or n, s, e, w, u, d).\nLook around: look (look up, look down). Look at something: examine [\u200bthing] (or x).\nTake, drop, use [\u200bitem] on [\u200bthing], give or show [\u200bitem] to [\u200bperson], open, push, play, read.\nTalk: talk to [\u200bperson], ask [\u200bperson] about [\u200bthing]. Answer: say [\u200bwords].\nIn a tight spot: run (works once).\nOther: inventory (i), status, hint, quit. Typo? oops [\u200bword] fixes the last line.\nShort rooms you've seen: brief (verbose for full). Save the story so far: transcript.\nFree anytime: look, examine, inventory, status, help, hint, brief, transcript. Once the chaos starts, everything else costs time.",   // [REV4] two slots, topics, oops, brief, transcript   // \u200b: shown as [thing], not read as an [id] tag
+  help: "Move: north, south, east, west, up, down (or n, s, e, w, u, d).\nLook around: look (look up, look down). Look at something: examine [\u200bthing] (or x).\nTake, drop, use [\u200bitem] on [\u200bthing], give or show [\u200bitem] to [\u200bperson], open, push, play, read.\nTalk: talk to [\u200bperson], ask [\u200bperson] about [\u200bthing]. Answer: say [\u200bwords].\nIn a tight spot: run (works once).\nOther: inventory (i), status, hint, quit. Typo? oops [\u200bword] fixes the last line.\nShorter descriptions for rooms you've seen: brief (verbose to switch back). Save the story so far: transcript.\nFree anytime: look, examine, inventory, status, help, hint, brief, transcript. Once the chaos starts, everything else costs time.",   // [REV4] two slots, topics, oops, brief, transcript   // \u200b: shown as [thing], not read as an [id] tag
   huh: ["You try that. The universe gives you a look usually reserved for bad checks.",
     "That doesn't make sense, even for a guy pitching a bookstore to a kingpin.",
     "Nice try, detective. Say it plain."],
@@ -59,7 +59,7 @@ const T = {
   room: {   // FIRST (first tour visit), REVISIT (later tour visits), ESCAPE (once the chaos starts)
     R1: { first: "The elevator doors open on a box of mirrored gold, and you see six versions of Walter Pryce, bookstore investor, all of them sweating a little. Don Chava's man hits the button and steps back out. The only way is north, into the foyer, where a voice is already saying your name like it's a deal.",
       revisit: "Mirrored gold, and your reflection trying hard to look like it belongs here. The foyer is north.",
-      escape: "The gold box hums, waiting. One button, one way down. Behind you, the double staircase and every problem you left on it." },
+      escape: "The gold box hums, waiting. One button, one way down. Behind you, the twin staircases and every problem you left on them." },
     R2: { first: "White marble floors, gold banisters, and two [staircases] that curve up to the same landing like arms around a hug you didn't ask for. The left staircase is wide and carpeted; the right is narrower, polished to a shine. The trophy room glitters west, a piano waits in the salon east, a long table stretches north in the dining hall, the stairs lead up, and the elevator is south.",
       revisit: "The twin [staircases], left for family and right for business, still curling up toward the landing. West to the trophies, east to the piano, north to dinner, up the stairs, or south to the elevator.",
       escape: [{ if: { flag: "p3" }, text: "The foyer lights flicker. Somewhere above, glass breaks. The two [staircases] rise into the dark; a panel in the right one stands open at the thirteenth step, breathing cold air. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead." },
@@ -101,7 +101,7 @@ const T = {
   item: {
     card: { look: "Your cover, in your own handwriting. Name: Walter Pryce. Business: The Dog-Eared Page, a bookstore planned for the empty lot next door. Offer: a brass plaque reading \"The Bellandi-Reyes Reading Room.\" At the bottom: \"Smile. Don't touch anything.\"",
       take: "You already have it. It's the only thing keeping you from being a very short story.",
-      use: "That won't help. The card is for reading, not for handing to anyone.",
+      use: "That won't help here. The card is for reading, and for showing to the right person.",
       q2: "\"Smile. Don't touch anything.\" You smiled. He liked the name. So far, so good.",
       answer: "{The:with} takes {the:what}, finds the name in your own handwriting, and laughs." },   // Script rev 3 [I1] IF Q2; [REV4] answer: the card answers Q2
     coin: { look: "A heavy gold coin with an eagle on one side and a winged figure on the other. The Don called it your \"first dividend.\"",
@@ -139,13 +139,13 @@ const T = {
     stop: {   // said on arriving at each tour stop; the last line names the next direction
       R2: "\"Mr. Pryce! Welcome. Salvatore Bellandi-Reyes, but friends call me Chava, and you're a friend until you're not.\" He grips your hand like he's weighing it.\n\n\"Two staircases, two families. My mother's people came from the mountains of the west coast, my father's from Palermo. In this house we never choose between family.\" He taps the left banister. \"Left stairs, twelve steps, for family. Right stairs, thirteen, for business. Never trust the thirteenth step, amigo.\" He winks. \"Come, the trophy room. West.\" He's already strolling west, toward the glitter.",
       R3: "\"My collection. Every piece has a story, and I tell none of them.\" He nods at the [rifle]. \"Admire. Don't touch. Back east, then the salon.\" He's already back through the door, into the foyer.",
-      R4: "\"My mother's piano. Only one song is ever played on her: my mother's song. Anything else is disrespect.\" He watches your hands. \"Now, dinner. Back west, then north.\" He holds the door for you, west, back toward the foyer.",
+      R4: "\"My mother's piano. Only one song is ever played on her: my mother's song. Anything else is disrespect.\" He watches your hands. \"Now, dinner. Back west, then north.\" He holds the door for you and heads west, back toward the foyer.",
       R5: "\"Mama Rosa sang 'Cielito Lindo' every Sunday at this table. Every Sunday. My nonna banged her spoon on the table to keep time.\" Then he leans in.",
       R6: "He's waiting at the top, not even out of breath. \"East, Walter. Follow the cigar smoke.\"",   // [REV4]
       R9: "He drops into a leather chair. \"A reading room. With my name on it. You know what that does for a man's reputation?\" He smiles.",
       R7: "\"Me, by the finest painters money can scare.\" A guard hurries past. \"My boys know the rule: the animals come first. Anything gets loose, they drop everything and chase it. North, to my girl.\" He strolls north, toward the sound of running water.",
       R8: "\"Pepita.\" He flicks a gold coin into the [hippo]'s mouth, and the bronze jaw swings open, then snaps shut. \"She only opens up for gold. Like my accountants. North, the birds.\" He heads north, toward the screaming.",
-      R10: "\"My peacocks. Loud, beautiful, and they don't know how to lie. North. Time you met the family.\" He steps out, north, into the night air."
+      R10: "\"My peacocks. Loud, beautiful, and they don't know how to lie. North. Time you met the family.\" He steps north, out into the night air."
     },
     after2: "He flips you a GOLD COIN. \"Your first dividend, partner. Now let me show you my real investments. West, west, then north.\" He's already out the door and heading for the portraits.",   // + leg cue
     talk: "Questions later, Walter. Keep up.",   // rev 2: STRIKES=2
@@ -181,7 +181,7 @@ const T = {
       plaque: "\"Later. On the wall. With a ribbon.\"",
       flatter: ["\"Tell me something I don't know.\" He's delighted.", "\"Flattery. Now? Interesting.\"", "\"Stop.\""],
       bribe: "He laughs, genuinely, for the first time. \"With what? My own coin?\"",
-      lie: "You're lying right now, Walter. You're doing fine. Don't push it.",
+      lie: "You're lying right now, detective. You're doing fine. Don't push it.",
       shake: "He shakes it again, longer this time. His grip hasn't gotten any weaker.",
       thank: "\"Thank me with a plaque.\"",
       hug: "He allows it, briefly, the way a statue allows pigeons." }
@@ -196,7 +196,7 @@ const T = {
       UNRELEASED: "Nando glances past you. No animal. No noise. Nothing. \"Nice try.\"",
       USED: "\"I just put that thing back,\" Nando says. \"Try another one.\" You don't have another one.",
       RUN2: "You bolt. So does Nando, and this time nothing lands on his head.",
-      ITEM: "Nando takes it, looks at it, pockets it, and zip-ties you anyway.",
+      ITEM: "Nando takes it, looks at it, and pockets it. Then he takes you, too.",
       MOVE: "You make it one step before a hand the size of a skillet closes on your collar.",
       OTHER: "Nando doesn't wait for you to finish.",
       LEMURS: "\"The lemurs?\" Nando snorts. \"The lemurs are always loose, friend.\"",   // BG-04 (QA text)
@@ -246,7 +246,7 @@ const T = {
   // level (the giraffe up, the jaguar and Reina down) add their own lines
   updown: {
     elevator: ["A mirrored ceiling. Six of you look back down, all of them sweating.", "Gold carpet with the Don's initials woven in. You're standing on his name."],
-    foyer: [[{ if: { flag: "escape" }, text: "The chandelier sways on its chain. Something heavy is walking around up there." }, "A chandelier the size of a small car, and the landing where both staircases meet."],
+    foyer: [[{ if: { flag: "escape" }, text: "The chandelier sways on its chain, though there's no wind in here." }, "A chandelier the size of a small car, and the landing where both staircases meet."],
       "The gold compass rose. All four points read \"CHAVA.\""],
     trophy: ["Spotlights, every one aimed at a case, like the guns are the guests of honor.", "Carpet so thick your shoes disappear into it."],
     salon: ["The fresco: clouds, cherubs, and one angel with a very familiar mustache.", "The piano's pedals, polished by one pair of feet."],
@@ -259,11 +259,11 @@ const T = {
     office: ["A ceiling fan, turning slowly, stirring the cigar smoke.", "A thick red rug, and one cigar ash nobody dared to sweep up."],
     aviary: [[{ if: "OUT_PEACOCKS", text: "Fogged glass and empty perches, a few feathers still drifting down." }, "Fogged glass, and peacocks on every perch, all of them looking down at you."], "Scuffed tiles, the marks spaced a very long stride apart."],
     terrace: [[{ if: { not: "OUT_GIRAFFE" }, text: "Rain, lightning, and the giraffe's head, high above her gate, chewing." }, "Rain, lightning, and nothing between you and the sky."], "Forty floors down, the city. The empty lot next door is the one dark square."],
-    enclosure: ["The bars, bent outward high over your head. Whatever did that is tall.", "Footprints the size of snow shovels, pressed into the straw."] },
+    enclosure: ["The bars, bent outward high over your head. Whatever did that is tall.", "Footprints pressed deep into the straw, each one longer than your arm."] },
   animal: {   // [REV4] the loose animals, out of their pens and roaming the palace (items, kind "animal")
-    giraffe: { random: ["Six meters of eyelashes and bad decisions, eating the Don's silk lilies one by one.", "She looks down at you from the ceiling, chewing, and decides you're not food. Probably."] },
+    giraffe: { random: ["Eighteen feet of eyelashes and bad decisions, eating the Don's silk lilies one by one.", "She looks down at you from the ceiling, chewing, and decides you're not food. Probably."] },
     jaguar: { random: ["Black, silent, and very interested in the pozole on your sleeve.", "It sits like a statue and watches you like a bill collector."] },
-    reina: [{ if: { level: { reina: "up" } }, text: "Up in the palms, tail hanging down like a stolen chandelier. She screams at you from above." },   // [REV5]
+    reina: [{ if: { level: { reina: "up" } }, text: "Up in the palms, tail hanging down like a sequined curtain. She screams at you from above." },   // [REV5]
       { random: ["The loudest of the Don's peacocks, tail fanned like a stolen chandelier.", "She screams at you personally. Then at a lamp. Then at you again."] }],
     take: "Faster than you, angrier than you, and not going in your jacket.",
     eat: "Absolutely not. In this house, the animals are family.",
@@ -290,7 +290,7 @@ const T = {
     W1: "CLEAN GETAWAY\n\nThe elevator doors slide shut on the roaring, screaming, chattering chaos above. Floors tick by. You pat your jacket: two secrets, safe. One is still up there, but tonight, two was plenty. The doors open onto the street, the city, and the empty lot next door. It would make a great bookstore.\n\nTHE END. Secrets recovered: 2/3.",
     W2: "CLEAN SWEEP\n\nThe doors shut. Your jacket is so heavy with evidence it practically has a credit rating. Ledger, manifest, photos. Every secret the Don had, and he gave you the tour himself. Somewhere upstairs, the Don is still waiting on his plaque.\n\nTHE END. Secrets recovered: 3/3. Perfect run.",
     L1: "COVER BLOWN\n\nThe Don goes very still. \"Walter. If that's your name.\" He snaps his fingers, and two guards appear. \"Show our friend the wine cellar. He likes to touch things. Let him touch the door from the inside.\"\n\nGAME OVER.",
-    L2: "CAUGHT\n\nNando doesn't buy it. A heavy hand, a plastic zip tie, and a long walk back to the Don. \"An investor,\" the Don says. \"I'm so disappointed.\"\n\nGAME OVER.",
+    L2: "CAUGHT\n\nA plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. \"An investor,\" he says. \"I'm so disappointed.\"\n\nGAME OVER.",
     L3: "BIG FOOTPRINT\n\nA shadow the size of a delivery truck fills the doorway. A hand like a catcher's mitt lifts you off your feet, gently, the way you'd pick up a kitten, and carries you back to the broken enclosure to keep him company. Big Tony is lonely. Big Tony is also very, very strong.\n\nGAME OVER."
   },
   retry: "\n\nType RESTART to try again, or QUIT to walk away.",
@@ -302,7 +302,7 @@ const T = {
     P3: ["Two staircases. They aren't the same length.", "Business has one more step than family.", "Push the step the Don told you never to trust."],
     checkpoint: ["He wants a reason.", "An animal you let loose is a reason. So are fast legs, once.", "\"say\" the name of an animal you released, or \"run\" if you haven't yet."],
     tour: ["Listen to the Don. Every brag is a clue.", "Look at everything. Touch nothing. Examining is always safe.", "The tour is the map. On the way out, you'll walk it backward."],
-    q1: ["He's asking you something. Answer with \"say\".", "He told you about this house and family in the foyer.", "In this house, you never choose."],   // NB-06: own places
+    q1: ["He's asking you something. Answer with \"say\".", "In the foyer, he told you how this house treats family.", "In this house, you never choose."],   // NB-06: own places
     q2: ["He's asking you something. Answer with \"say\".", "It's written on your briefing card.", "Read your card: the bookstore has a name."],
     escape: ["Walk the tour backward. Grab what you can.", "The guards chase animals first.", "The gates are on the roof and the aviary is right below it. Open one before you meet a guard. Two secrets gets you out."] },
   graded: {   // E2
@@ -325,7 +325,7 @@ const T = {
     peacocks: "\"Peacocks! All nine, upstairs!\" A scream rings down from the balcony right on cue. Nando takes the stairs three at a time.",
     giraffe: "You just point up. The giraffe's head hangs over the banister, chewing a lily. Nando looks at it, then at you, then sprints up the stairs shouting into his radio.",
     jaguar: "\"The jaguar! It went into the dining hall!\" Nando goes very pale and very fast.",
-    run: "You bolt across the marble, skid on the compass rose, and duck behind the left staircase. Nando thunders past, the wrong way, chasing a peacock he thinks is you." },
+    run: "You bolt across the marble, skid on the compass rose, and duck behind the left staircase. Nando thunders past, the wrong way, chasing a shadow he thinks is you." },
 };
 
 // ---- Tour: the Don's route (GDD 5). During TOUR only the next leg's exit opens.
@@ -355,7 +355,7 @@ const AGAIN = {   // Script B [ROOM.Rn.escrevisit]
   landing: [[null, "The balcony again, trembling. The portraits one way, the stairs down to the foyer the other."]],
   gallery: [[null, "The painted Dons again, still glaring. Chlorine at one end, the balcony at the other."]],
   atrium: [["!P2", "Pepita the [hippo] again, mouth shut, lemurs overhead. Peacocks one way, portraits the other."], ["P2", "Pepita the [hippo] again, jaw hanging open, lemurs overhead. Peacocks one way, portraits the other."]],
-  office: [[null, "The ransacked office again. Only the balcony is out."]],
+  office: [[null, "The ransacked office again. The only way out is the balcony."]],
   aviary: [["!OUT_PEACOCKS", "The screaming [aviary] again. Night air one way, chlorine the other."], ["OUT_PEACOCKS", "The [aviary] again, feathers still falling. Night air one way, chlorine the other."]],
   terrace: [],   // no ESCAPE revisit line in the Script for R11: its REVISIT text is used
   enclosure: [[null, "The broken enclosure again, a tire swing creaking on its chain. The terrace is the only way out."]]
@@ -404,7 +404,7 @@ const HIPPO = "hippo|pepita|fountain|jaw|mouth";
 // ---- Script rev 3, section A: nouns (X.<room>.<noun>) and room verbs, keyed by GDD 12.4 (nouns add-on)
 const NOUNS = {
     "R2.marble": { at: "foyer", cat: "FIXTURE", words: ["marble", "floor", "floors", "tile", "tiles", "compass", "compass rose"],
-      examine: [["TOUR", "White marble, polished until you can see the soles of your cheap shoes in it. A gold compass rose is set into the center. All four points read \"CHAVA.\""], ["ESCAPE", "The marble throws the red light back at you. Mud is smeared across the compass rose in prints the size of snow shovels."]],
+      examine: [["TOUR", "White marble, polished until you can see the soles of your cheap shoes in it. A gold compass rose is set into the center. All four points read \"CHAVA.\""], ["ESCAPE", "The marble throws the red light back at you. Mud is smeared across the compass rose in bare footprints wider than the tiles."]],
       smell: [["TOUR", "Floor polish, lilies, and a cigar from somewhere upstairs."], ["ESCAPE", "Smoke, wet feathers, and something musky that wasn't here an hour ago."]],
       listen: [["TOUR", "Your footsteps echo. The Don's don't. He's had practice."], ["ESCAPE", "Glass breaking upstairs, alarms everywhere, and under all of it, heavy footsteps that aren't in any hurry."]] },
     "R1.mirrors": { at: "elevator", cat: "FIXTURE", words: ["mirror", "mirrors", "mirrored gold", "walls", "wall", "reflection", "reflections", "walter", "pryce", "myself"],
@@ -426,7 +426,7 @@ const NOUNS = {
     "R2.frames": { at: "foyer", cat: "ART", words: ["frames", "frame", "snapshots", "family pictures", "family photos", "family photo", "pictures", "christening", "wedding", "weddings", "baby", "quinceanera", "envelope", "envelopes"],
       examine: [["TOUR", "Christenings, weddings, a quinceañera, a baby in a tiny tuxedo. In every one, the Don is either handing someone an envelope or holding someone's baby."], ["ESCAPE", "One frame has fallen and cracked straight across a wedding. Someone is going to hear about that."]] },
     "R2.step": { at: "foyer", cat: "PUZZLE", strike: "STEP", puzzle: "P3", words: ["thirteenth step", "13th step", "step thirteen", "step 13", "thirteenth", "top step", "13", "thirteen", "step"],   // + NB-07, BG-08
-      examine: [["TOUR", "Thirteen up the business side. It looks like every other step, except the shine on it is worn in a small ring, as if someone steps on it more carefully than the rest. The Don is watching your eyes."], ["ESCAPE", "A hair taller than its neighbors, with a seam you'd never notice unless you were looking. The shine is worn in a ring right in the center, right where a thumb would press."], ["P3", "Pressed flat now. The panel beside it hangs open."]],
+      examine: [["TOUR", "Thirteen up the business side. It looks like every other step, except the shine on it is worn in a small ring, as if someone steps on it more carefully than the rest. The Don's eyes follow yours."], ["ESCAPE", "A hair taller than its neighbors, with a seam you'd never notice unless you were looking. The shine is worn in a ring right in the center, right where a thumb would press."], ["P3", "Pressed flat now. The panel beside it hangs open."]],
       search: [["TOUR", "Your hand drifts toward it. The Don clears his throat. \"Admire, Walter. Don't touch.\""], ["ESCAPE", "You run your fingers around the seam. It moves, just barely. It's waiting for a firm push."]] },
     "R2.panel": { at: "foyer", cat: "FIXTURE", words: ["panel", "passage", "hidden door", "hidden passage", "crawlspace", "opening", "hatch", "cold air", "air", "tunnel"],
       examine: [["P3", "A narrow passage drops away under the stairs, cold and dark and smelling of wet concrete. It's the Don's back door, not yours. Wherever it goes, it doesn't go to the lobby."]],
@@ -506,20 +506,20 @@ const NOUNS = {
       grab: [["ESCAPE", "It hisses, keeps the grape, and keeps its dignity. You keep neither."]],
       chase: [["ESCAPE", "It hisses, keeps the grape, and keeps its dignity. You keep neither."]] },
     "R6.balcony": { at: "landing", cat: "FIXTURE", words: ["balcony", "landing", "railing", "rail", "view", "below"],
-      examine: [["TOUR", "From up here you can see the whole foyer: the gold compass rose, both staircases, and every step on each. The right staircase has one more than the left."], ["ESCAPE", "The balcony trembles under your hands. Below, the foyer flickers red and dark, red and dark."], ["P3", "Below, the panel in the right staircase gapes open, a black rectangle in all that marble."]] },
+      examine: [["TOUR", "From up here you can see the whole foyer: the gold compass rose, both staircases, and every step of each. The right staircase has one more than the left."], ["ESCAPE", "The balcony trembles under your hands. Below, the foyer flickers red and dark, red and dark."], ["P3", "Below, the panel in the right staircase gapes open, a black rectangle in all that marble."]] },
     "R6.foyer": { at: "landing", cat: "FIXTURE", words: ["foyer", "down there", "compass rose", "marble"],
       examine: [["TOUR", "Marble and gold all the way down, and the Don's compass rose pointing every direction at once, all of them \"CHAVA.\""], ["ESCAPE", "Red light, black shadows, and at the bottom of it all, the gold elevator. Straight down and you're nearly home."]] },
     "R6.stairs": { at: "landing", cat: "FIXTURE", words: ["staircases", "stairs", "left staircase", "right staircase", "thirteenth step", "13th step", "steps"],
       examine: [["TOUR", "Twelve steps on the family side, thirteen on the business side, meeting right here at your feet. The top step of the business side shines a little brighter than the rest."], ["ESCAPE", "From above, the thirteenth step on the business side catches the red light a half second before the others."], ["P3", "The business side has a hole in it now. You put it there."]] },
     "R6.officedoor": { at: "landing", cat: "FIXTURE", words: ["office door", "door", "heavy door", "oak door", "brass plaque", "plaque door"],
-      examine: [["TOUR", "Heavy oak, and screwed to it, a brass plaque: \"S. BELLANDI-REYES, PRESIDENT.\" President of what, it doesn't say. The Don does love a plaque."], ["ESCAPE", "Wide open, swinging slightly. Whatever mattered in there left with the Don."]] },
+      examine: [["TOUR", "Heavy oak, and screwed to it, a brass plaque: \"S. BELLANDI-REYES, PRESIDENT.\" President of what, it doesn't say. The Don does love a plaque."], ["ESCAPE", "Wide open, swinging slightly. Nobody's guarding it anymore."]] },
     "R6.smoke": { at: "landing", cat: "FIXTURE", words: ["smoke", "cigar smoke", "cigar", "haze"],
       examine: [["TOUR", "Sweet, expensive, and it follows you around like a second guard."], ["ESCAPE", "Still drifting out of the office, lazy, like it didn't get the memo about the animals."]],
       smell: [[null, "Cedar, cream, and money on fire."]] },
     "R6.vase": { at: "landing", cat: "ART", words: ["vase", "lilies", "flowers", "stand", "pedestal"],
       examine: [["TOUR", "A tall vase of white lilies on a marble pedestal, placed exactly where every guest has to walk around it. Even the flowers here make you wait."], ["ESCAPE", "Still standing. Barely. It rocks on its pedestal every time something heavy hits the floor."], ["OUT_JAGUAR", "Knocked flat, lilies everywhere, water soaking into the carpet. Something fast came through here, low to the ground."]] },
     "R7.portraits": { at: "gallery", cat: "ART", words: ["portraits", "portrait", "paintings", "painting", "dons", "oil portraits", "canvas", "canvases"],   // + F-01
-      examine: [["TOUR", "A hundred Don Chavas in gold frames, every one painted by someone who was clearly told to make him taller. Three stand out: a horse, a lion, a saint."], ["ESCAPE", "A hundred painted Dons glaring down at the one man who got away with their secrets. One hangs crooked, slashed by claws."]] },
+      examine: [["TOUR", "A hundred Don Chavas in gold frames, every one painted by someone who was clearly told to make him taller. Three stand out: a horse, a lion, a saint."], ["ESCAPE", "A hundred painted Dons, every one of them glaring down at you. One hangs crooked, slashed by claws."]] },
     "R7.horse": { at: "gallery", cat: "ART", words: ["horse", "horse portrait", "don horse", "rider", "stallion", "sword"],
       examine: [["TOUR", "The Don on a rearing white stallion, sword raised, in a battle that never happened. The horse is real, a plaque says. It lives on a ranch now and does not know it's famous."], ["ESCAPE", "The Don on his stallion, charging nowhere. He doesn't look so brave in red light."]] },
     "R7.lion": { at: "gallery", cat: "ART", words: ["lion", "lion portrait", "don lion", "mane"],
@@ -530,7 +530,7 @@ const NOUNS = {
     "R7.crooked": { at: "gallery", cat: "ART", words: ["crooked portrait", "crooked painting", "claw marks", "claws", "scratches", "slashes", "torn portrait"],
       examine: [["ESCAPE", "Four long slashes through the canvas. Too wide for the jaguar. Too high for a lemur. Whatever did it stood taller than a door."], ["OUT_JAGUAR", "The crooked portrait is on the floor now, and the frame has fresh teeth marks. Busy night for art."]] },
     "R7.wallpaper": { at: "gallery", cat: "FIXTURE", words: ["wallpaper", "walls", "wall", "feathers", "peacock feathers", "eyes"],
-      examine: [["TOUR", "Real peacock feathers, glued on one by one, thousands of little eyes watching you walk. Somebody had a very long week."], ["ESCAPE", "A thousand feather eyes. Now that the real peacocks are screaming, the wallpaper feels personal."], ["OUT_PEACOCKS", "Real feathers drift down past the glued ones. Nature, filing a complaint."]],
+      examine: [["TOUR", "Real peacock feathers, glued on one by one, thousands of little eyes watching you walk. Somebody lost a whole summer to this."], ["ESCAPE", "A thousand feather eyes. Now that the real peacocks are screaming, the wallpaper feels personal."], ["OUT_PEACOCKS", "Real feathers drift down past the glued ones. Nature, filing a complaint."]],
       touch: [[null, "Soft, and a little dusty. Even the Don's cleaning staff are afraid of the wallpaper."]] },
     "R7.guard": { at: "gallery", cat: "PERSON", words: ["guard", "guards", "security", "radio"],
       examine: [["TOUR", "Already gone, his radio crackling around the corner. He moved like a man who's chased a lemur before."], ["ESCAPE&!CP7_PENDING", "No guards in sight. You can hear plenty of them."]] },
@@ -669,12 +669,12 @@ const ROOM_VERBS = {
 const opener = (text, title, line) => text.replace(title + "\n\n", title + "\n\n" + line + "\n\n");
 const W1 = { a: "The elevator doors slide shut on the roaring, screaming, chattering chaos above. Floors tick by, forty, thirty, twenty, and the thudding fades until all you can hear are the violins. You pat your jacket: two secrets, safe.",
   b: "The doors open onto the street, the city, and the empty lot next door. It would make a great bookstore.",
-  missing: { P1: "Somewhere up there, a notebook full of rubber bands keeps its secrets. Two was plenty.",
+  missing: { P1: "Somewhere up there, a ledger bound in rubber bands is still keeping its secrets. Two was plenty.",
     P2: "Somewhere up there, Pepita is still sitting on a shipping schedule. Let her. Two was plenty.",
     P3: "Somewhere up there, the thirteenth step is still keeping the Don's best pictures. Two was plenty." } };
 const W2 = "The doors shut. Floors tick by, and the chaos above fades to violins. Your jacket is so heavy with evidence it practically has a credit rating: ledger, manifest, photos. Every secret the Don had, and he gave you the tour himself. Somewhere upstairs, the Don is still waiting on his plaque.";
 const L1_OPENERS = {
-  RIFLE: "The Don looks at your hand on the glass. \"The rifle, Walter? In my house?\"", PIANO: "\"Nobody touches Mama's piano.\" He says it very quietly.",
+  RIFLE: "His eyes drop to your hand on the glass. \"The rifle, Walter? In my house?\"", PIANO: "\"Nobody touches Mama's piano.\" He says it very quietly.",
   STEP: "\"The thirteenth step.\" He smiles, and it's the worst smile yet. \"You were listening. Too well.\"", HIPPO: "\"You put your hands on my Pepita?\"",
   Q1: "\"Choose between my mother and my nonna? In THIS house?\"", Q2: "\"You don't know the name of your own bookstore, Walter?\"" };
 const L3_FIRST = "A shadow the size of a delivery truck fills the doorway.";

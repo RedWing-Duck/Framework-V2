@@ -1,69 +1,119 @@
-# Text RPG Framework v2
+# Text RPG Framework v2 — Base
 
-A tiny, dependency-free framework for text adventures, and a blueprint for new text-based games, so nobody starts from scratch.
+**This is the frozen starting point for a new text adventure every week.**
 
-- **Data-driven.** A game is a single data object, and the engine never changes per game.
-- **Add-ons.** New mechanics plug in with `addon({...})`, never by editing the engine.
-- **Small.** No dependencies. Building and testing need only Node 18+.
-- **One file.** Each finished game is a single HTML file that runs anywhere, including offline.
+It's a small, dependency-free engine for parser-based text games ("take lamp", "ask the guard about the key"). Each game builds into **one HTML file** that anyone can download, open in a browser, and play offline. No install, no server, no accounts.
 
-v2 folds what the first games kept rebuilding into the engine: verbs and replies on anything, a command reader (verb + things, with "Which do you mean?", pronouns, `all`), containers and surfaces, ask/tell topics, kinds, rotating and random text, named conditions, rewordable messages, undo/again/restart and saves that survive a reload. It also adds hooks, so add-ons never patch the engine. Later passes finished the word layer: two slots ("give the bread to the guard"), answered in slot order, so the guard replies whichever way it's said; pointing by a word ("the chipped cup", "the other one", "both", "all except"); pronouns by kind; articles and proper names; names that change; moves you can see; "(first taking...)"; `oops`, `brief` and `transcript`. The sixth pass added up and down: `look up` / `look down`, with things that sit up or down in a room and can move between the two. See [`docs/REVIEW.md`](docs/REVIEW.md) for what changed and why, and how to port a v1 game.
+This repository is **not** where games get made. It's the clean foundation that gets copied at the start of each weekly project.
 
-## What it is, and what it isn't
+---
 
-**It is** a blueprint for short-to-medium authored parser games in one HTML file: exploration, puzzles, people to talk to, a clock, a story that remembers what you did. `games/` has three: a tutorial (damp-cell), a countdown (sundown), and *This Place Has a Big Footprint*, the largest game built on v1 (a guided tour, guard checkpoints, strikes, a clock and five endings), rebuilt on v2 without game-specific engine changes ([`games/big-footprint/PORT.md`](games/big-footprint/PORT.md)). It is also the showcase: every word-layer feature appears somewhere a player meets it naturally, mapped in its [GDD, sections 12 and 13](games/big-footprint/design/GDD_week01_rev4.md).
+## How the weekly release works
 
-**It isn't**, out of the box:
-- a natural-language parser. It reads a verb and the things you name; [`docs/AUTHORING.md`](docs/AUTHORING.md#how-a-command-is-read) lists exactly what it does and doesn't understand.
-- a systems engine. There is no combat, economy, NPC schedule, skill check, or spatial model beyond rooms, in/on and up/down. Counters, `rand`, `status` and hooks are the parts you build those from, as an add-on, and none of them is written yet.
+```
+ Framework-V2 (this repo, frozen)        Add-on Reference repo
+            │                                     │
+            └──────── copied into ────────────────┘
+                          │
+                          ▼
+              Weekly game repo (week N)
+        engine, add-ons and game all live here;
+        anything can be changed for this game
+                          │
+                          ▼
+            dist/<game>.html, a standalone
+            single-file release, snapshotted as-is
+```
 
-## Review package
+1. **Copy this base** into a new repo for the week's game.
+2. **Copy in any add-ons** the idea needs from the Add-on Reference repo.
+3. **Build the game.** In the weekly repo, the engine and add-ons can be changed freely to fit the idea. Those changes stay in that week's repo.
+4. **Ship the single HTML file** and snapshot the repo. That week is done and never needs to stay compatible with anything else.
+5. **Harvest what worked.** If a new add-on proved useful, copy it back to the Add-on Reference repo, noting the week it came from, for later weeks to reuse and modify.
 
-The source is the review artifact, not only the compiled games: `engine/`, `addons/`, `games/`, `tools/build.js` and `tests/run.js` are all here. `node tests/run.js` runs every test headless against the built files, including a check that each `dist/` file matches what `tools/build.js` produces from source.
+This repo stays untouched, so every week starts from the same known-good base.
 
-## Play
+---
 
-Download [`dist/damp-cell.html`](dist/damp-cell.html), [`dist/sundown.html`](dist/sundown.html) or [`dist/big-footprint.html`](dist/big-footprint.html) and open it in a browser. Type `help` for the list of commands.
+## Why it's built this way
 
-## Build and test
+- **Fast releases, not one big game.** Every game is a self-contained product. No shared code has to keep working across weeks, so nothing slows a release down.
+- **Games are data.** A game is mostly one `game.js` object: rooms, items, people, dialogue, events, endings. Most ideas need no new code at all.
+- **New mechanics plug in.** Add-ons attach through hooks (`addon({...})`) instead of rewriting the engine. That keeps them easy to copy between weeks.
+- **One file, runs anywhere.** The output has no dependencies and makes no network requests. It can be emailed, hosted, or played from a USB stick.
+
+---
+
+## What's in the box
+
+| Folder | What it is |
+| --- | --- |
+| `engine/` | The engine (`engine.js`), page shell, and stylesheet |
+| `addons/` | Starter add-ons: `light`, `craft`, `journal`, `endings`, `tags`, `hints` |
+| `template/` | A blank starter game to copy |
+| `games/` | Three example games (see below) |
+| `tools/` | `build.js` (bundles a game into one HTML file) and `headless.js` (runs games in Node for testing) |
+| `tests/` | Headless test suite, run with `node tests/run.js` |
+| `docs/` | The full authoring reference, add-on guide, design recipes, and v2 change notes |
+| `dist/` | The built, playable example games |
+
+### Example games
+
+- **`damp-cell`**: a short tutorial game.
+- **`sundown`**: a countdown game against the clock.
+- **`big-footprint`** (*This Place Has a Big Footprint*): the full showcase. It has a guided tour, guard checkpoints, strikes, a clock and five endings, and every parser feature appears somewhere in it. Its `design/` and `release/` folders show a complete weekly process from design doc through QA to release.
+
+To try them, download any file in `dist/`, open it in a browser, and type `help`.
+
+---
+
+## What the engine handles out of the box
+
+- **Parser:** verb plus things, two-object commands ("give the bread to the guard"), "Which do you mean?", pronouns, `all` / `all except`, "the other one", `oops`, and `again`
+- **World:** rooms, containers and surfaces, things up high or underfoot (`look up` / `look down`), and names that change
+- **People:** branching dialogue, plus ask/tell topics
+- **Logic:** flags, counters, named conditions, timed and repeating events, random and rotating text
+- **Player tools:** undo, restart, brief mode, and transcripts
+- **Validator:** catches broken references and data mistakes at build time
+
+**Out of scope by design:** there's no combat, economy, skill checks, or NPC schedules. Counters, `rand`, `status` and hooks are the building blocks for those, and they get built as add-ons when a week's idea needs them.
+
+---
+
+## About saves
+
+Games are designed to be **played in one sitting**. The game saves automatically after each move, but only as a safety net against a browser or system crash. A player *can* close the tab and come back with **Continue**, but nothing is designed around that.
+
+Saves live in the browser's local storage. If a game's rooms, items, NPCs or events change, old saves are ignored rather than loaded into the wrong state.
+
+---
+
+## Quick start (inside a weekly repo)
+
+Requires **Node 18+** and nothing else. There's no `npm install`.
 
 ```sh
-node tools/build.js damp-cell   # → dist/damp-cell.html, plus the validator report
-node tools/build.js sundown
-node tools/build.js big-footprint
-node tests/run.js               # headless tests against the built files
+cp -r template games/my-game          # start a new game
+# edit games/my-game/game.js          # the game itself (see docs/AUTHORING.md)
+# edit games/my-game/build.json       # add-ons, e.g. { "addons": ["light", "endings"] }
+
+node tools/build.js my-game           # → dist/my-game.html plus a validator report
+node tests/run.js                     # headless tests
 ```
 
-## Make a new game
+A build is ready when the validator says `Validator: no problems`. The file in `dist/` is the entire game.
 
-The Purpose of this Repo is to be copied completely to the new game's repo and used as the base, so that this framework is left untouched. Do this first, then-
+---
 
-1. `cp -r template games/my-game`
-2. Edit `games/my-game/game.js`. [`docs/AUTHORING.md`](docs/AUTHORING.md) documents every key.
-3. List any add-ons in `games/my-game/build.json`, for example `{ "addons": ["light"] }`.
-4. Run `node tools/build.js my-game` and fix anything the validator reports. The file is written even when there are problems
-   (the command then exits with an error), so don't commit it until it says `Validator: no problems`. Run `node tests/run.js`
-   too: it checks that every game's `dist/` file matches its sources.
-5. Commit `dist/my-game.html`. That file is the whole game.
+## Docs
 
-Recipes for common designs (countdowns, ranked endings, hidden things, hint ladders...) are in [`docs/PATTERNS.md`](docs/PATTERNS.md).
-To add a new mechanic, first check it isn't data already, then write an add-on: see [`docs/ADDONS.md`](docs/ADDONS.md).
+- [`docs/AUTHORING.md`](docs/AUTHORING.md): every key a game can use, and exactly what the parser understands
+- [`docs/PATTERNS.md`](docs/PATTERNS.md): recipes from real games (countdowns, ranked endings, hidden things, hint ladders and more)
+- [`docs/ADDONS.md`](docs/ADDONS.md): the add-on contract, the available hooks, and a worked example
+- [`docs/REVIEW.md`](docs/REVIEW.md): what changed from v1, and why
+- [`CLAUDE.md`](CLAUDE.md): working rules for AI-assisted development
 
-## Layout
-
-```
-engine/      shell.html, style.css, engine.js   (shared; never edited per game)
-addons/      shared optional mechanics: light, craft, journal, endings, tags, hints
-games/       one folder per game: game.js + build.json (+ the game's own add-ons, "./name" in build.json);
-             big-footprint/ also keeps its design docs (design/) and release pack (release/)
-template/    blank starter game
-tools/       build.js (bundler), headless.js (DOM stub for Node)
-tests/       run.js (node:test; loads big-footprint.js), words/ and local-addon/ (small test games)
-docs/        AUTHORING.md, ADDONS.md, PATTERNS.md, REVIEW.md
-dist/        built, playable single-file games
-```
-
-The page uses the system's monospace font and makes no network requests.
+---
 
 ## License
 

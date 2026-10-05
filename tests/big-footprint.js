@@ -324,7 +324,7 @@ test("Polish B: GDD 12.1 D3: talk, ask and examine Nando at a checkpoint are fre
 });
 
 test("Polish B: CAUGHT_BY openers (D4) and STRIKE3_BY is recorded", () => {
-  const cases = [["say jaguar", /No animal\. No noise/], ["e", /hand the size of a skillet/], ["dance", /doesn't wait for you to finish/], ["give card to nando", /zip-ties you anyway/]];
+  const cases = [["say jaguar", /No animal\. No noise/], ["e", /hand the size of a skillet/], ["dance", /doesn't wait for you to finish/], ["give card to nando", /Then he takes you, too/]];
   for (const [cmd, opener] of cases) {
     const g = toEscape(); g.type("s", "s", "s", cmd);
     assert.match(g.last(), /^CAUGHT\n\n/, cmd); assert.match(g.last(), opener, cmd);
@@ -387,7 +387,7 @@ const BASE = ["open giraffe gate", "s", "s", "use gold coin on hippo", "s", "run
 
 test("Polish C: W1 names the secret left behind; the run report matches the run", () => {
   const noLedger = play(...TOUR, ...BASE, "s", "d");
-  assert.match(noLedger.last(), /a notebook full of rubber bands keeps its secrets[\s\S]*THE END\. Secrets recovered: 2\/3\.\n\nRUN REPORT/);
+  assert.match(noLedger.last(), /a ledger bound in rubber bands is still keeping its secrets[\s\S]*THE END\. Secrets recovered: 2\/3\.\n\nRUN REPORT/);
   const r = report(noLedger);
   assert.equal(r.Secrets, "2 of 3 (manifest, photos)");
   assert.equal(r["Turns to spare"], String(noLedger.get("S.count.clock")));
@@ -812,7 +812,7 @@ test("feature two slots: give/show/put with what: and with:, {the:what}/{The:wit
   g.type("give the don the card");
   assert.match(g.last(), /^He glances at it and hands it back/, "slot order: the Don, not the card's own line, whichever way it's said");
   g.type("use card");
-  assert.equal(g.last(), "That won't help. The card is for reading, not for handing to anyone.", "the card's own reply, with no one in the second slot");
+  assert.equal(g.last(), "That won't help here. The card is for reading, and for showing to the right person.", "the card's own reply, with no one in the second slot");
   g.type("drop card", "show the card to the don");
   assert.equal(g.lines().at(-2), "(first taking the BRIEFING CARD)", "carry: picked up first");
   const q = play(...TOUR.slice(0, 10), "show card to don");
@@ -939,17 +939,22 @@ test("feature up and down: look up / look down in every room; the giraffe is up,
   const g = play(...TOUR, "s", "open aviary", "s"), t = g.get("S.count.turns");
   assert.equal(g.get("S.level.reina"), "up", "released: up in the palms");
   g.type("look up");
-  assert.equal(g.lines().slice(-2)[1], "Reina: Up in the palms, tail hanging down like a stolen chandelier. She screams at you from above.", "named, then described");
+  assert.equal(g.lines().slice(-2)[1], "Reina: Up in the palms, tail hanging down like a sequined curtain. She screams at you from above.", "named, then described");
   assert.equal(g.get("S.count.turns"), t, "looking is free");
   while (g.get("S.loc.reina === 'atrium'")) g.type("wait");
   assert.equal(g.get("S.level.reina ?? null"), null, "she lands when she moves: back to her data level");
   const l = play(...TOUR, "open giraffe gate", "s", "s", "s", "run", "e");
   while (l.get("S.loc.giraffe !== 'landing'")) l.type("wait");
   l.type("look up");
-  assert.ok(l.lines().some(x => /^The giraffe: (Six meters of eyelashes|She looks down at you from the ceiling)/.test(x)), "the giraffe is up, named");
+  assert.ok(l.lines().some(x => /^The giraffe: (Eighteen feet of eyelashes|She looks down at you from the ceiling)/.test(x)), "the giraffe is up, named");
   // wording: a thing's line never repeats its own name ("Reina: Reina, up in...")
   const named = [...g.lines(), ...l.lines()].map(x => /^(?:The )?([^:]+): (.*)$/i.exec(x)).filter(m => m && ["Reina", "giraffe", "jaguar"].includes(m[1]));
   assert.ok(named.length >= 2);
   for (const [line, who, text] of named) assert.ok(!text.toLowerCase().startsWith(who.toLowerCase()) && !text.toLowerCase().startsWith("the " + who.toLowerCase()), line);
 });
 
+
+test("big-footprint: the full Script (design/SCRIPT_week01_rev6.txt) matches game.js", () => {
+  const { script, OUT } = require("../games/big-footprint/design/make-script");
+  assert.equal(fs.readFileSync(OUT, "utf8"), script(), "run: node games/big-footprint/design/make-script.js");
+});

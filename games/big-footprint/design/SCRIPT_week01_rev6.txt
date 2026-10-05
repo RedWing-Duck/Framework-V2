@@ -1,0 +1,2752 @@
+THIS PLACE HAS A BIG FOOTPRINT
+Week 01 · Full Script, rev 6 (generated from games/big-footprint/game.js; do not edit by hand)
+
+How to read it: each line is [condition] text. "always" is the fallback. [id] tags are names the game highlights;
+{name} slots are filled in at play time. A line already printed elsewhere shows (same as <where>).
+Regenerate after any text change: node games/big-footprint/design/make-script.js
+
+==============================================================================
+INTRO
+==============================================================================
+  ntro:
+    [always] A Retroment Gaming production.
+
+      Your client wants three secrets from Don Chava's penthouse. Your cover: Walter Pryce, bookstore investor, carrying a plaque proposal and a smile. The Don will give you the grand tour himself. Listen to everything. Touch nothing. Get out with at least two.
+
+      Type HELP for commands.
+
+==============================================================================
+STATUS LINE
+==============================================================================
+
+-- status.0
+    [flag escape] Bigfoot clock: {clock} · Secrets: {secrets}/3
+
+-- status.1
+    [always] The tour · Strikes: {strikes}/3
+
+==============================================================================
+SYSTEM MESSAGES (help, errors, movement)
+==============================================================================
+
+-- messages.huh
+    [always] You try that. The universe gives you a look usually reserved for bad checks.
+    [always] That doesn't make sense, even for a guy pitching a bookstore to a kingpin.
+    [always] Nice try, detective. Say it plain.
+
+-- messages.cant
+    [always] (same as messages.huh)
+
+-- messages.what
+    [always] (same as messages.huh)
+
+-- messages.arrives
+    [always] {A} comes in from the {dir}.
+
+-- messages.leaves
+    [always] {The} slips away to the {dir}.
+
+-- messages.see
+    [always] You see: {list}
+
+-- messages.over
+    [always] The story's over, detective. RESTART or QUIT.
+    [always] The Don's house is quiet now. RESTART or QUIT.
+    [always] Case closed. RESTART to reopen it, or QUIT.
+
+-- messages.help
+    [always] Move: north, south, east, west, up, down (or n, s, e, w, u, d).
+      Look around: look (look up, look down). Look at something: examine [thing] (or x).
+      Take, drop, use [item] on [thing], give or show [item] to [person], open, push, play, read.
+      Talk: talk to [person], ask [person] about [thing]. Answer: say [words].
+      In a tight spot: run (works once).
+      Other: inventory (i), status, hint, quit. Typo? oops [word] fixes the last line.
+      Shorter descriptions for rooms you've seen: brief (verbose to switch back). Save the story so far: transcript.
+      Free anytime: look, examine, inventory, status, help, hint, brief, transcript. Once the chaos starts, everything else costs time.
+
+-- messages.exits
+    [always] Exits: {list}
+
+-- messages.cantGo
+    [always] No way through there, detective.
+
+-- messages.notHere
+    [always] Nothing like that around here.
+
+-- messages.fixed
+    [always] It's bolted down, or it's worth more than your car. Either way, no.
+
+-- messages.notHave
+    [always] You're not carrying that.
+
+-- messages.nothing
+    [always] Nothing happens. The penthouse is unimpressed.
+
+-- messages.noOne
+    [always] Nobody by that name around.
+
+-- messages.wait
+    [always] You wait. The penthouse doesn't.
+
+==============================================================================
+ROOMS
+==============================================================================
+
+-- rooms.elevator: Private Elevator
+  desc:
+    [flag escbeen_elevator & key ESCAPE] Back in the gold box. The doors wait. So does the button.
+    [flag escape] The gold box hums, waiting. One button, one way down. Behind you, the twin staircases and every problem you left on them.
+    [flag been_elevator] Mirrored gold, and your reflection trying hard to look like it belongs here. The foyer is north.
+    [always] The elevator doors open on a box of mirrored gold, and you see six versions of Walter Pryce, bookstore investor, all of them sweating a little. Don Chava's man hits the button and steps back out. The only way is north, into the foyer, where a voice is already saying your name like it's a deal.
+  on.examine:
+    [not(flag escape) & said "don|chava|don chava|salvatore"] You'll meet him in a second. You can already hear him.
+  on.talk:
+    [not(flag escape) & said "don|chava|don chava|salvatore"] (same as rooms.elevator.on.examine)
+  on.ask:
+    [not(flag escape) & said "don|chava|don chava|salvatore"] (same as rooms.elevator.on.examine)
+  on.tell:
+    [not(flag escape) & said "don|chava|don chava|salvatore"] (same as rooms.elevator.on.examine)
+  on.go:
+    [said "down" & not(flag escape)] "Leaving before dessert?" The Don steers you back out.
+    [said "down" & secrets<=1 & secrets>=1] Your thumb hovers over the button. One secret isn't a case. It's a rumor. Go get another.
+    [said "down" & secrets<=1] Your thumb hovers over the button. Two secrets minimum, or this was all for nothing. You're not leaving empty-handed.
+  on.push:
+    [said "button|buttons|lobby" & not(flag escape)] The Don's hand lands on yours, friendly as a pair of handcuffs. "Leaving before dessert?"
+    [said "button|buttons|lobby" & secrets<=1 & secrets>=1] (same as rooms.elevator.on.go)
+    [said "button|buttons|lobby" & secrets<=1] (same as rooms.elevator.on.go)
+  verbs.listen:
+    [TOUR] Violins, very softly. The music of people who have never once had to hurry.
+    [ESCAPE] The hum of the cable. Above it, everything else.
+  verbs.smell:
+    [TOUR] Cologne, brass polish, and your own nerves.
+    [ESCAPE] Cologne, and now, faintly, wet dog.
+  again:
+    [always] (same as rooms.elevator.desc)
+  revisit:
+    [always] (same as rooms.elevator.desc)
+  up:
+    [always] A mirrored ceiling. Six of you look back down, all of them sweating.
+  down:
+    [always] Gold carpet with the Don's initials woven in. You're standing on his name.
+
+-- rooms.foyer: Grand Foyer
+  desc:
+    [flag escbeen_foyer & key ESCAPE&P3] The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The panel under the stairs is still breathing cold air.
+    [flag escbeen_foyer & key ESCAPE&!P3] The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The thirteenth step still sits a hair too high.
+    [flag escape & not(not(flag p3))] The foyer lights flicker. Somewhere above, glass breaks. The two [staircases] rise into the dark; a panel in the right one stands open at the thirteenth step, breathing cold air. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead.
+    [flag escape] The foyer lights flicker. Somewhere above, glass breaks. The two [staircases] rise into the dark; the right one gleams, and its thirteenth step sits a hair higher than the rest, like it's waiting to be pressed. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead.
+    [flag been_foyer] The twin [staircases], left for family and right for business, still curling up toward the landing. West to the trophies, east to the piano, north to dinner, up the stairs, or south to the elevator.
+    [always] White marble floors, gold banisters, and two [staircases] that curve up to the same landing like arms around a hug you didn't ask for. The left staircase is wide and carpeted; the right is narrower, polished to a shine. The trophy room glitters west, a piano waits in the salon east, a long table stretches north in the dining hall, the stairs lead up, and the elevator is south.
+  on.use:
+    [not(flag escape) & said "thirteenth|13th|step|steps|stair|stairs|staircase|staircases" & strikes>=2] The smile is gone. "Twice now. I don't like three."
+    [not(flag escape) & said "thirteenth|13th|step|steps|stair|stairs|staircase|staircases" & any(noted(STRUCK R8.hippo) | noted(STRUCK hippo))] The Don's smile tightens. "Pepita doesn't like strangers, Walter. Hands to yourself."
+    [not(flag escape) & said "thirteenth|13th|step|steps|stair|stairs|staircase|staircases" & noted(STRIKE3_BY HIPPO)] The Don's smile tightens. "Those are Pepita's, Walter. Hands to yourself."
+    [not(flag escape) & said "thirteenth|13th|step|steps|stair|stairs|staircase|staircases" & noted(STRIKE3_BY STEP)] The Don's smile tightens. "Mind your feet, Walter. Those stairs are older than you."
+    [not(flag escape) & said "thirteenth|13th|step|steps|stair|stairs|staircase|staircases" & noted(STRIKE3_BY PIANO)] The Don's smile tightens. "Hands off Mama's piano, Walter."
+    [not(flag escape) & said "thirteenth|13th|step|steps|stair|stairs|staircase|staircases"] The Don's smile tightens. "Hands to yourself, Walter. That's a collector's piece."
+  on.push:
+    [flag p3 & said "thirteenth|13th|13|thirteen"] It's already down. The panel is already open.
+    [flag escape & said "thirteenth|13th|13|thirteen" & not(flag p3)] You press the thirteenth step. It sinks with a click, and a panel in the staircase slides open, releasing cold air from a narrow passage. Just inside, a shoebox holds the DEAL PHOTOS. Secrets: {secrets} of 3.
+    [flag escape & said "first|1th|1st|1nd|1rd|1,step"] That's step 1. It's just a step. Keep counting.
+    [flag escape & said "second|2th|2st|2nd|2rd|2,step"] That's step 2. It's just a step. Keep counting.
+    [flag escape & said "third|3th|3st|3nd|3rd|3,step"] That's step 3. It's just a step. Keep counting.
+    [flag escape & said "fourth|4th|4st|4nd|4rd|4,step"] That's step 4. It's just a step. Keep counting.
+    [flag escape & said "fifth|5th|5st|5nd|5rd|5,step"] That's step 5. It's just a step. Keep counting.
+    [flag escape & said "sixth|6th|6st|6nd|6rd|6,step"] That's step 6. It's just a step. Keep counting.
+    [flag escape & said "seventh|7th|7st|7nd|7rd|7,step"] That's step 7. It's just a step. Keep counting.
+    [flag escape & said "eighth|8th|8st|8nd|8rd|8,step"] That's step 8. It's just a step. Keep counting.
+    [flag escape & said "ninth|9th|9st|9nd|9rd|9,step"] That's step 9. It's just a step. Keep counting.
+    [flag escape & said "tenth|10th|10st|10nd|10rd|10,step"] That's step 10. It's just a step. Keep counting.
+    [flag escape & said "eleventh|11th|11st|11nd|11rd|11,step"] That's step 11. It's just a step. Keep counting.
+    [flag escape & said "twelfth|12th|12st|12nd|12rd|12,step"] That's step 12. It's just a step. Keep counting.
+    [flag escape & said "fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|14th|14|15th|15|16th|16|17th|17|18th|18|19th|19|20th|20,step"] There are only thirteen. That's the point.
+    [flag escape & only step|steps] Which one? The Don was very specific about one of them.
+    [flag escape & said "thirteenth|13th|step|steps|stair"] You press a step. It's just a step. The Don said which one you can't trust.
+  on.examine:
+    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps") & flag p3] The two staircases rise into the dark; a panel in the right one stands open at the thirteenth step, breathing cold air.
+    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps") & flag escape] The two staircases rise into the dark; the right one gleams, and its thirteenth step sits a hair higher than the rest, like it's waiting to be pressed.
+    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps")] The left staircase is wide and carpeted, twelve steps up. The right is narrower and polished to a shine, thirteen steps. The Don is watching your eyes.
+  verbs.listen:
+    [TOUR] Your footsteps echo. The Don's don't. He's had practice.
+    [ESCAPE] Glass breaking upstairs, alarms everywhere, and under all of it, heavy footsteps that aren't in any hurry.
+  verbs.smell:
+    [TOUR] Floor polish, lilies, and a cigar from somewhere upstairs.
+    [ESCAPE] Smoke, wet feathers, and something musky that wasn't here an hour ago.
+  again:
+    [!P3] (same as rooms.foyer.desc)
+    [P3] (same as rooms.foyer.desc)
+  revisit:
+    [always] (same as rooms.foyer.desc)
+  up:
+    [flag escape] The chandelier sways on its chain, though there's no wind in here.
+    [always] A chandelier the size of a small car, and the landing where both staircases meet.
+  down:
+    [always] The gold compass rose. All four points read "CHAVA."
+
+-- rooms.trophy: Trophy Room
+  desc:
+    [flag escbeen_trophy & key ESCAPE] The trophy cases again, rattling, the [rifle] still behind glass. The way out is back toward the staircases.
+    [flag escape] The cases rattle each time something heavy hits a floor above. The [rifle] stares back at you, useless. The only way out is back toward the staircases.
+    [flag been_trophy] The glass cases, the [rifle], the diamonds, the headline with the missing name. East to the foyer.
+    [always] Glass cases line the walls, lit like jewelry counters. Inside: a [rifle] engraved with roses, a pistol studded with enough diamonds to buy a small town, and a framed newspaper headline someone has carefully cut the name out of. The foyer is back east.
+  on.use:
+    [not(flag escape) & said "rifle" & strikes>=2] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "rifle" & any(noted(STRUCK R8.hippo) | noted(STRUCK hippo))] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "rifle" & noted(STRIKE3_BY HIPPO)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "rifle" & noted(STRIKE3_BY STEP)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "rifle" & noted(STRIKE3_BY PIANO)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "rifle"] (same as rooms.foyer.on.use)
+  verbs.listen:
+    [TOUR] A faint hum from the case lights.
+    [ESCAPE] The cases rattle in their frames like chattering teeth.
+  verbs.smell:
+    [always] Glass cleaner and gun oil.
+  again:
+    [always] (same as rooms.trophy.desc)
+  revisit:
+    [always] (same as rooms.trophy.desc)
+  up:
+    [always] Spotlights, every one aimed at a case, like the guns are the guests of honor.
+  down:
+    [always] Carpet so thick your shoes disappear into it.
+
+-- rooms.salon: Music Salon
+  desc:
+    [flag escbeen_salon & key ESCAPE&P1] The open [piano] and its empty tray. The way out is back toward the staircases.
+    [flag escbeen_salon & key ESCAPE&!P1] Mama's [piano] again, in the flashing light. The way out is back toward the staircases.
+    [flag escape & not(not(flag p1))] The [piano]'s mirrored lid stands open, the hidden tray empty. Mama's piano kept her secret as long as she could. The way out is back toward the staircases.
+    [flag escape] The [piano] waits in the half-light, its mirrored lid reflecting flashing alarm lights. Mama's piano. Mama's song. The way out is back toward the staircases.
+    [flag been_salon] The mirrored [piano], reflecting the chandelier and your nerves. West to the foyer.
+    [always] A white grand [piano] sits in the middle of the room like the only guest who got a chair. Its lid is a sheet of mirror, and it shows you the chandelier, the ceiling fresco, and your own nervous smile. The foyer is west.
+  on.use:
+    [not(flag escape) & said "piano|lid|keys|keyboard|ivory|ivories" & strikes>=2] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "piano|lid|keys|keyboard|ivory|ivories" & any(noted(STRUCK R8.hippo) | noted(STRUCK hippo))] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "piano|lid|keys|keyboard|ivory|ivories" & noted(STRIKE3_BY HIPPO)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "piano|lid|keys|keyboard|ivory|ivories" & noted(STRIKE3_BY STEP)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "piano|lid|keys|keyboard|ivory|ivories" & noted(STRIKE3_BY PIANO)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "piano|lid|keys|keyboard|ivory|ivories"] (same as rooms.foyer.on.use)
+  on.play:
+    [not(flag escape) & strikes>=2] (same as rooms.foyer.on.use)
+    [not(flag escape) & any(noted(STRUCK R8.hippo) | noted(STRUCK hippo))] (same as rooms.foyer.on.use)
+    [not(flag escape) & noted(STRIKE3_BY HIPPO)] (same as rooms.foyer.on.use)
+    [not(flag escape) & noted(STRIKE3_BY STEP)] (same as rooms.foyer.on.use)
+    [not(flag escape) & noted(STRIKE3_BY PIANO)] (same as rooms.foyer.on.use)
+    [not(flag escape)] (same as rooms.foyer.on.use)
+    [said "cielito lindo" & not(flag p1)] You play the first bars of "Cielito Lindo," badly but with feeling. Something clicks. The mirrored lid rises on its own, and a hidden tray slides out holding a LEDGER bound in rubber bands. Secrets: {secrets} of 3.
+    [not(flag p1) & only piano|keys|keyboard|lid|song|a|some|something|music|tune] You bang out a few notes. The piano does nothing, but you're pretty sure Mama Rosa is disappointed. Which song does this piano keep?
+    [not(flag p1) & said "mama's song|mamas song|mama song|her song|mother's song|mothers song|rosa's song|rosas song|mama rosa's song"] Right song. Wrong words. What was it called? She sang it every Sunday.
+    [not(flag p1)] Pretty. Not hers.
+    [not(flag p1)] The piano doesn't so much as click. Not her song.
+    [not(flag p1)] You play it well. It doesn't matter. Only one song opens her.
+    [always] You already found what she was hiding.
+  verbs.smell:
+    [TOUR] Lemon polish and old sheet music.
+    [ESCAPE] Dust, shaken down from the fresco.
+  verbs.listen:
+    [TOUR] Silence, the expensive kind. The piano ticks softly as it settles.
+    [ESCAPE] Crystal chiming overhead, and the piano's strings humming along with every thud.
+  verbs.sing:
+    [TOUR] You hum something. The Don winces. "Not in here, amigo. Only her song."
+    [ESCAPE&!P1] You hum her song under your breath. The piano's strings hum back, faintly. It wants hands, not a voice.
+    [ESCAPE&P1] You hum a few bars for Mama Rosa. It seems only polite.
+  verbs.hum:
+    [TOUR] (same as rooms.salon.verbs.sing)
+    [ESCAPE&!P1] (same as rooms.salon.verbs.sing)
+    [ESCAPE&P1] (same as rooms.salon.verbs.sing)
+  again:
+    [!P1] (same as rooms.salon.desc)
+    [P1] (same as rooms.salon.desc)
+  revisit:
+    [always] (same as rooms.salon.desc)
+  up:
+    [always] The fresco: clouds, cherubs, and one angel with a very familiar mustache.
+  down:
+    [always] The piano's pedals, polished by one pair of feet.
+
+-- rooms.dining: Dining Hall
+  desc:
+    [flag escbeen_dining & key ESCAPE] The wrecked dinner again. The lemur hasn't moved and has no plans to. The way out is back toward the staircases.
+    [flag escape] Chairs knocked over, a lemur on the table eating grapes out of a silver bowl. It doesn't care about you. The way out is back toward the staircases.
+    [flag been_dining] The endless table, the two grandmothers watching each other like rival dons. South to the foyer.
+    [always] A table long enough to seat a jury, set for twenty. Two portraits face each other across it: a stern woman in a rebozo and a sterner woman holding a wooden spoon. Chili, garlic, and slow-cooked tomato hang in the air. The foyer is south.
+  on:
+    [not(flag q1) & said ""] "So tell me, Walter. Sunday dinner: my mother's pozole or my nonna's Sunday gravy?"
+    [not(any(flag q1 | said "not|neither|nor|no|never")) & said "both|pozole and gravy|gravy and pozole|each|two of them"] He laughs and slaps the table. "Both! Now you sound like family. Come, upstairs, we talk business. South, then up, then east." He's already at the foot of the stairs.
+    [not(any(flag q1 | said "pozole|gravy|soup|sauce|mother|mama|nonna|grandmother|both|either|neither|one|choose|pick"))] The Don smiles. "Compliments later, Walter. Pozole or gravy?"
+    [not(flag q1) & strikes>=2] The smile is gone. "Twice now, Walter. I don't like three." He asks one more time. "Sunday dinner. Pozole or gravy?"
+    [not(flag q1)] "You'd choose? In this house?" His smile tightens. He asks again, slower. "Sunday dinner. Pozole or gravy?"
+  verbs.smell:
+    [TOUR] Chili, garlic, slow-cooked tomato, and warm bread. Your stomach votes to stay for dinner.
+    [ESCAPE] Chili and garlic, and now, lemur.
+  verbs.listen:
+    [TOUR] Two pots simmering in stereo.
+    [ESCAPE] Silverware rattling, and the lemur chewing, loudly and on purpose.
+  again:
+    [always] (same as rooms.dining.desc)
+  revisit:
+    [always] (same as rooms.dining.desc)
+  up:
+    [always] A crystal chandelier over the long table, bright enough to read a contract by.
+  down:
+    [flag escape] Silverware, napkins, and a lemur eating the place cards.
+    [always] Not a crumb on the floor. Someone sweeps between courses.
+
+-- rooms.landing: Upper Landing
+  desc:
+    [flag escbeen_landing & key ESCAPE] The balcony again, trembling. The portraits one way, the stairs down to the foyer the other.
+    [flag escape] The balcony shakes under a distant thud. Cigar smoke still drifts from the office. The hall of portraits stretches one way; the staircases drop down to the foyer.
+    [flag been_landing] The balcony where the two staircases meet. West to the portraits, east to the office, down to the foyer.
+    [always] Both staircases meet here at a balcony that looks down on the foyer. A gallery of portraits stretches west, and a heavy office door stands open to the east, leaking cigar smoke. The stairs lead back down.
+  verbs.listen:
+    [TOUR] The foyer's echo rising up the stairwell, and the Don's shoes on marble.
+    [ESCAPE] Every sound in the palace funnels up this stairwell. It's like standing inside a drum.
+  again:
+    [always] (same as rooms.landing.desc)
+  revisit:
+    [always] (same as rooms.landing.desc)
+  up:
+    [always] A painted sky, with a gold sun that looks a lot like the Don.
+  down:
+    [always] The foyer, far below: the compass rose, both staircases, and a long way down.
+
+-- rooms.gallery: Gallery Hall
+  desc:
+    [flag escbeen_gallery & key ESCAPE] The painted Dons again, still glaring. Chlorine at one end, the balcony at the other.
+    [flag escape] The painted Dons glare down, and one portrait is hanging crooked, torn by claws. One end of the hall smells of chlorine; the other opens onto the balcony above the stairs.
+    [flag been_gallery] A hundred painted Don Chavas watch you walk. North to the atrium, east to the landing.
+    [always] A long hall of oil portraits, all of them the Don: the Don on a horse, the Don with a lion, the Don as a saint. The wallpaper is peacock feathers. The atrium is north, the landing east.
+  verbs.smell:
+    [always] Linseed oil, candle wax, and chlorine drifting in from one end.
+  verbs.listen:
+    [TOUR] Your own footsteps, and a radio fading around a corner.
+    [ESCAPE] Frames rattling on their hooks, all hundred Dons tapping against the walls at once.
+  again:
+    [always] (same as rooms.gallery.desc)
+  revisit:
+    [always] (same as rooms.gallery.desc)
+  up:
+    [always] A brass picture light over every Don.
+  down:
+    [always] A long runner, worn down the middle by one man's pacing.
+
+-- rooms.atrium: Atrium
+  desc:
+    [flag escbeen_atrium & key ESCAPE&P2] Pepita the [hippo] again, jaw hanging open, lemurs overhead. Peacocks one way, portraits the other.
+    [flag escbeen_atrium & key ESCAPE&!P2] Pepita the [hippo] again, mouth shut, lemurs overhead. Peacocks one way, portraits the other.
+    [flag escape & not(not(flag p2))] Water sloshes over the fountain's edge. Lemurs chatter in the palms, pelting the floor with fruit. The bronze [hippo] gapes, jaw hanging open, very pleased with itself. One way, the peacocks scream; the other, the hall of portraits.
+    [flag escape] Water sloshes over the fountain's edge. Lemurs chatter in the palms, pelting the floor with fruit. The bronze [hippo] waits, mouth shut. One way, the peacocks scream; the other, the hall of portraits.
+    [flag been_atrium] The bronze [hippo] spouts water, mouth shut, in its cloud of chlorine. South to the gallery, north to the birds.
+    [always] A glass roof, tropical plants, and the sharp, clean smell of chlorine. In the center, a bronze [hippo] fountain spouts water from its nostrils with great dignity. Its mouth is closed tight. The gallery is south and a chorus of shrieking birds comes from the north.
+  on.use:
+    [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth" & strikes>=2] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth" & any(noted(STRUCK R8.hippo) | noted(STRUCK hippo))] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth" & noted(STRIKE3_BY HIPPO)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth" & noted(STRIKE3_BY STEP)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth" & noted(STRIKE3_BY PIANO)] (same as rooms.foyer.on.use)
+    [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.foyer.on.use)
+    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] Pepita's already open, and already empty.
+    [flag escape & said "coin" & any(carrying coin | coin here)] You flick the coin into Pepita's mouth. The bronze jaw swings open, and a waterproof tube tumbles out into the water. You fish out the SHIPPING MANIFEST. Secrets: {secrets} of 3.
+    [flag escape & said "coin" & key COIN_DROPPED] Your pocket's empty. The coin is wherever you left it.
+    [flag escape & said "card|briefing,hippo|pepita|fountain|jaw|mouth"] Pepita doesn't read.
+    [flag escape & said "ledger|manifest|photos|photo,hippo|pepita|fountain|jaw|mouth"] Tempting, but this is evidence, not a tool. Keep it safe.
+    [flag escape & said "hippo|pepita|fountain|jaw|mouth"] You pull at the bronze jaw. Pepita's got a grip like a bank vault. She only opens up for one thing.
+  on.touch:
+    [flag escape & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.atrium.on.use)
+  on.open:
+    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as rooms.atrium.on.use)
+    [flag escape & said "hippo|pepita|fountain|jaw|mouth"] Pepita keeps her mouth shut. She only opens up for one thing.
+  on.push:
+    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as rooms.atrium.on.use)
+    [flag escape & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.atrium.on.open)
+  on.pull:
+    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as rooms.atrium.on.use)
+    [flag escape & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.atrium.on.open)
+  verbs.smell:
+    [always] Chlorine, wet stone, and tropical flowers.
+  verbs.listen:
+    [TOUR] Rain on the glass, water splashing, peacocks screaming somewhere north.
+    [ESCAPE] Splashing, lemurs chattering, and above the glass roof, something heavy walking in the rain.
+  verbs.swim:
+    [always] The only water here is Pepita's pool, and she doesn't share.
+    [always] You'd be wet, you'd be slow, and Pepita would never respect you again.
+  verbs.enter:
+    [always] (same as rooms.atrium.verbs.swim)
+  again:
+    [!P2] (same as rooms.atrium.desc)
+    [P2] (same as rooms.atrium.desc)
+  revisit:
+    [always] (same as rooms.atrium.desc)
+  up:
+    [flag escape] The glass roof shivers with every thud. Lightning, and for a second, a huge shadow.
+    [always] The glass roof, rain drumming on it.
+  down:
+    [always] Pepita's pool, gold coins glinting under the water.
+
+-- rooms.office: The Don's Office
+  desc:
+    [flag escbeen_office & key ESCAPE] The ransacked office again. The only way out is the balcony.
+    [flag escape] Papers everywhere, a chair knocked over, the humidor open and empty. Whatever mattered in here, the Don took it. The only way out is back to the balcony.
+    [flag been_office] The leather, the cigars, the sign that protests too much. West to the landing.
+    [always] Leather, mahogany, a humidor the size of a coffin, and a window that looks down on a city he probably owns part of. A framed sign on the desk reads "LEGITIMATE BUSINESS." The landing is west.
+  on:
+    [not(flag q2) & said "dog eared page|dog eared"] "The Dog-Eared Page. Cute. I like cute." He flips you a GOLD COIN. "Your first dividend, partner. Now let me show you my real investments. West, west, then north." He's already out the door and heading for the portraits.
+    [not(flag q2) & said ""] "Remind me, what's your bookstore called?"
+    [not(flag q2) & strikes>=2] The smile is gone. "Twice now, Walter. I don't like three. The bookstore. Its name."
+    [not(flag q2)] "That's not what you told my people." His smile tightens. "What's the bookstore called?"
+  verbs.smell:
+    [TOUR] Leather, cedar, and the particular smell of a man who's never been told no.
+    [ESCAPE] Leather, spilled brandy, and panic.
+  verbs.listen:
+    [TOUR] Rain on the window, and the Don breathing through his nose while he decides whether he likes you.
+    [ESCAPE] Sirens far below. Thuds far closer.
+  again:
+    [always] (same as rooms.office.desc)
+  revisit:
+    [always] (same as rooms.office.desc)
+  up:
+    [always] A ceiling fan, turning slowly, stirring the cigar smoke.
+  down:
+    [always] A thick red rug, and one cigar ash nobody dared to sweep up.
+
+-- rooms.aviary: Aviary
+  desc:
+    [flag escbeen_aviary & key ESCAPE&OUT_PEACOCKS] The [aviary] again, feathers still falling. Night air one way, chlorine the other.
+    [flag escbeen_aviary & key ESCAPE&!OUT_PEACOCKS] The screaming [aviary] again. Night air one way, chlorine the other.
+    [flag escape & not(not(peacocks>=1))] The door of the [aviary] hangs open, the keypad smashed. Feathers everywhere, and the peacocks are screaming their way through the palace. One doorway breathes fresh night air; the other smells of chlorine.
+    [flag escape] The [aviary] keypad is smashed, its door rattling. The peacocks are screaming louder than ever. One doorway breathes fresh night air; the other smells of chlorine.
+    [flag been_aviary] The peacocks, the screaming, the red keypad on the [aviary] door. South to the atrium, north to the terrace.
+    [always] A glass room full of peacocks that scream like car alarms with feelings. The [aviary] door has a keypad lock, glowing red. The atrium is south, and fresh night air blows in from the terrace north.
+  on.open:
+    [not(flag escape) & said "aviary|door|keypad|cage|peacock|peacocks"] The keypad blinks red. Locked tight, and the Don is watching.
+    [said "aviary|door|keypad|cage|peacock|peacocks" & peacocks<=0] You punch the smashed keypad. The door swings open and peacocks explode into the palace, screaming like the world is ending. Perfect alibi: PEACOCKS.
+    [said "aviary|door|keypad|cage|peacock|peacocks"] It's already open. That animal's somebody else's problem now.
+  verbs.smell:
+    [always] Birdseed and outrage.
+  verbs.listen:
+    [always] You don't need to try.
+  again:
+    [!OUT_PEACOCKS] (same as rooms.aviary.desc)
+    [OUT_PEACOCKS] (same as rooms.aviary.desc)
+  revisit:
+    [always] (same as rooms.aviary.desc)
+  up:
+    [OUT_PEACOCKS] Fogged glass and empty perches, a few feathers still drifting down.
+    [always] Fogged glass, and peacocks on every perch, all of them looking down at you.
+  down:
+    [always] Scuffed tiles, the marks spaced a very long stride apart.
+
+-- rooms.terrace: Zoo Terrace
+  desc:
+    [flag escape & giraffe<=0 & not(not(jaguar<=0))] Wind and alarms. The giraffe peers over the [giraffegate]. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe<=0 & not(not(jaguar>=1))] Wind and alarms. The giraffe peers over the [giraffegate]. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe>=1 & not(not(jaguar<=0))] Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe>=1 & not(not(jaguar>=1))] Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [always] A rooftop garden with a view of the whole city, glittering in the rain. Behind the [giraffegate] a giraffe chews thoughtfully; beside it, a black jaguar paces behind the [jaguargate]. The Don spreads his arms. "My family."
+
+      Then the alarms start, every speaker in the palace at once. Lemurs pour out of the dark, a roar shakes the glass, and the Don goes pale. "The accountant," he breathes. "He opened the big one."
+
+      He's gone south with his guards in three seconds flat. You are alone on a roof, holding a plaque proposal, with something enormous waking up to the east.
+  on.open:
+    [said "giraffe" & giraffe<=0] You lift the latch. The giraffe ducks out and ambles off toward the stairs, curious about everything. Perfect alibi: GIRAFFE.
+    [said "giraffe"] (same as rooms.aviary.on.open)
+    [said "jaguar" & jaguar<=0] You swing the gate open and flatten yourself against the wall. The jaguar pours past like smoke and disappears downstairs. Perfect alibi: JAGUAR.
+    [said "jaguar"] (same as rooms.aviary.on.open)
+  verbs.smell:
+    [always] Wet roses, hay, and a big, musky animal smell drifting over from the east.
+  verbs.listen:
+    [always] Alarms, rain, peacocks, and from the east, a slow, heavy breathing that stops when you stop.
+  again:
+    [always] (same as rooms.terrace.desc)
+  revisit.opening:
+    [always] Wind and alarms.
+  revisit.giraffe:
+    [always] The giraffe peers over the [giraffegate].
+    [always] The [giraffegate] creaks on its hinges, the yard empty.
+  revisit.jaguar:
+    [always] The jaguar paces behind the [jaguargate].
+    [always] The [jaguargate] swings in the wind.
+  revisit.closing:
+    [always] The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+  up:
+    [not(OUT_GIRAFFE)] Rain, lightning, and the giraffe's head, high above her gate, chewing.
+    [always] Rain, lightning, and nothing between you and the sky.
+  down:
+    [always] Forty floors down, the city. The empty lot next door is the one dark square.
+
+-- rooms.enclosure: Broken Enclosure
+  desc:
+    [flag escbeen_enclosure & key ESCAPE] The broken enclosure again, a tire swing creaking on its chain. The terrace is the only way out.
+    [always] Steel bars bent outward like someone opened a bag of chips. A brass sign reads "BIG TONY — DO NOT FEED." Footprints the size of snow shovels lead back past you. The only way out is the terrace.
+  verbs.smell:
+    [always] Wet dog, bananas, and something older than both.
+  verbs.listen:
+    [always] Nothing in here. That's what worries you. He's out there.
+  again:
+    [always] (same as rooms.enclosure.desc)
+  up:
+    [always] The bars, bent outward high over your head. Whatever did that is tall.
+  down:
+    [always] Footprints pressed deep into the straw, each one longer than your arm.
+
+==============================================================================
+ITEMS AND THINGS
+==============================================================================
+
+-- items.card: BRIEFING CARD
+  desc:
+    [flag q2] Your cover, in your own handwriting. Name: Walter Pryce. Business: The Dog-Eared Page, a bookstore planned for the empty lot next door. Offer: a brass plaque reading "The Bellandi-Reyes Reading Room." At the bottom: "Smile. Don't touch anything." You smiled. He liked the name. So far, so good.
+    [always] Your cover, in your own handwriting. Name: Walter Pryce. Business: The Dog-Eared Page, a bookstore planned for the empty lot next door. Offer: a brass plaque reading "The Bellandi-Reyes Reading Room." At the bottom: "Smile. Don't touch anything."
+  on.use:
+    [carrying card] That won't help here. The card is for reading, and for showing to the right person.
+
+-- items.coin: GOLD COIN
+  desc:
+    [key ESCAPE&COIN_HELD] The eagle, the winged figure, and the weight of it in your palm. In this house, gold opens things.
+    [always] A heavy gold coin with an eagle on one side and a winged figure on the other. The Don called it your "first dividend."
+  on.use:
+    [carrying coin] You hold out the coin. Nothing here wants it. You put it back before you lose it.
+
+-- items.ledger: LEDGER
+  desc:
+    [always] A fat notebook held shut with rubber bands, full of initials, dates, and payments in neat columns. Two pages list nothing but rubber band purchases. Someone had a lot of cash to wrap.
+  on.use:
+    [always] (same as rooms.atrium.on.use)
+
+-- items.manifest: SHIPPING MANIFEST
+  desc:
+    [always] A waterproof tube holding a shipping schedule: dates, ports, and thousands of cans of "premium chiles" that clearly have never been near a chile.
+  on.use:
+    [always] (same as rooms.atrium.on.use)
+
+-- items.photos: DEAL PHOTOS
+  desc:
+    [always] A stack of photos: the Don shaking hands on a yacht with men whose faces would end careers. Someone wrote a date on the back of each one.
+  on.use:
+    [always] (same as rooms.atrium.on.use)
+
+-- items.rifle: GOLD RIFLE
+  desc:
+    [always] A GOLD RIFLE engraved with roses, in a glass case lit like a jewelry counter.
+
+-- items.piano: PIANO
+  desc:
+    [flag escape] Its mirrored lid reflects flashing alarm lights. Mama's piano. Mama's song.
+    [always] A white grand PIANO. Its lid is a sheet of mirror, and it shows you the chandelier, the ceiling fresco, and your own nervous smile.
+
+-- items.staircases: staircases
+  desc:
+    [flag p3] (same as rooms.foyer.on.examine)
+    [flag escape] (same as rooms.foyer.on.examine)
+    [always] (same as rooms.foyer.on.examine)
+
+-- items.leftstairs: left staircase
+  desc:
+    [ESCAPE] The family side. Twelve steps of red carpet, and every frame on the wall is rattling.
+    [always] Wide, carpeted in deep red, and lined with small gold frames of family moments. Twelve steps. You count them twice, because the Don is watching you count.
+  on.push:
+    [ESCAPE] The family side. Twelve honest steps. Nothing to hide there, apparently.
+
+-- items.rightstairs: right staircase
+  desc:
+    [P3] The panel under the thirteenth step hangs open, breathing cold air up at you.
+    [ESCAPE] Thirteen steps, and one of them is wrong. Standing close, you can see it: the thirteenth sits a hair proud of the rest, with a thin dark seam around its edge.
+    [always] Narrower, bare marble, polished to a shine, and no frames on the wall at all. Business doesn't keep pictures. Thirteen steps.
+  on.push:
+    [ESCAPE] Thirteen steps. You need one in particular.
+
+-- items.hippo: HIPPO
+  desc:
+    [flag p2] Pepita's jaw hangs open. Whatever she was guarding, you've got it.
+    [always] A bronze HIPPO fountain spouting water from its nostrils with great dignity. Its mouth is closed tight.
+
+-- items.tray: hidden tray
+  desc:
+    [always] Velvet-lined, with a ledger-shaped dent and one stray rubber band. Mama's piano kept that secret for years.
+  on.open:
+    [always] Already open, and already empty.
+  on.close:
+    [always] It won't close. Mama's piano has nothing left to hide.
+
+-- items.mouth: hippo's mouth
+  desc:
+    [open mouth] Wide open. There's nothing inside now but a little gold in the back of her throat. Yours.
+    [ESCAPE] Shut. The hinges in her jowls gleam wet in the red light. She opens for one thing, the Don said.
+    [always] The lips are shut tight, but look closer: two tiny brass hinges tucked into the jowls. Pepita's mouth was built to open.
+  on.smell:
+    [always] Wet bronze and chlorine.
+  on.listen:
+    [always] Water splashing from her nostrils, steady as a heartbeat.
+  on.close:
+    [open mouth] Pepita keeps her mouth open now. She's earned it.
+
+-- items.aviary: [object Object],AVIARY
+  desc:
+    [peacocks>=1] The AVIARY door hangs open, the keypad smashed.
+    [flag escape] The AVIARY keypad is smashed, its door rattling.
+    [always] The AVIARY door has a keypad lock, glowing red.
+
+-- items.giraffe: giraffe
+  desc:
+    [always] Eighteen feet of eyelashes and bad decisions, eating the Don's silk lilies one by one.
+    [always] She looks down at you from the ceiling, chewing, and decides you're not food. Probably.
+
+-- items.jaguar: jaguar
+  desc:
+    [always] Black, silent, and very interested in the pozole on your sleeve.
+    [always] It sits like a statue and watches you like a bill collector.
+
+-- items.reina: Reina
+  desc:
+    [level(reina up)] Up in the palms, tail hanging down like a sequined curtain. She screams at you from above.
+    [always] The loudest of the Don's peacocks, tail fanned like a stolen chandelier.
+    [always] She screams at you personally. Then at a lamp. Then at you again.
+
+-- items.giraffegate: [object Object],GIRAFFE GATE
+  desc:
+    [giraffe>=1] The GIRAFFE GATE hangs open. The giraffe is somebody else's problem now.
+    [always] A tall iron gate. The giraffe leans over it, chewing, curious about you.
+
+-- items.jaguargate: [object Object],JAGUAR GATE
+  desc:
+    [jaguar>=1] The JAGUAR GATE hangs open. You're very glad you're not the one chasing it.
+    [always] A steel-barred gate. Behind it, the jaguar paces and watches you with yellow eyes.
+
+==============================================================================
+KINDS (the loose animals)
+==============================================================================
+
+-- kinds.animal
+  eat:
+    [always] Absolutely not. In this house, the animals are family.
+  ride:
+    [always] You picture riding {the} out of here. {The} pictures something else.
+    [always] {The} gives you a look. You'd make it about one step.
+  touch:
+    [always] {The} gives you a look that ends the idea.
+  talk:
+    [always] You make your case. {The} hears you out, then goes back to being somebody else's problem.
+
+==============================================================================
+PEOPLE
+==============================================================================
+
+-- npcs.don: Don Chava
+  on.use:
+    [in office & not(flag q2) & what card] {The:with} takes {the:what}, finds the name in your own handwriting, and laughs. "The Dog-Eared Page. Cute. I like cute." He flips you a GOLD COIN. "Your first dividend, partner. Now let me show you my real investments. West, west, then north." He's already out the door and heading for the portraits.
+    [what card] He glances at it and hands it back. "I know who you are, Walter." A pause just long enough for you to sweat. "The bookstore man."
+    [what coin] He folds your fingers back over it. "A dividend is not a loan."
+    [said "plaque|proposal|mockup"] "Later. On the wall. With a ribbon."
+    [always] He looks at your hands, then at you. "Keep it, Walter. I have one of everything."
+  desc:
+    [key STRIKES=2] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. He's not looking at the room anymore. He's looking at you.
+    [in foyer] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. He stands at the center of his compass rose, the way other men stand at the center of a photograph.
+    [in trophy] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. He's admiring the gold rifle the way other men admire their grandchildren.
+    [in salon] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. One hand rests on the piano lid, very lightly, like it's asleep.
+    [in dining] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. He's watching you, not the food. He's already had dinner. You haven't answered yet.
+    [in office] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. Behind the desk, in the high chair, he looks exactly as tall as the portraits say.
+    [in gallery] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. He walks past a hundred paintings of himself without looking at a single one. He doesn't have to.
+    [in atrium] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. He's watching the ripples where his coin went in.
+    [in aviary] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava. The peacocks go quiet when he walks in. You make a note.
+    [always] Salvatore Bellandi-Reyes: white suit, gold rings, a silver mustache trimmed to the millimeter, and a smile that checks your pockets. Friends call him Chava.
+  topics.mother|mama|rosa:
+    [STRIKES=2] "No more questions."
+    [STRIKES=2] He doesn't answer. He just keeps walking.
+    [STRIKES=2] "You talk a lot for a bookstore man."
+    [STRIKES=2] "Careful, Walter."
+    [STRIKES=1] "My mother is not small talk."
+    [Q1] "'Cielito Lindo.' Every Sunday. The whole street could hear her. Nobody ever complained. Nobody would dare."
+    [always] "At dinner. She deserves a table."
+  topics.nonna|grandmother|grandma:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "She'd have liked you less."
+    [always] "Palermo. Four foot ten. She kept time with a wooden spoon and kept order with the same spoon."
+  topics.family|families|photos|photo|pictures|picture:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Family is not your business, Walter."
+    [always] "Two families, one house. My mother's people from the mountains out west, my father's from Palermo. I never pick. Never."
+  topics.palermo|italy|sicily|father|papa|dad:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Far away. Like you'll be, soon."
+    [always] "My father's town. Lemons, churches, and men who never raise their voices. I learned a lot there."
+  topics.mountains|mexico|west coast:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Mountains are mountains."
+    [always] "My mother's mountains. Cold mornings, strong coffee, and church bells you can hear three valleys away."
+  topics.song|songs|cielito lindo|music:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Don't hum at me."
+    [Q1] "Her song. Only hers. You play it on that piano, you'd better play it right."
+    [always] "At dinner." He taps his heart.
+  topics.piano|pianos:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Don't look at the piano like that."
+    [always] "Mama's. Nobody plays her but me, and I play only one thing."
+  topics.hippo|hippos|pepita|fountain:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Leave Pepita alone."
+    [always] "A lady. She has standards. She has a price. Like everyone."
+  topics.peacock|peacocks|bird|birds|reina:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Birds. Loud birds."
+    [always] "Nine names. Reina is the loudest. She's also my favorite. Don't tell the others."
+  topics.giraffe|giraffes|mariposa:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "She's on the roof. You'll see."
+    [always] "Mariposa. Butterfly. She's six meters of grace. She eats my hedges and I let her. That's love, Walter."
+  topics.jaguar|jaguars|gato|cat|cats:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Don't worry about the cat. Worry about me."
+    [always] "He came from my mother's mountains. He's the only one in this house who doesn't pretend to like me. I respect that."
+  topics.lemur|lemurs:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "They steal. Everybody steals. Next."
+    [always] "Thieves. Little furry thieves. I have a soft spot for thieves, as long as they're mine."
+  topics.big tony|tony|bigfoot|creature:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "No."
+    [always] The smile slips for half a second. "Family pet. Very private. You'll never meet him." It sounds like a promise.
+  topics.accountant|contador|prisoner|empty chair:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] He doesn't answer. He just looks at you until you look away.
+    [always] The temperature drops. "On a leave of absence. Next question."
+  topics.guard|guards|nando|security:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "They're watching you. That's their job."
+    [always] "Nando runs my house. Big man, big heart, small patience. And my boys know the rule: the animals come first."
+  topics.rifle|rifles|gun|guns|pistol|pistols|trophy|trophies:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Admire. Don't touch. I won't say it again."
+    [always] "Gifts from friends. I keep every one, behind glass, so I remember who my friends are."
+  topics.stairs|staircase|staircases|step|steps:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Mind your feet, Walter."
+    [always] "Twelve for family, thirteen for business. People who don't count, don't last."
+  topics.plaque|reading room:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "We'll see about the plaque."
+    [always] He lights up. "Brass. My name. On a building full of books. My mother would cry. You'll make the letters big?"
+  topics.bookstore|dog eared page|books|lot:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Your little store. Yes."
+    [Q2] "The Dog-Eared Page. Cute name. I like cute. Cute is easy to remember."
+    [always] "Tell me in my office. I like to hear business in the right room."
+  topics.business|money|legitimate:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "My business is my business."
+    [always] "Legitimate. It says so on my desk." He winks, very slowly.
+  topics.coin|coins|dividend|gold:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Don't lose it."
+    [Q2] "Your first dividend. Keep it close. In this house, gold always finds a use."
+    [always] "What coin?" He smiles. "Business first."
+  topics.city|view|window:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Pretty, from up here."
+    [always] "Mine. Not on paper. But mine."
+  topics.walter|pryce|me|you|yourself|myself:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "I'm still deciding about you."
+    [always] "You? You're a bookstore man who sweats in elevators. I like you. Mostly."
+  topics.saint|portraits|paintings|portrait|painting|god|church|lion|horse:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Keep walking."
+    [always] "Every family needs a saint. Mine is me. It saves time."
+  topics.house|marble|palace|elevator:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "It's a house."
+    [always] "Every stone, I picked. Every stone, I paid for. Mostly."
+  topics.dinner|food|pozole|gravy:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Patience. Business first, then the table."
+    [Q1] "Mama's pozole, Nonna's gravy, same flame, every Sunday. That's the whole philosophy, Walter."
+    [always] (same as npcs.don.topics.dinner|food|pozole|gravy)
+  topics.wife|kids|children:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "Family is not for strangers, Walter. Not yet."
+    [always] (same as npcs.don.topics.wife|kids|children)
+  topics.animal|animals|zoo:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] "They're fed. Mostly."
+    [always] "Some men buy boats. I bought a family that bites."
+  topics.*:
+    [STRIKES=2] (same as npcs.don.topics.mother|mama|rosa)
+    [STRIKES=1] (same as npcs.don.topics.big tony|tony|bigfoot|creature)
+    [always] "Ask me something interesting, Walter."
+
+-- npcs.nando: Nando
+  desc:
+    [always] Six and a half feet of black suit, a radio, a flashlight, and a face that has heard every excuse. He's waiting for yours. "Well? Why are you up here?"
+  topics.don|boss|chava|salvatore:
+    [always] "The boss is busy. I'm not. Why are you up here?"
+  topics.animal|animals|giraffe|giraffes|jaguar|jaguars|peacock|peacocks|bird|birds|lemur|lemurs|zoo:
+    [always] "Something you want to tell me about the animals? Say it."
+  topics.tony|big tony|bigfoot:
+    [always] His eyes flick to the ceiling and back. "Not my department. You are."
+  topics.flashlight|light|radio:
+    [always] "It's for finding people. Look, it found one."
+  topics.you|yourself|nando|job|family:
+    [always] "My life story costs extra, friend. Why are you here?"
+  topics.*:
+    [always] Nando just shines the light in your eyes. "I asked you a question."
+    [always] "Not a conversation, friend. Why are you here?"
+    [always] His radio crackles. He ignores it. "I'm waiting."
+
+-- npcs.tony: Big Tony
+  desc:
+    [always] You haven't seen him. You'd rather keep it that way.
+
+==============================================================================
+GAME-WIDE REPLIES
+==============================================================================
+
+-- on.use
+    [flag checkpoint & what ledger,manifest,photos] The Don's own guard, and {the:what}? Not in this lifetime. The flashlight stays on your face. "Well?"
+    [don here & said "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread"] Throw Mama's pozole? You'd be out of the house before it landed.
+
+-- on.drop
+    [said "ledger|manifest|photos|photo"] (same as rooms.atrium.on.use)
+
+-- on.take
+    [said "coin" & coin here] You pocket the coin. It's warm from his hand, which somehow makes it worse.
+    [said "coin" & carrying coin] You already have that.
+    [said "ledger" & carrying ledger] (same as on.take)
+    [said "manifest" & carrying manifest] (same as on.take)
+    [said "photos|photo" & carrying photos] (same as on.take)
+
+-- on.talk
+    [flag checkpoint] (same as npcs.nando.topics.*)
+    [don here & said "myself|me"] He smiles. "I know who you are, Walter. I checked."
+    [don here & any(said "" | said "don|chava|salvatore") & in dining & not(flag q1)] (same as rooms.dining.on)
+    [don here & any(said "" | said "don|chava|salvatore") & in office & not(flag q2)] (same as rooms.office.on)
+    [don here & any(said "" | said "don|chava|salvatore") & key STRIKES=2] Questions later, Walter. Keep up.
+    [don here & any(said "" | said "don|chava|salvatore") & key STRIKES=1] "We talk later, Walter." He doesn't say "amigo" anymore.
+    [don here & any(said "" | said "don|chava|salvatore") & in foyer] "Look around, Walter. Every stone in this floor, I earned."
+    [don here & any(said "" | said "don|chava|salvatore") & in trophy] "Friends give me gifts. I keep all of them. I keep all my friends, too." He lets that sit.
+    [don here & any(said "" | said "don|chava|salvatore") & in salon] "My mother's piano. When I was small, I sat under it while she played. Best seat in the house."
+    [don here & any(said "" | said "don|chava|salvatore") & in dining] "Eat with a man's family, you know the man. After business, you eat."
+    [don here & any(said "" | said "don|chava|salvatore") & in office] "A bookstore. Books. Imagine: all those stories, and every one of them has somebody else's name on it." He smiles. "But the plaque will have mine."
+    [don here & any(said "" | said "don|chava|salvatore") & in gallery] "The painters make me taller. I don't correct them. Why would I correct a man who is right?"
+    [don here & any(said "" | said "don|chava|salvatore") & in atrium] "Pepita. She was a gift. She was also, once, a very expensive misunderstanding. Now she's family."
+    [don here & any(said "" | said "don|chava|salvatore") & in aviary] "Nine peacocks. Nine names. They scream because they are beautiful and nobody lets them forget it."
+    [don here & any(said "" | said "don|chava|salvatore")] (same as on.talk)
+    [said "nando|guard" & cleared>=1 & not(nando here)] Nando is gone, shouting somewhere far away.
+
+-- on.tell
+    [flag checkpoint & only nando|guard|about|him] (same as npcs.nando.topics.*)
+    [flag checkpoint & said ""] (same as npcs.nando.topics.*)
+    [flag checkpoint & said "peacock|peacocks" & peacocks>=1 & peacocks<=1 & in foyer] "Peacocks! All nine, upstairs!" A scream rings down from the balcony right on cue. Nando takes the stairs three at a time.
+    [flag checkpoint & said "peacock|peacocks" & peacocks>=1 & peacocks<=1] "The peacocks are out! The Don wants them rounded up!" As if on cue, a scream echoes down the hall. Nando sprints toward it.
+    [flag checkpoint & said "giraffe|giraffes" & giraffe>=1 & giraffe<=1 & in foyer] You just point up. The giraffe's head hangs over the banister, chewing a lily. Nando looks at it, then at you, then sprints up the stairs shouting into his radio.
+    [flag checkpoint & said "giraffe|giraffes" & giraffe>=1 & giraffe<=1] "The giraffe is loose, and she's heading for the stairs!" Nando swears and runs past you toward the balcony, already yelling into his radio.
+    [flag checkpoint & said "jaguar|jaguars" & jaguar>=1 & jaguar<=1 & in foyer] "The jaguar! It went into the dining hall!" Nando goes very pale and very fast.
+    [flag checkpoint & said "jaguar|jaguars" & jaguar>=1 & jaguar<=1] "The jaguar is out. It came through the atrium." Nando's flashlight beam starts to shake. He backs away from you, then runs the other way.
+    [don here & said "love|like|beautiful|amazing|great|nice" & key STRIKES=2] "Stop."
+    [don here & said "love|like|beautiful|amazing|great|nice" & key STRIKES=1] "Flattery. Now? Interesting."
+    [don here & said "love|like|beautiful|amazing|great|nice"] "Tell me something I don't know." He's delighted.
+
+-- on.bribe
+    [don here] He laughs, genuinely, for the first time. "With what? My own coin?"
+
+-- on.provoke
+    [don here & key STRIKES=2] He says nothing at all. That's worse.
+    [don here & key STRIKES=1] "Careful."
+    [don here] He laughs, but his eyes don't. "Walter. We were getting along so well."
+
+-- on.flatter
+    [don here & key STRIKES=2] (same as on.tell)
+    [don here & key STRIKES=1] (same as on.tell)
+    [don here] (same as on.tell)
+
+-- on.lie
+    [don here] You're lying right now, detective. You're doing fine. Don't push it.
+
+-- on.shake
+    [don here] He shakes it again, longer this time. His grip hasn't gotten any weaker.
+
+-- on.thank
+    [don here] "Thank me with a plaque."
+
+-- on.hug
+    [don here] He allows it, briefly, the way a statue allows pigeons.
+
+-- on.run
+    [flag checkpoint & ran<=0 & in foyer] You bolt across the marble, skid on the compass rose, and duck behind the left staircase. Nando thunders past, the wrong way, chasing a shadow he thinks is you.
+    [flag checkpoint & ran<=0] You bolt. Nando grabs for you, and a lemur lands on his head. By the time he pulls it off, you're long gone.
+    [always] Nothing to run from yet.
+
+-- on.examine
+    [flag checkpoint & said "flashlight|beam|torch"] The beam is pointed straight at your face. That's the point of it.
+
+-- on.say
+    [flag checkpoint & said ""] (same as npcs.nando.topics.*)
+    [flag checkpoint & said "peacock|peacocks" & peacocks>=1 & peacocks<=1 & in foyer] (same as on.tell)
+    [flag checkpoint & said "peacock|peacocks" & peacocks>=1 & peacocks<=1] (same as on.tell)
+    [flag checkpoint & said "giraffe|giraffes" & giraffe>=1 & giraffe<=1 & in foyer] (same as on.tell)
+    [flag checkpoint & said "giraffe|giraffes" & giraffe>=1 & giraffe<=1] (same as on.tell)
+    [flag checkpoint & said "jaguar|jaguars" & jaguar>=1 & jaguar<=1 & in foyer] (same as on.tell)
+    [flag checkpoint & said "jaguar|jaguars" & jaguar>=1 & jaguar<=1] (same as on.tell)
+    [don here & said "thank|thanks"] (same as on.thank)
+    [don here & said "love|like|beautiful|amazing|great|nice" & key STRIKES=2] (same as on.tell)
+    [don here & said "love|like|beautiful|amazing|great|nice" & key STRIKES=1] (same as on.tell)
+    [don here & said "love|like|beautiful|amazing|great|nice"] (same as on.tell)
+    [not(don here)] You say it out loud. The house doesn't answer.
+
+-- on.hint
+    [flag checkpoint] He wants a reason.
+    [flag checkpoint] An animal you let loose is a reason. So are fast legs, once.
+    [flag checkpoint] "say" the name of an animal you released, or "run" if you haven't yet.
+    [in dining & not(flag q1)] He's asking you something. Answer with "say".
+    [in dining & not(flag q1)] In the foyer, he told you how this house treats family.
+    [in dining & not(flag q1)] In this house, you never choose.
+    [in office & not(flag q2)] (same as on.hint)
+    [in office & not(flag q2)] It's written on your briefing card.
+    [in office & not(flag q2)] Read your card: the bookstore has a name.
+    [flag escape & in salon & not(flag p1)] This piano only plays one thing.
+    [flag escape & in salon & not(flag p1)] He told you whose song this piano keeps. He told you the title over dinner.
+    [flag escape & in salon & not(flag p1)] Type "play" and the song Mama Rosa sang every Sunday. The Don said its name in the dining hall.
+    [flag escape & in atrium & not(flag p2)] Pepita has a price.
+    [flag escape & in atrium & not(flag p2)] The hippo has expensive taste. So did the Don's handshake.
+    [flag escape & in atrium & not(flag p2) & key COIN_DROPPED] The Don's coin is how you pay her. You left it somewhere on the tour.
+    [flag escape & in atrium & not(flag p2)] Something gold from your pocket, into her mouth.
+    [flag escape & in foyer & not(flag p3)] Two staircases. They aren't the same length.
+    [flag escape & in foyer & not(flag p3)] Business has one more step than family.
+    [flag escape & in foyer & not(flag p3)] Push the step the Don told you never to trust.
+    [flag escape] Walk the tour backward. Grab what you can.
+    [flag escape] The guards chase animals first.
+    [flag escape] The gates are on the roof and the aviary is right below it. Open one before you meet a guard. Two secrets gets you out.
+    [always] Listen to the Don. Every brag is a clue.
+    [always] Look at everything. Touch nothing. Examining is always safe.
+    [always] The tour is the map. On the way out, you'll walk it backward.
+
+-- on.status
+    [not(flag escape)] Tour in progress. Strikes: {strikes}/3.
+  line:
+    [always] Bigfoot clock: {clock} turns. Secrets: {secrets}/3. Run: 
+    [always] . Alibis: 
+
+-- on.where
+    [key ESCAPE & in elevator] Private Elevator
+      Back in the gold box. The doors wait. So does the button.
+    [in elevator] Private Elevator
+      Mirrored gold, and your reflection trying hard to look like it belongs here. The foyer is north.
+    [key ESCAPE&P3 & in foyer] Grand Foyer
+      The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The panel under the stairs is still breathing cold air.
+    [key ESCAPE&!P3 & in foyer] Grand Foyer
+      The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The thirteenth step still sits a hair too high.
+    [in foyer] Grand Foyer
+      The twin [staircases], left for family and right for business, still curling up toward the landing. West to the trophies, east to the piano, north to dinner, up the stairs, or south to the elevator.
+    [key ESCAPE & in trophy] Trophy Room
+      The trophy cases again, rattling, the [rifle] still behind glass. The way out is back toward the staircases.
+    [in trophy] Trophy Room
+      The glass cases, the [rifle], the diamonds, the headline with the missing name. East to the foyer.
+    [key ESCAPE&P1 & in salon] Music Salon
+      The open [piano] and its empty tray. The way out is back toward the staircases.
+    [key ESCAPE&!P1 & in salon] Music Salon
+      Mama's [piano] again, in the flashing light. The way out is back toward the staircases.
+    [in salon] Music Salon
+      The mirrored [piano], reflecting the chandelier and your nerves. West to the foyer.
+    [key ESCAPE & in dining] Dining Hall
+      The wrecked dinner again. The lemur hasn't moved and has no plans to. The way out is back toward the staircases.
+    [in dining] Dining Hall
+      The endless table, the two grandmothers watching each other like rival dons. South to the foyer.
+    [key ESCAPE & in landing] Upper Landing
+      The balcony again, trembling. The portraits one way, the stairs down to the foyer the other.
+    [in landing] Upper Landing
+      The balcony where the two staircases meet. West to the portraits, east to the office, down to the foyer.
+    [key ESCAPE & in gallery] Gallery Hall
+      The painted Dons again, still glaring. Chlorine at one end, the balcony at the other.
+    [in gallery] Gallery Hall
+      A hundred painted Don Chavas watch you walk. North to the atrium, east to the landing.
+    [key ESCAPE&P2 & in atrium] Atrium
+      Pepita the [hippo] again, jaw hanging open, lemurs overhead. Peacocks one way, portraits the other.
+    [key ESCAPE&!P2 & in atrium] Atrium
+      Pepita the [hippo] again, mouth shut, lemurs overhead. Peacocks one way, portraits the other.
+    [in atrium] Atrium
+      The bronze [hippo] spouts water, mouth shut, in its cloud of chlorine. South to the gallery, north to the birds.
+    [key ESCAPE & in office] The Don's Office
+      The ransacked office again. The only way out is the balcony.
+    [in office] The Don's Office
+      The leather, the cigars, the sign that protests too much. West to the landing.
+    [key ESCAPE&OUT_PEACOCKS & in aviary] Aviary
+      The [aviary] again, feathers still falling. Night air one way, chlorine the other.
+    [key ESCAPE&!OUT_PEACOCKS & in aviary] Aviary
+      The screaming [aviary] again. Night air one way, chlorine the other.
+    [in aviary] Aviary
+      The peacocks, the screaming, the red keypad on the [aviary] door. South to the atrium, north to the terrace.
+    [flag escape & giraffe<=0 & not(not(jaguar<=0)) & in terrace] Zoo Terrace
+      Wind and alarms. The giraffe peers over the [giraffegate]. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe<=0 & not(not(jaguar>=1)) & in terrace] Zoo Terrace
+      Wind and alarms. The giraffe peers over the [giraffegate]. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe>=1 & not(not(jaguar<=0)) & in terrace] Zoo Terrace
+      Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe>=1 & not(not(jaguar>=1)) & in terrace] Zoo Terrace
+      Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [key ESCAPE & in enclosure] Broken Enclosure
+      The broken enclosure again, a tire swing creaking on its chain. The terrace is the only way out.
+
+-- on.exits
+    [not(flag escape) & in elevator] Exits: north
+    [not(flag escape) & in foyer] Exits: south, west, east, north, up
+    [not(flag escape) & in trophy] Exits: east
+    [not(flag escape) & in salon] Exits: west
+    [not(flag escape) & in dining] Exits: south
+    [not(flag escape) & in landing] Exits: down, west, east
+    [not(flag escape) & in gallery] Exits: east, north
+    [not(flag escape) & in atrium] Exits: south, north
+    [not(flag escape) & in office] (same as on.exits)
+    [not(flag escape) & in aviary] (same as on.exits)
+    [not(flag escape) & in terrace] Exits: south, east
+    [not(flag escape) & in enclosure] (same as on.exits)
+    [key ESCAPE & in elevator] No signs, no arrows. Just landmarks.
+      Back in the gold box. The doors wait. So does the button.
+    [key ESCAPE&P3 & in foyer] No signs, no arrows. Just landmarks.
+      The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The panel under the stairs is still breathing cold air.
+    [key ESCAPE&!P3 & in foyer] No signs, no arrows. Just landmarks.
+      The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The thirteenth step still sits a hair too high.
+    [key ESCAPE & in trophy] No signs, no arrows. Just landmarks.
+      The trophy cases again, rattling, the [rifle] still behind glass. The way out is back toward the staircases.
+    [key ESCAPE&P1 & in salon] No signs, no arrows. Just landmarks.
+      The open [piano] and its empty tray. The way out is back toward the staircases.
+    [key ESCAPE&!P1 & in salon] No signs, no arrows. Just landmarks.
+      Mama's [piano] again, in the flashing light. The way out is back toward the staircases.
+    [key ESCAPE & in dining] No signs, no arrows. Just landmarks.
+      The wrecked dinner again. The lemur hasn't moved and has no plans to. The way out is back toward the staircases.
+    [key ESCAPE & in landing] No signs, no arrows. Just landmarks.
+      The balcony again, trembling. The portraits one way, the stairs down to the foyer the other.
+    [key ESCAPE & in gallery] No signs, no arrows. Just landmarks.
+      The painted Dons again, still glaring. Chlorine at one end, the balcony at the other.
+    [key ESCAPE&P2 & in atrium] No signs, no arrows. Just landmarks.
+      Pepita the [hippo] again, jaw hanging open, lemurs overhead. Peacocks one way, portraits the other.
+    [key ESCAPE&!P2 & in atrium] No signs, no arrows. Just landmarks.
+      Pepita the [hippo] again, mouth shut, lemurs overhead. Peacocks one way, portraits the other.
+    [key ESCAPE & in office] No signs, no arrows. Just landmarks.
+      The ransacked office again. The only way out is the balcony.
+    [key ESCAPE&OUT_PEACOCKS & in aviary] No signs, no arrows. Just landmarks.
+      The [aviary] again, feathers still falling. Night air one way, chlorine the other.
+    [key ESCAPE&!OUT_PEACOCKS & in aviary] No signs, no arrows. Just landmarks.
+      The screaming [aviary] again. Night air one way, chlorine the other.
+    [flag escape & giraffe<=0 & not(not(jaguar<=0)) & in terrace] No signs, no arrows. Just landmarks.
+      Wind and alarms. The giraffe peers over the [giraffegate]. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe<=0 & not(not(jaguar>=1)) & in terrace] No signs, no arrows. Just landmarks.
+      Wind and alarms. The giraffe peers over the [giraffegate]. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe>=1 & not(not(jaguar<=0)) & in terrace] No signs, no arrows. Just landmarks.
+      Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe>=1 & not(not(jaguar>=1)) & in terrace] No signs, no arrows. Just landmarks.
+      Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [key ESCAPE & in enclosure] No signs, no arrows. Just landmarks.
+      The broken enclosure again, a tire swing creaking on its chain. The terrace is the only way out.
+
+-- on.map
+    [not(flag escape)] The Don is the map tonight. Follow him.
+    [always] No map. The tour was the map.
+
+-- on.save
+    [always] No saves, no do-overs. Tonight counts.
+
+-- on.back
+    [not(any(flag escape | flag checkpoint))] The Don puts a hand on your shoulder. "Private, amigo. This way."
+    [not(flag checkpoint)] Back which way? Name a direction, or a landmark.
+
+-- on.go
+    [not(any(flag escape | flag checkpoint)) & said "back"] (same as on.back)
+    [not(flag checkpoint) & said "back"] (same as on.back)
+
+-- on.help
+    [flag checkpoint & said "me"] (same as on.hint)
+    [in dining & not(flag q1) & said "me"] (same as on.hint)
+    [in office & not(flag q2) & said "me"] (same as on.hint)
+    [flag escape & in salon & not(flag p1) & said "me"] (same as on.hint)
+    [flag escape & in atrium & not(flag p2) & said "me"] (same as on.hint)
+    [flag escape & in atrium & not(flag p2) & said "me" & key COIN_DROPPED] (same as on.hint)
+    [flag escape & in atrium & not(flag p2) & said "me"] (same as on.hint)
+    [flag escape & in foyer & not(flag p3) & said "me"] (same as on.hint)
+    [flag escape & said "me"] (same as on.hint)
+    [said "me"] (same as on.hint)
+
+-- on.ways
+    [not(flag escape) & in elevator] (same as on.exits)
+    [not(flag escape) & in foyer] (same as on.exits)
+    [not(flag escape) & in trophy] (same as on.exits)
+    [not(flag escape) & in salon] (same as on.exits)
+    [not(flag escape) & in dining] (same as on.exits)
+    [not(flag escape) & in landing] (same as on.exits)
+    [not(flag escape) & in gallery] (same as on.exits)
+    [not(flag escape) & in atrium] (same as on.exits)
+    [not(flag escape) & in office] (same as on.exits)
+    [not(flag escape) & in aviary] (same as on.exits)
+    [not(flag escape) & in terrace] (same as on.exits)
+    [not(flag escape) & in enclosure] (same as on.exits)
+    [key ESCAPE & in elevator] (same as on.exits)
+    [key ESCAPE&P3 & in foyer] (same as on.exits)
+    [key ESCAPE&!P3 & in foyer] (same as on.exits)
+    [key ESCAPE & in trophy] (same as on.exits)
+    [key ESCAPE&P1 & in salon] (same as on.exits)
+    [key ESCAPE&!P1 & in salon] (same as on.exits)
+    [key ESCAPE & in dining] (same as on.exits)
+    [key ESCAPE & in landing] (same as on.exits)
+    [key ESCAPE & in gallery] (same as on.exits)
+    [key ESCAPE&P2 & in atrium] (same as on.exits)
+    [key ESCAPE&!P2 & in atrium] (same as on.exits)
+    [key ESCAPE & in office] (same as on.exits)
+    [key ESCAPE&OUT_PEACOCKS & in aviary] (same as on.exits)
+    [key ESCAPE&!OUT_PEACOCKS & in aviary] (same as on.exits)
+    [flag escape & giraffe<=0 & not(not(jaguar<=0)) & in terrace] (same as on.exits)
+    [flag escape & giraffe<=0 & not(not(jaguar>=1)) & in terrace] (same as on.exits)
+    [flag escape & giraffe>=1 & not(not(jaguar<=0)) & in terrace] (same as on.exits)
+    [flag escape & giraffe>=1 & not(not(jaguar>=1)) & in terrace] (same as on.exits)
+    [key ESCAPE & in enclosure] (same as on.exits)
+
+==============================================================================
+EVENTS AND ENDINGS
+==============================================================================
+
+-- events.1
+    [strikes>=3 & key STRIKE3_BY=RIFLE] COVER BLOWN
+
+      His eyes drop to your hand on the glass. "The rifle, Walter? In my house?"
+
+      The Don goes very still. "Walter. If that's your name." He snaps his fingers, and two guards appear. "Show our friend the wine cellar. He likes to touch things. Let him touch the door from the inside."
+
+      GAME OVER.
+    [strikes>=3 & key STRIKE3_BY=PIANO] COVER BLOWN
+
+      "Nobody touches Mama's piano." He says it very quietly.
+
+      The Don goes very still. "Walter. If that's your name." He snaps his fingers, and two guards appear. "Show our friend the wine cellar. He likes to touch things. Let him touch the door from the inside."
+
+      GAME OVER.
+    [strikes>=3 & key STRIKE3_BY=STEP] COVER BLOWN
+
+      "The thirteenth step." He smiles, and it's the worst smile yet. "You were listening. Too well."
+
+      The Don goes very still. "Walter. If that's your name." He snaps his fingers, and two guards appear. "Show our friend the wine cellar. He likes to touch things. Let him touch the door from the inside."
+
+      GAME OVER.
+    [strikes>=3 & key STRIKE3_BY=HIPPO] COVER BLOWN
+
+      "You put your hands on my Pepita?"
+
+      The Don goes very still. "Walter. If that's your name." He snaps his fingers, and two guards appear. "Show our friend the wine cellar. He likes to touch things. Let him touch the door from the inside."
+
+      GAME OVER.
+    [strikes>=3 & key STRIKE3_BY=Q1] COVER BLOWN
+
+      "Choose between my mother and my nonna? In THIS house?"
+
+      The Don goes very still. "Walter. If that's your name." He snaps his fingers, and two guards appear. "Show our friend the wine cellar. He likes to touch things. Let him touch the door from the inside."
+
+      GAME OVER.
+    [strikes>=3 & key STRIKE3_BY=Q2] COVER BLOWN
+
+      "You don't know the name of your own bookstore, Walter?"
+
+      The Don goes very still. "Walter. If that's your name." He snaps his fingers, and two guards appear. "Show our friend the wine cellar. He likes to touch things. Let him touch the door from the inside."
+
+      GAME OVER.
+    [strikes>=3] COVER BLOWN
+
+      The Don goes very still. "Walter. If that's your name." He snaps his fingers, and two guards appear. "Show our friend the wine cellar. He likes to touch things. Let him touch the door from the inside."
+
+      GAME OVER.
+
+-- events.2
+    [flag won & secrets>=3 & key RAN] CLEAN SWEEP
+
+      The doors shut. Floors tick by, and the chaos above fades to violins. Your jacket is so heavy with evidence it practically has a credit rating: ledger, manifest, photos. Every secret the Don had, and he gave you the tour himself. Somewhere upstairs, the Don is still waiting on his plaque. One sprint, one good story, three secrets. Not bad for a bookstore man.
+
+      THE END. Secrets recovered: 3/3. Perfect run.
+    [flag won & secrets>=3] CLEAN SWEEP
+
+      The doors shut. Floors tick by, and the chaos above fades to violins. Your jacket is so heavy with evidence it practically has a credit rating: ledger, manifest, photos. Every secret the Don had, and he gave you the tour himself. Somewhere upstairs, the Don is still waiting on his plaque. You never ran once. You talked your way out of a kingpin's palace with a smile, a story, and a zoo's worth of alibis.
+
+      THE END. Secrets recovered: 3/3. Perfect run.
+
+-- events.3
+    [flag won & key !P1] CLEAN GETAWAY
+
+      The elevator doors slide shut on the roaring, screaming, chattering chaos above. Floors tick by, forty, thirty, twenty, and the thudding fades until all you can hear are the violins. You pat your jacket: two secrets, safe. Somewhere up there, a ledger bound in rubber bands is still keeping its secrets. Two was plenty. The doors open onto the street, the city, and the empty lot next door. It would make a great bookstore.
+
+      THE END. Secrets recovered: 2/3.
+    [flag won & key !P2] CLEAN GETAWAY
+
+      The elevator doors slide shut on the roaring, screaming, chattering chaos above. Floors tick by, forty, thirty, twenty, and the thudding fades until all you can hear are the violins. You pat your jacket: two secrets, safe. Somewhere up there, Pepita is still sitting on a shipping schedule. Let her. Two was plenty. The doors open onto the street, the city, and the empty lot next door. It would make a great bookstore.
+
+      THE END. Secrets recovered: 2/3.
+    [flag won & key !P3] CLEAN GETAWAY
+
+      The elevator doors slide shut on the roaring, screaming, chattering chaos above. Floors tick by, forty, thirty, twenty, and the thudding fades until all you can hear are the violins. You pat your jacket: two secrets, safe. Somewhere up there, the thirteenth step is still keeping the Don's best pictures. Two was plenty. The doors open onto the street, the city, and the empty lot next door. It would make a great bookstore.
+
+      THE END. Secrets recovered: 2/3.
+
+-- events.4
+    [in foyer & leg>=0 & leg<=0] "Mr. Pryce! Welcome. Salvatore Bellandi-Reyes, but friends call me Chava, and you're a friend until you're not." He grips your hand like he's weighing it.
+
+      "Two staircases, two families. My mother's people came from the mountains of the west coast, my father's from Palermo. In this house we never choose between family." He taps the left banister. "Left stairs, twelve steps, for family. Right stairs, thirteen, for business. Never trust the thirteenth step, amigo." He winks. "Come, the trophy room. West." He's already strolling west, toward the glitter.
+
+-- events.5
+    [in trophy & leg>=1 & leg<=1] "My collection. Every piece has a story, and I tell none of them." He nods at the [rifle]. "Admire. Don't touch. Back east, then the salon." He's already back through the door, into the foyer.
+
+-- events.6
+    [in foyer & leg>=2 & leg<=2 & key STRIKES=2] The Don doesn't slow down or look back. "Keep up."
+    [in foyer & leg>=2 & leg<=2] He taps the marble with a heel. "Carrara. Same quarry as the old cathedrals. God and I use the same contractor." He holds out an arm toward the salon. East.
+
+-- events.7
+    [in salon & leg>=3 & leg<=3] "My mother's piano. Only one song is ever played on her: my mother's song. Anything else is disrespect." He watches your hands. "Now, dinner. Back west, then north." He holds the door for you and heads west, back toward the foyer.
+
+-- events.8
+    [in foyer & leg>=4 & leg<=4 & key STRIKES=2] (same as events.6)
+    [in foyer & leg>=4 & leg<=4] He glances at the right-hand staircase and smiles at some private joke. "My business stairs. Nobody climbs them but me." Then he's walking north, toward the smell of dinner.
+
+-- events.9
+    [in dining & leg>=5 & leg<=5] "Mama Rosa sang 'Cielito Lindo' every Sunday at this table. Every Sunday. My nonna banged her spoon on the table to keep time." Then he leans in. "So tell me, Walter. Sunday dinner: my mother's pozole or my nonna's Sunday gravy?"
+
+-- events.10
+    [in foyer & leg>=6 & leg<=6 & key STRIKES=2] (same as events.6)
+    [in foyer & leg>=6 & leg<=6] He takes the left staircase, the family side, two steps at a time. "Up. My office is east."
+
+-- events.11
+    [in landing & leg>=7 & leg<=7] He's waiting at the top, not even out of breath. "East, Walter. Follow the cigar smoke."
+
+-- events.12
+    [in office & leg>=8 & leg<=8] He drops into a leather chair. "A reading room. With my name on it. You know what that does for a man's reputation?" He smiles. "Remind me, what's your bookstore called?"
+
+-- events.13
+    [in landing & leg>=9 & leg<=9] He's halfway across the balcony already. "West. Don't look down, Walter. Nobody trusts a man who looks down."
+
+-- events.14
+    [in gallery & leg>=10 & leg<=10] "Me, by the finest painters money can scare." A guard hurries past. "My boys know the rule: the animals come first. Anything gets loose, they drop everything and chase it. North, to my girl." He strolls north, toward the sound of running water.
+
+-- events.15
+    [in atrium & leg>=11 & leg<=11] "Pepita." He flicks a gold coin into the [hippo]'s mouth, and the bronze jaw swings open, then snaps shut. "She only opens up for gold. Like my accountants. North, the birds." He heads north, toward the screaming.
+
+-- events.16
+    [in aviary & leg>=12 & leg<=12] "My peacocks. Loud, beautiful, and they don't know how to lie. North. Time you met the family." He steps north, out into the night air.
+
+-- events.20
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=UNRELEASED] CAUGHT
+
+      Nando glances past you. No animal. No noise. Nothing. "Nice try."
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=USED] CAUGHT
+
+      "I just put that thing back," Nando says. "Try another one." You don't have another one.
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=RUN2] CAUGHT
+
+      You bolt. So does Nando, and this time nothing lands on his head.
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=ITEM] CAUGHT
+
+      Nando takes it, looks at it, and pockets it. Then he takes you, too.
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=MOVE] CAUGHT
+
+      You make it one step before a hand the size of a skillet closes on your collar.
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=OTHER] CAUGHT
+
+      Nando doesn't wait for you to finish.
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=LEMURS] CAUGHT
+
+      "The lemurs?" Nando snorts. "The lemurs are always loose, friend."
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=TONY] CAUGHT
+
+      "Everybody knows about Tony. That's why I'm standing here."
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1) & key CAUGHT_BY=HIPPO] CAUGHT
+
+      Nando glances at the bronze hippo. "She's not going anywhere. Neither are you."
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+    [flag checkpoint & since(stop 1)] CAUGHT
+
+      A plastic zip tie, a long walk back through the palace, and the Don waiting at the end of it. "An investor," he says. "I'm so disappointed."
+
+      GAME OVER.
+
+-- events.21
+    [flag escape & clock<=0 & any(in elevator | in foyer | in trophy | in dining | in landing | in gallery | in office) & key SECRETS>=1] BIG FOOTPRINT
+
+      A shadow the size of a delivery truck fills the doorway. A hand like a catcher's mitt lifts you off your feet, gently, the way you'd pick up a kitten, and carries you back to the broken enclosure to keep him company. Big Tony is lonely. Big Tony is also very, very strong. Back in the enclosure, he takes everything out of your jacket and lines it up neatly on the straw. Big Tony keeps things.
+
+      GAME OVER.
+    [flag escape & clock<=0 & any(in elevator | in foyer | in trophy | in dining | in landing | in gallery | in office)] BIG FOOTPRINT
+
+      A shadow the size of a delivery truck fills the doorway. A hand like a catcher's mitt lifts you off your feet, gently, the way you'd pick up a kitten, and carries you back to the broken enclosure to keep him company. Big Tony is lonely. Big Tony is also very, very strong.
+
+      GAME OVER.
+    [flag escape & clock<=0 & any(in salon | in atrium | in aviary) & key SECRETS>=1] BIG FOOTPRINT
+
+      Every pane in the room goes dark at once. Then the doorway does too. A hand like a catcher's mitt lifts you off your feet, gently, the way you'd pick up a kitten, and carries you back to the broken enclosure to keep him company. Big Tony is lonely. Big Tony is also very, very strong. Back in the enclosure, he takes everything out of your jacket and lines it up neatly on the straw. Big Tony keeps things.
+
+      GAME OVER.
+    [flag escape & clock<=0 & any(in salon | in atrium | in aviary)] BIG FOOTPRINT
+
+      Every pane in the room goes dark at once. Then the doorway does too. A hand like a catcher's mitt lifts you off your feet, gently, the way you'd pick up a kitten, and carries you back to the broken enclosure to keep him company. Big Tony is lonely. Big Tony is also very, very strong.
+
+      GAME OVER.
+    [flag escape & clock<=0 & any(in terrace | in enclosure) & key SECRETS>=1] BIG FOOTPRINT
+
+      The rain stops hitting you. Something is standing over you, and it's breathing. A hand like a catcher's mitt lifts you off your feet, gently, the way you'd pick up a kitten, and carries you back to the broken enclosure to keep him company. Big Tony is lonely. Big Tony is also very, very strong. Back in the enclosure, he takes everything out of your jacket and lines it up neatly on the straw. Big Tony keeps things.
+
+      GAME OVER.
+    [flag escape & clock<=0 & any(in terrace | in enclosure)] BIG FOOTPRINT
+
+      The rain stops hitting you. Something is standing over you, and it's breathing. A hand like a catcher's mitt lifts you off your feet, gently, the way you'd pick up a kitten, and carries you back to the broken enclosure to keep him company. Big Tony is lonely. Big Tony is also very, very strong.
+
+      GAME OVER.
+
+-- events.22
+    [flag escape & clock<=6] Somewhere behind you, a thud rattles the chandeliers.
+
+-- events.23
+    [flag escape & clock<=3] A roar, closer now. Something is sniffing its way through the palace.
+
+-- events.24
+    [flag escape & clock<=1] The floor shakes. You smell wet dog and bad decisions. Move.
+
+-- events.25
+    [flag escape & in gallery] A flashlight hits your face. Nando, the size of a vending machine, blocks the hall. "Hey. Guests don't wander. Why are you up here?" Your legs vote to run. Your brain votes for a good story.
+
+-- events.26
+    [flag escape & in foyer & key RAN] The flashlight finds you again. Nando, breathing hard, with a lemur scratch across one cheek. "You. Again. Why are you down here this time?" Your legs remind you they already had their turn.
+    [flag escape & in foyer] A flashlight hits your face from the bottom of the stairs. Nando again, covered in feathers, hay, or both. "You're still here? Why?" Your legs vote to run. Your brain votes for a good story.
+
+==============================================================================
+SCENERY (examine, smell, listen... by room)
+==============================================================================
+
+-- nouns.R2.marble
+  examine:
+    [TOUR] White marble, polished until you can see the soles of your cheap shoes in it. A gold compass rose is set into the center. All four points read "CHAVA."
+    [ESCAPE] The marble throws the red light back at you. Mud is smeared across the compass rose in bare footprints wider than the tiles.
+  smell:
+    [TOUR] (same as rooms.foyer.verbs.smell)
+    [ESCAPE] (same as rooms.foyer.verbs.smell)
+  listen:
+    [TOUR] (same as rooms.foyer.verbs.listen)
+    [ESCAPE] (same as rooms.foyer.verbs.listen)
+
+-- nouns.R1.mirrors
+  examine:
+    [TOUR] Six of you, from six angles, and not one of them has ever owned a bookstore. You straighten your tie. Five of you do it half a second late.
+    [ESCAPE] Six of you again, sweatier, hair wrecked, collars open. None of them look like Walter Pryce anymore.
+    [SECRETS=1] Six of you, and every jacket has one lump in it. One isn't enough. All six of you know it.
+    [SECRETS=2] Six jackets, each bulging with somebody else's secrets. All six of you look ready to leave.
+    [SECRETS=3] Six of you, every jacket stuffed with the Don's whole life. Six very guilty-looking men. Time to go.
+
+-- nouns.R1.doors
+  examine:
+    [TOUR] Gold doors etched with a looping monogram: S.B.R. Even the elevator knows whose house this is.
+    [ESCAPE] The doors stand open, patient. The monogram catches the red emergency light and holds it.
+  open:
+    [ESCAPE] They're already open. They're waiting for you.
+
+-- nouns.R1.button
+  examine:
+    [TOUR] One button, no numbers. This elevator was built to bring people up. Only the Don decides who goes down.
+    [ESCAPE] One brass button marked LOBBY, worn smooth by nervous thumbs. One press and you're out.
+    [ESCAPE&SECRETS=0] One button marked LOBBY. Not with empty pockets. You didn't come this far for the view.
+    [ESCAPE&SECRETS=1] One button marked LOBBY. One secret isn't a case. It's a rumor. Get another.
+  push:
+    [TOUR] (same as rooms.elevator.on.push)
+
+-- nouns.R1.elevator
+  examine:
+    [TOUR] A gold box that smells like cologne and money. A speaker somewhere plays a string version of a love song, very quietly.
+    [ESCAPE] It hums, doors open, lights steady. It's the calmest thing in the building, and it's waiting for you.
+  smell:
+    [TOUR] (same as rooms.elevator.verbs.smell)
+    [ESCAPE] (same as rooms.elevator.verbs.smell)
+  listen:
+    [TOUR] (same as rooms.elevator.verbs.listen)
+    [ESCAPE] (same as rooms.elevator.verbs.listen)
+
+-- nouns.R1.man
+  examine:
+    [TOUR] Gone before you could tip him. He didn't look like a man who takes tips. He looked like a man who takes names.
+    [ESCAPE] Long gone. Smart man.
+  *:
+    [always] He's gone. Men like that don't wait around.
+
+-- nouns.R2.banisters
+  examine:
+    [TOUR] Real gold leaf, rubbed dull along the right-hand rail where a lot of hands have gripped it on the way up to do business. The left rail still shines.
+    [ESCAPE] The rail is cold under your palm, and it's vibrating. Something heavy is walking around up there.
+    [OUT_GIRAFFE] The rail is cold under your palm, and it's vibrating. Something heavy is walking around up there. A giraffe's head rests on the upper banister like it owns the place, chewing a silk lily from the Don's arrangement. It blinks at you. You blink back.
+  touch:
+    [TOUR] The Don watches you not slide down it.
+
+-- nouns.R2.frames
+  examine:
+    [TOUR] Christenings, weddings, a quinceañera, a baby in a tiny tuxedo. In every one, the Don is either handing someone an envelope or holding someone's baby.
+    [ESCAPE] One frame has fallen and cracked straight across a wedding. Someone is going to hear about that.
+
+-- nouns.R2.step
+  examine:
+    [TOUR] Thirteen up the business side. It looks like every other step, except the shine on it is worn in a small ring, as if someone steps on it more carefully than the rest. The Don's eyes follow yours.
+    [ESCAPE] A hair taller than its neighbors, with a seam you'd never notice unless you were looking. The shine is worn in a ring right in the center, right where a thumb would press.
+    [P3] Pressed flat now. The panel beside it hangs open.
+  search:
+    [TOUR] Your hand drifts toward it. The Don clears his throat. "Admire, Walter. Don't touch."
+    [ESCAPE] You run your fingers around the seam. It moves, just barely. It's waiting for a firm push.
+    [P3] The seam is open now. Nothing behind it but the passage and the cold air.
+
+-- nouns.R2.panel
+  examine:
+    [P3] A narrow passage drops away under the stairs, cold and dark and smelling of wet concrete. It's the Don's back door, not yours. Wherever it goes, it doesn't go to the lobby.
+  go:
+    [P3] You'd fit. You'd also be crawling somewhere with no light, no map, and a clock running. The elevator is right there.
+  enter:
+    [P3] (same as nouns.R2.panel.go)
+  climb:
+    [P3] (same as nouns.R2.panel.go)
+
+-- nouns.R2.shoebox
+  examine:
+    [P3] An Italian shoe brand you'll never afford, emptied of shoes and packed with trouble. The trouble is in your jacket now.
+
+-- nouns.R2.lights
+  examine:
+    [TOUR] Sconces shaped like gold torches, every bulb burning. Nobody in this house has ever opened an electric bill.
+    [ESCAPE] The main lights stutter out every few seconds and the red emergency strips take over. Everything looks like a crime scene. In fairness, it is one.
+
+-- nouns.R2.glass
+  examine:
+    [ESCAPE] It's upstairs, and it's moving. Every crash is a little closer than the last.
+
+-- nouns.R3.cases
+  examine:
+    [TOUR] Museum glass, tiny brass locks, and an alarm sticker on every pane. Not one fingerprint. Somebody in this house polishes glass for a living, and they're very good at it.
+    [ESCAPE] The glass hums every time something heavy lands upstairs. One case has a fresh crack running corner to corner.
+  open:
+    [TOUR] Locked, alarmed, and the Don is standing close enough to smell your aftershave. You admire from a distance.
+    [ESCAPE] Break museum glass, set off one more alarm, and carry a diamond pistol past Nando? You're a detective, not a magpie.
+  break:
+    [TOUR] (same as nouns.R3.cases.open)
+    [ESCAPE] (same as nouns.R3.cases.open)
+  smell:
+    [always] (same as rooms.trophy.verbs.smell)
+  listen:
+    [TOUR] (same as rooms.trophy.verbs.listen)
+    [ESCAPE] (same as rooms.trophy.verbs.listen)
+
+-- nouns.R3.rifle
+  examine:
+    [TOUR] Gold from stock to barrel, engraved with roses and the initials S.B.R. A tiny brass plate reads "A gift from friends." The friends didn't sign it.
+    [ESCAPE] Still gold, still behind glass, still useless to you. In a house full of real problems, it's the one thing here that can't hurt anybody.
+  search:
+    [always] It's behind locked museum glass. You search it with your eyes, which is all anyone gets.
+  open:
+    [always] It's locked behind museum glass, and the case isn't opening.
+  smell:
+    [always] Glass cleaner. The glass is the only part you can reach.
+  handle:
+    [TOUR] Your fingertips meet the glass, and the Don's eyes meet your fingertips. You take them back.
+    [ESCAPE] Locked behind glass. Leave it.
+
+-- nouns.R3.roses
+  examine:
+    [TOUR] Hand-cut roses twisting down the barrel, every one with a thorn. Somebody spent a year on this and probably never got a thank-you.
+    [ESCAPE] Gold roses, gold thorns, red light. Pretty. No time for pretty.
+  search:
+    [always] (same as nouns.R3.rifle.search)
+  open:
+    [always] (same as nouns.R3.rifle.open)
+  smell:
+    [always] (same as nouns.R3.rifle.smell)
+  handle:
+    [TOUR] (same as nouns.R3.rifle.handle)
+    [ESCAPE] (same as nouns.R3.rifle.handle)
+
+-- nouns.R3.pistol
+  examine:
+    [TOUR] The grip is paved with diamonds that spell out a saint's name in tiny glittering letters. It's the kind of object a museum would bid on and a court would keep as evidence.
+    [ESCAPE] Diamonds throw red light across the ceiling in a thousand little sparks. Not your problem tonight.
+  search:
+    [always] (same as nouns.R3.rifle.search)
+  open:
+    [always] (same as nouns.R3.rifle.open)
+  smell:
+    [always] (same as nouns.R3.rifle.smell)
+  handle:
+    [TOUR] (same as nouns.R3.rifle.handle)
+    [ESCAPE] (same as nouns.R3.rifle.handle)
+
+-- nouns.R3.diamonds
+  examine:
+    [TOUR] You'd guessed a small town. Up close, you revise that: a medium town, with a stadium.
+    [ESCAPE] Still there. Still not yours. Still not the job.
+  search:
+    [always] (same as nouns.R3.rifle.search)
+  open:
+    [always] (same as nouns.R3.rifle.open)
+  smell:
+    [always] (same as nouns.R3.rifle.smell)
+  handle:
+    [TOUR] (same as nouns.R3.rifle.handle)
+    [ESCAPE] (same as nouns.R3.rifle.handle)
+
+-- nouns.R3.headline
+  examine:
+    [TOUR] A front page about a big arrest: a rival boss led out in handcuffs, blurred by camera flash. Someone cut the name out with nail scissors, very neatly. The Don doesn't keep his enemies' names. He keeps their bad days.
+    [ESCAPE] The frame hangs crooked now, and the hole where the name used to be looks like a tiny window into the wall.
+  search:
+    [always] (same as nouns.R3.rifle.search)
+  open:
+    [always] (same as nouns.R3.rifle.open)
+  smell:
+    [always] (same as nouns.R3.rifle.smell)
+  handle:
+    [TOUR] (same as nouns.R3.rifle.handle)
+    [ESCAPE] (same as nouns.R3.rifle.handle)
+
+-- nouns.R4.piano
+  examine:
+    [TOUR] A white grand, polished like a wedding car. On the music stand there's no sheet music, just a small framed picture of a woman singing with her eyes closed. The Don rests a hand on the lid like it's somebody's shoulder.
+    [ESCAPE] Mama's piano, alone in the flashing light. The picture on the music stand has tipped over, face down.
+    [P1] The mirrored lid stands open, the hidden tray pulled out and empty. The picture on the stand is upright again. You don't remember touching it.
+  smell:
+    [always] (same as rooms.salon.verbs.smell)
+  listen:
+    [TOUR] Silent. It only plays one song, and not for you.
+    [ESCAPE] The strings hum along with every thud.
+    [P1] Silent now. It already sang for you.
+
+-- nouns.R4.lid
+  examine:
+    [TOUR] A sheet of mirror on top of the lid. It shows you the chandelier, the fresco, and a man trying very hard to look like he knows about pianos.
+    [ESCAPE] From an angle, in the flashing light, you catch something: a seam where mirror meets wood, just wide enough for a tray.
+    [P1] Standing open. Your reflection looks up at you from underneath, upside down and very pleased with itself.
+  smell:
+    [always] (same as rooms.salon.verbs.smell)
+  listen:
+    [TOUR] (same as nouns.R4.piano.listen)
+    [ESCAPE] (same as nouns.R4.piano.listen)
+    [P1] (same as nouns.R4.piano.listen)
+
+-- nouns.R4.keys
+  examine:
+    [TOUR] Real ivory, yellowed in the middle where one song has been played a thousand times. The keys at either end look brand new.
+    [ESCAPE] Worn in the middle. Mama's song lives right there, under your fingers, if you know which one it is.
+    [P1] The worn keys are still warm. Or you're imagining it.
+  smell:
+    [always] (same as rooms.salon.verbs.smell)
+  listen:
+    [TOUR] (same as nouns.R4.piano.listen)
+    [ESCAPE] (same as nouns.R4.piano.listen)
+    [P1] (same as nouns.R4.piano.listen)
+
+-- nouns.R4.picture
+  examine:
+    [TOUR] A woman of about forty, eyes closed mid-song, one hand on her heart. Someone wrote on the frame in pencil: "Los domingos." Sundays.
+    [ESCAPE] Face down on the stand. You don't need to see it. You remember her.
+    [P1] Upright again. Mama Rosa, mid-song, eyes closed, exactly as she was.
+
+-- nouns.R4.bench
+  examine:
+    [TOUR] A padded bench, the cushion flattened on the left side only. One person sits here. Always the same one.
+    [ESCAPE] Knocked sideways. You won't need it. You're not staying for the encore.
+  sit:
+    [TOUR] The Don's eyebrows rise one inch. You decide you prefer standing.
+    [ESCAPE] You sit. It's comfortable. That's the problem. You stand back up.
+
+-- nouns.R4.chandelier
+  examine:
+    [TOUR] A waterfall of crystal with one bulb out near the back. In a house this perfect, you wonder who's too scared to change it.
+    [ESCAPE] Swinging. Not much. Enough. Every crystal chimes when something upstairs moves.
+
+-- nouns.R4.fresco
+  examine:
+    [TOUR] Clouds, cherubs, and a ring of angels gazing down in approval. One angel, off to the side, has the Don's exact mustache.
+    [ESCAPE] In red light, the angels look a lot less approving.
+
+-- nouns.R5.table
+  examine:
+    [TOUR] Twenty place settings, each with a handwritten place card. Yours says "Mr. Pryce (Guest)" in better handwriting than yours. At the far end, one chair has no card at all, and a silver spoon lies beside it, bent double.
+    [ESCAPE] Chairs knocked flat, silver everywhere, and a lemur holding court in the middle of it all. The empty chair at the end is the only one still standing.
+
+-- nouns.R5.placecards
+  examine:
+    [TOUR] Every name in the same looping hand: Mama Rosa's seat at one end, Nonna's at the other, cousins, uncles, a Father Tomás. Yours is squeezed in beside the Don's, which is either an honor or a leash.
+    [ESCAPE] Scattered across the floor. A lemur is eating Father Tomás.
+
+-- nouns.R5.emptychair
+  examine:
+    [TOUR] No card, no plate, just the bent spoon. The Don sees you looking. "My accountant's seat. He's on a leave of absence." He smiles without showing any teeth.
+    [ESCAPE] Still standing, still empty. Now you know how the accountant spent his leave of absence: with a set of keys and a grudge.
+
+-- nouns.R5.bentspoon
+  examine:
+    [TOUR] Solid silver, folded clean in half like a paper clip. Nobody at a dinner party is that strong. Nobody human, anyway.
+    [ESCAPE] You think about who's strong enough to do that. You decide to stop thinking about it and start walking.
+
+-- nouns.R5.grandmothers
+  examine:
+    [TOUR] Mama Rosa on the left, Nonna on the right, facing each other down the length of the table. The frames are the same size and hung at exactly the same height. Somebody measured.
+    [Q1] Same frames, same height. Mama Rosa seems to approve of your answer. Nonna is reserving judgment.
+    [ESCAPE] Both grandmothers watch the lemur on their table. Mama Rosa looks amused. Nonna looks like she wants her spoon.
+
+-- nouns.R5.rosa
+  examine:
+    [TOUR] Painted mid-laugh in a blue rebozo, one hand on her heart like she's about to sing. "Cielito Lindo," every Sunday, the Don said. The painter caught her on a good day.
+    [ESCAPE] Mama Rosa, mid-laugh, mid-song. Every Sunday. You know which song.
+
+-- nouns.R5.nonna
+  examine:
+    [TOUR] Straight-backed in black, holding a wooden spoon like a conductor's baton. She kept time for the singing with it. She also, you suspect, kept order.
+    [ESCAPE] Nonna glares down at the lemur. The lemur, wisely, doesn't look at her.
+
+-- nouns.R5.rebozo
+  examine:
+    [TOUR] Hand-woven, deep blue, patterned with tiny white birds. The same birds are stitched on every napkin on the table.
+    [ESCAPE] Tiny white birds. The real birds upstairs are a lot less peaceful.
+
+-- nouns.R5.woodenspoon
+  examine:
+    [TOUR] Painted so carefully you can see the scorch mark on one side, where it rested on the edge of the pot every Sunday for fifty years.
+    [ESCAPE] The scorched spoon, in a painting, keeping time for nobody.
+
+-- nouns.R5.pots
+  examine:
+    [TOUR] On the sideboard, two pots over two flames: red pozole thick with hominy on the left, Sunday gravy with meatballs on the right. Same size pots. Same flame. Of course.
+    [Q1] Two pots, one family. You get it now.
+    [ESCAPE] Both pots still simmering, somehow. The lemur has been at the pozole.
+  eat:
+    [TOUR] The Don moves the lid back, gently. "After business, Walter. Family eats first."
+    [ESCAPE] You grab a meatball on the way past. Best thing that's happened all night.
+  taste:
+    [TOUR] (same as nouns.R5.pots.eat)
+    [ESCAPE] (same as nouns.R5.pots.eat)
+  search:
+    [always] Hominy in one, meatballs in the other. No secrets, just Sunday.
+  open:
+    [always] The lids are already off. It's dinner, not a safe.
+  listen:
+    [always] (same as rooms.dining.verbs.listen)
+
+-- nouns.R5.napkins
+  examine:
+    [TOUR] Linen napkins stitched with the same white birds as Mama Rosa's rebozo. The silverware is heavy enough to count as exercise.
+    [ESCAPE] Silver all over the floor. Nobody's counting it tonight.
+
+-- nouns.R5.chairs
+  examine:
+    [TOUR] Carved, high-backed, and heavy. Nobody leaves this table early.
+    [ESCAPE] Knocked over in a hurry. One still has a napkin tucked into its collar, as if its owner left mid-bite.
+
+-- nouns.R5.bowl
+  examine:
+    [TOUR] Grapes piled in a silver bowl, untouched. Decoration. In this house, even the fruit is for show.
+    [ESCAPE] Half empty, and the lemur is working on the other half.
+  handle:
+    [TOUR] You pluck a grape, think better of it, and put it back.
+    [ESCAPE] The lemur watches your hand. You take it back.
+  smell:
+    [always] Grapes. Just grapes.
+  search:
+    [always] Grapes, all the way down.
+  listen:
+    [TOUR] Grapes are quiet.
+    [ESCAPE] The grapes are quiet. The lemur eating them is not.
+
+-- nouns.R5.lemur
+  examine:
+    [ESCAPE] It meets your eyes and eats another grape, slowly, at you. It has the confidence of an animal that has never been told no.
+  grab:
+    [ESCAPE] It hisses, keeps the grape, and keeps its dignity. You keep neither.
+  chase:
+    [ESCAPE] (same as nouns.R5.lemur.grab)
+  talk:
+    [always] The lemurs chatter back. It sounds like they're arguing about you.
+
+-- nouns.R6.balcony
+  examine:
+    [TOUR] From up here you can see the whole foyer: the gold compass rose, both staircases, and every step of each. The right staircase has one more than the left.
+    [ESCAPE] The balcony trembles under your hands. Below, the foyer flickers red and dark, red and dark.
+    [P3] Below, the panel in the right staircase gapes open, a black rectangle in all that marble.
+
+-- nouns.R6.foyer
+  examine:
+    [TOUR] Marble and gold all the way down, and the Don's compass rose pointing every direction at once, all of them "CHAVA."
+    [ESCAPE] Red light, black shadows, and at the bottom of it all, the gold elevator. Straight down and you're nearly home.
+
+-- nouns.R6.stairs
+  examine:
+    [TOUR] Twelve steps on the family side, thirteen on the business side, meeting right here at your feet. The top step of the business side shines a little brighter than the rest.
+    [ESCAPE] From above, the thirteenth step on the business side catches the red light a half second before the others.
+    [P3] The business side has a hole in it now. You put it there.
+
+-- nouns.R6.officedoor
+  examine:
+    [TOUR] Heavy oak, and screwed to it, a brass plaque: "S. BELLANDI-REYES, PRESIDENT." President of what, it doesn't say. The Don does love a plaque.
+    [ESCAPE] Wide open, swinging slightly. Nobody's guarding it anymore.
+
+-- nouns.R6.smoke
+  examine:
+    [TOUR] Sweet, expensive, and it follows you around like a second guard.
+    [ESCAPE] Still drifting out of the office, lazy, like it didn't get the memo about the animals.
+  smell:
+    [always] Cedar, cream, and money on fire.
+
+-- nouns.R6.vase
+  examine:
+    [TOUR] A tall vase of white lilies on a marble pedestal, placed exactly where every guest has to walk around it. Even the flowers here make you wait.
+    [ESCAPE] Still standing. Barely. It rocks on its pedestal every time something heavy hits the floor.
+    [OUT_JAGUAR] Knocked flat, lilies everywhere, water soaking into the carpet. Something fast came through here, low to the ground.
+  smell:
+    [always] Lilies, heavy and sweet, like a funeral that went well.
+
+-- nouns.R7.portraits
+  examine:
+    [TOUR] A hundred Don Chavas in gold frames, every one painted by someone who was clearly told to make him taller. Three stand out: a horse, a lion, a saint.
+    [ESCAPE] A hundred painted Dons, every one of them glaring down at you. One hangs crooked, slashed by claws.
+
+-- nouns.R7.horse
+  examine:
+    [TOUR] The Don on a rearing white stallion, sword raised, in a battle that never happened. The horse is real, a plaque says. It lives on a ranch now and does not know it's famous.
+    [ESCAPE] The Don on his stallion, charging nowhere. He doesn't look so brave in red light.
+
+-- nouns.R7.lion
+  examine:
+    [TOUR] The Don with one hand on a lion's mane. The lion looks bored. A small plaque says the lion was also real. It doesn't say where the lion is now, and you decide not to ask.
+    [ESCAPE] The painted lion looks less bored now. It's listening to the thuds, same as you.
+
+-- nouns.R7.saint
+  examine:
+    [TOUR] The Don in a white robe and a painted halo, blessing a crowd of grateful villagers. Real candles burn under it on a little shelf. Kingpins have their own saints. This one just skipped a step and painted himself.
+    [ESCAPE] The candles under the saint are still burning. Of all the things in this house, they're the only ones not panicking.
+  pray:
+    [TOUR] You bow your head. The Don nods approvingly, which might be the most dangerous thing that's happened yet.
+    [ESCAPE] You say a quick one. Couldn't hurt.
+
+-- nouns.R7.crooked
+  examine:
+    [ESCAPE] Four long slashes through the canvas. Too wide for the jaguar. Too high for a lemur. Whatever did it stood taller than a door.
+    [OUT_JAGUAR] Four long slashes through the canvas. Too wide for the jaguar. Too high for a lemur. Whatever did it stood taller than a door. The crooked portrait is on the floor now, and the frame has fresh teeth marks. Busy night for art.
+
+-- nouns.R7.wallpaper
+  examine:
+    [TOUR] Real peacock feathers, glued on one by one, thousands of little eyes watching you walk. Somebody lost a whole summer to this.
+    [ESCAPE] A thousand feather eyes. Now that the real peacocks are screaming, the wallpaper feels personal.
+    [OUT_PEACOCKS] A thousand feather eyes. Now that the real peacocks are screaming, the wallpaper feels personal. Real feathers drift down past the glued ones. Nature, filing a complaint.
+  touch:
+    [always] Soft, and a little dusty. Even the Don's cleaning staff are afraid of the wallpaper.
+
+-- nouns.R7.guard
+  examine:
+    [TOUR] Already gone, his radio crackling around the corner. He moved like a man who's chased a lemur before.
+    [ESCAPE&!CP7_PENDING] No guards in sight. You can hear plenty of them.
+  *:
+    [TOUR] He's gone, radio and all.
+    [ESCAPE&!CP7_PENDING] (same as nouns.R7.guard.examine)
+
+-- nouns.R7.cap
+  examine:
+    [CP7_DONE] Nando's cap, upside down on the carpet. There's a little embroidered lemur on the brim. Someone has a sense of humor about his job.
+
+-- nouns.R8.hippo
+  examine:
+    [TOUR] A life-size bronze hippo, belly-deep in her pool, water arching from her nostrils. A brass name plate on the rim reads "PEPITA." Her mouth is closed tight, and her expression says she knows exactly what she's worth.
+    [ESCAPE] Pepita waits, mouth shut, water still arching from her nostrils like nothing is happening.
+    [ESCAPE&COIN_HELD] Pepita waits, mouth shut. The coin in your pocket suddenly feels heavy.
+    [P2] Pepita's jaw hangs open, and she looks very pleased with herself. Whatever she was guarding, you have it.
+  talk:
+    [TOUR] Pepita maintains a dignified bronze silence. The Don adds, "She likes you. Maybe."
+    [ESCAPE] Pepita maintains a dignified bronze silence.
+  smell:
+    [always] (same as items.mouth.on.smell)
+  listen:
+    [always] (same as items.mouth.on.listen)
+
+-- nouns.R8.fountain
+  examine:
+    [TOUR] The pool is lined with coins, every single one gold, winking up through the water. Nobody has ever dared take one.
+    [ESCAPE] Water slops over the rim with every thud. The gold coins on the bottom shimmer.
+  drink:
+    [always] Chlorine and gold. You'll pass.
+  smell:
+    [always] (same as items.mouth.on.smell)
+  listen:
+    [always] (same as items.mouth.on.listen)
+  handle:
+    [ESCAPE] Cold water, and gold coins set into the bottom. The mouth is the part that opens.
+
+-- nouns.R8.tube
+  examine:
+    [P2] The empty tube bobs in the fountain. The manifest inside is in your jacket, still damp.
+
+-- nouns.R8.roof
+  examine:
+    [TOUR] Rain drums on the glass roof. Every few seconds, lightning turns the whole atrium silver.
+    [ESCAPE] The glass roof shivers with every thud. Lightning flashes, and for one second you see a huge shadow cross the glass, then nothing.
+  handle:
+    [always] It's a glass roof, twenty feet up. You'd need a ladder and a reason.
+
+-- nouns.R8.plants
+  examine:
+    [TOUR] Imported palms, each with a little brass tag naming the country it came from. None of them came legally, and all of them look happier than you.
+    [ESCAPE] The palms are full of lemurs, shaking down fruit like they've been planning it for months.
+    [OUT_GIRAFFE] The palms are full of lemurs, shaking down fruit like they've been planning it for months. The top leaves of every palm have been neatly stripped away. Somebody tall had a snack on the way through.
+  handle:
+    [TOUR] Waxy leaves and a little brass tag. The Don watches you touch his palms.
+    [ESCAPE] The leaves shake. A lemur shakes back.
+  search:
+    [TOUR] Leaves, soil, a brass tag. Nothing hidden.
+    [ESCAPE] A lemur pelts you with a mango. Nothing else in there.
+  smell:
+    [always] Wet soil and something tropical.
+
+-- nouns.R8.lemurs
+  examine:
+    [ESCAPE] A dozen lemurs in the palms. One is wearing a gold chain three sizes too big. It definitely stole it, and it's never been happier.
+  chase:
+    [ESCAPE] The lemur with the chain looks at you like you're the one who doesn't belong here. It might be right.
+  talk:
+    [always] (same as nouns.R5.lemur.talk)
+
+-- nouns.R8.fruit
+  examine:
+    [ESCAPE] Mangoes, mostly, bouncing off the tiles. A banana peel lies right in the middle of the floor, which feels like a warning.
+  eat:
+    [ESCAPE] You catch a mango, look at the clock in your head, and put it back.
+  handle:
+    [always] Bruised mangoes and a banana peel. You leave them for the lemurs.
+  search:
+    [always] Mangoes and a banana peel. No secrets, just a mess.
+  smell:
+    [always] Ripe mango and chlorine.
+  listen:
+    [always] Mangoes thudding onto the tiles.
+
+-- nouns.R9.desk
+  examine:
+    [TOUR] Mahogany, and bare except for the sign, a silver letter opener, and one delivery slip tucked half under the blotter. A desk this clean is either very honest or very careful.
+    [ESCAPE] The drawers hang open, cleaned out. The Don packs fast.
+  open:
+    [TOUR] The Don clears his throat, pleasantly. "Walter. We're partners, not roommates."
+    [ESCAPE] Empty. He took what mattered. The secrets he didn't have time to grab are still hidden where he put them.
+  search:
+    [TOUR] (same as nouns.R9.desk.open)
+    [ESCAPE] (same as nouns.R9.desk.open)
+
+-- nouns.R9.letteropener
+  examine:
+    [TOUR] Solid silver, the handle shaped like a tiny hippo. The Don has a type.
+    [ESCAPE] Gone. Of all the things to grab on his way out.
+  *:
+    [ESCAPE] It's gone. The Don took it with him, of all things.
+
+-- nouns.R9.slip
+  examine:
+    [TOUR] A delivery slip: FORTY KILOS OF BANANAS, EXTRA LARGE, WEEKLY, signed for by someone who pressed so hard the pen went through the paper. Somebody in this house has a very big appetite.
+    [ESCAPE] Somewhere on the floor now, with everything else. You already know who the bananas were for.
+
+-- nouns.R9.chair
+  examine:
+    [TOUR] Oxblood leather, still warm, behind the desk. The visitor's chair across from it is set noticeably lower. You get it. You're supposed to get it.
+    [ESCAPE] Knocked over, one leg in the air, like it fainted.
+  sit:
+    [TOUR] You take the low chair. The Don smiles down at you from the high one. That's the whole meeting, really.
+
+-- nouns.R9.humidor
+  examine:
+    [TOUR] Cedar-lined and the size of a coffin, holding a few hundred cigars. Every band is printed with a tiny portrait of the Don.
+    [ESCAPE] Open and empty. He grabbed the cigars and left the papers. Priorities.
+  smell:
+    [always] Cedar, tobacco, and a little bit of money.
+  open:
+    [TOUR] You lift the lid an inch. The Don lets it close again with one finger.
+    [ESCAPE] Open and empty. Whatever was worth taking, somebody took.
+
+-- nouns.R9.window
+  examine:
+    [TOUR] The city at night, glittering in the rain. Right next door, one empty lot glows under a single streetlight: your "bookstore." It looks very small from up here.
+    [ESCAPE] Sirens down in the streets, heading somewhere else. The empty lot still glows under its streetlight. It would make a great bookstore.
+
+-- nouns.R9.sign
+  examine:
+    [TOUR] Gold frame, block capitals: "LEGITIMATE BUSINESS." Under it, in very small print: "Est. last year."
+    [ESCAPE] Face down on the desk now. Even the sign has stopped pretending.
+
+-- nouns.R9.papers
+  examine:
+    [ESCAPE] Payroll for eleven gardeners, a vet bill for "one (1) sedative dart, EXTRA LARGE, unused," and a banana order. Nothing worth your clock.
+  search:
+    [ESCAPE] You flip through. Gardeners, vets, bananas. No secrets. The Don hid the real ones better than this.
+
+-- nouns.R10.peacocks
+  examine:
+    [TOUR] Nine peacocks, tails dragging like expensive gowns, each with a tiny gold band on one ankle engraved with a name: Reina, Duquesa, Lola, Bianca... They scream at you in turn, like a receiving line.
+    [ESCAPE] All nine are screaming now, in harmony, which is somehow worse.
+    [OUT_PEACOCKS] Gone, into the palace, screaming their way from room to room. A few loose feathers spin in the empty aviary.
+  talk:
+    [always] You say hello. Nine peacocks scream back, in harmony.
+  listen:
+    [always] Nine peacocks, screaming in shifts.
+
+-- nouns.R10.door
+  examine:
+    [TOUR] A glass door with a keypad glowing red. Six digits. You don't have them. The Don does, and he isn't sharing.
+    [ESCAPE] The keypad is smashed, wires sparking. The door rattles in its frame every time a peacock throws itself at it. One good pull would open it.
+    [OUT_PEACOCKS] Hanging open, the keypad dead. Peacocks are somebody else's problem now. Specifically, Nando's.
+
+-- nouns.R10.feathers
+  examine:
+    [TOUR] A few molted feathers on the floor, every one with a perfect iridescent eye.
+    [ESCAPE] Feathers everywhere, and every eye is looking at you.
+    [OUT_PEACOCKS] A blizzard of feathers, still settling. Every eye on the floor looks like it's laughing.
+  handle:
+    [always] Soft, and every one has a perfect little eye. You put it down.
+  smell:
+    [always] (same as rooms.aviary.verbs.smell)
+
+-- nouns.R10.glass
+  examine:
+    [TOUR] Floor-to-ceiling glass, fogged from the inside by bird breath. Someone has drawn a small heart in the fog, low down, at child height.
+    [ESCAPE] The glass walls buzz with every scream.
+
+-- nouns.R10.scuffs
+  examine:
+    [TOUR] Big dull scuffs on the tiles, spaced like footsteps, heading north toward the terrace. They're a very long stride apart.
+    [ESCAPE] The scuffs again, and now some of them are fresh, wet, and heading the other way.
+
+-- nouns.R11.garden
+  examine:
+    [ESCAPE] Clipped hedges, rain-soaked roses, and a flower bed in the shape of the Don's initials. Half the S has been trampled flat.
+    [OUT_JAGUAR] Clipped hedges, rain-soaked roses, and a flower bed in the shape of the Don's initials. Half the S has been trampled flat. A single paw print sits dead center in the flower bed, deep and fresh, pointed toward the stairs.
+
+-- nouns.R11.city
+  examine:
+    [ESCAPE] The whole city, glittering in the rain, completely unaware that a Bigfoot is loose forty floors above it. Down there somewhere: your car, your client, and the empty lot that was going to be a bookstore.
+  smell:
+    [always] Rain and exhaust, forty floors down. It smells like freedom.
+  listen:
+    [always] Sirens far below, heading somewhere else.
+
+-- nouns.R11.giraffe
+  examine:
+    [ESCAPE] She leans over the [giraffegate], chewing, eyelashes like a movie star. She looks at you the way the Don looked at you: sizing you up, deciding whether you're worth the trouble.
+    [OUT_GIRAFFE] Gone. The top leaves of the hedges are gone too. She's having a better night than anybody.
+  pet:
+    [!OUT_GIRAFFE] She lowers her head and lets you scratch her nose. For one second, everything is fine.
+  touch:
+    [!OUT_GIRAFFE] (same as nouns.R11.giraffe.pet)
+  talk:
+    [!OUT_GIRAFFE] She lowers her head, listens politely, and eats a hedge.
+  listen:
+    [always] Slow chewing. She's in no hurry at all.
+
+-- nouns.R11.jaguar
+  examine:
+    [ESCAPE] Black on black, and the only parts you can really see are the eyes, yellow and steady, following you along the fence.
+    [OUT_JAGUAR] Gone. A single deep paw print in the flower bed points toward the stairs. You hope Nando is fast.
+  pet:
+    [!OUT_JAGUAR] You look at the jaguar. The jaguar looks at your hand. You keep your hand.
+  touch:
+    [!OUT_JAGUAR] (same as nouns.R11.jaguar.pet)
+  talk:
+    [!OUT_JAGUAR] The jaguar listens to every word, and you get the strong feeling it's taking notes.
+  listen:
+    [always] Nothing. It's the quietest thing on the roof, and the most frightening.
+
+-- nouns.R11.yard
+  examine:
+    [ESCAPE] A tall iron fence around a patch of lawn, a hay bale, and a brass nameplate: MARIPOSA. Even the giraffe has a plaque.
+    [OUT_GIRAFFE] An empty yard, a half-eaten hay bale, and the brass plaque reading MARIPOSA. She'll be back when she's hungry. Or not.
+
+-- nouns.R11.lemurs
+  examine:
+    [ESCAPE] A troop of lemurs sprinting along the hedges, stealing anything shiny. One of them is wearing the Don's reading glasses.
+  talk:
+    [always] (same as nouns.R5.lemur.talk)
+
+-- nouns.R11.alarms
+  examine:
+    [ESCAPE] Every speaker in the palace, all at once, plus nine screaming peacocks. Nobody is coming to turn it off.
+  listen:
+    [always] Every speaker in the palace, at once. Your ears will be ringing tomorrow.
+
+-- nouns.R11.enclosure
+  examine:
+    [ESCAPE] Bent bars glinting in the dark past the gates. You would honestly rather not.
+
+-- nouns.R11.rain
+  examine:
+    [ESCAPE] Warm rain, sideways wind, and lightning that turns the roof white for one second at a time. Perfect weather for a getaway. Terrible weather for everything else.
+  smell:
+    [always] Warm rain and wet stone.
+  listen:
+    [always] Rain on the leaves, rain on the glass, rain on you.
+
+-- nouns.R12.bars
+  examine:
+    [ESCAPE] Bent outward at exactly hand height. Big Tony has hands. You make a note of that.
+  search:
+    [always] Bent steel, and a tuft of long, reddish hair caught in the gap.
+  handle:
+    [always] The steel is still warm where it bent. That isn't a comforting thought.
+  smell:
+    [always] Wet dog.
+  listen:
+    [always] The bars creak in the wind.
+
+-- nouns.R12.sign
+  examine:
+    [ESCAPE] "BIG TONY — DO NOT FEED." Underneath, in black marker, in different handwriting: "(PLEASE)."
+  search:
+    [always] Just the sign, and the marker underneath: (PLEASE).
+  smell:
+    [always] Brass and rain.
+
+-- nouns.R12.footprints
+  examine:
+    [ESCAPE] Size thirty-something, bare, with long toes. They head for the stairs, turn, and circle back past the enclosure. He's looking for something.
+    [SECRETS>=1] Size thirty-something, heading for the stairs and circling back. You get the sudden, uncomfortable feeling he's looking for whoever has the Don's things.
+  *:
+    [always] They're footprints. Big ones. You'd rather not stand in them.
+  smell:
+    [always] Wet dog and bananas.
+
+-- nouns.R12.floor
+  examine:
+    [ESCAPE] Straw, a mountain of banana peels, and a truck tire hanging from a chain, swinging gently. Big Tony has a tire swing. You don't know why that's the part that scares you.
+  handle:
+    [always] Straw, banana peels, and a tire swing that's still warm. You wipe your hand on your pants.
+  search:
+    [always] Straw, peels, and one very large hair. Nothing you want.
+  smell:
+    [always] (same as rooms.enclosure.verbs.smell)
+  listen:
+    [always] The tire swing creaks on its chain.
+
+-- nouns.ANY.self
+  examine:
+    [TOUR] Walter Pryce, bookstore investor: a cheap gray suit, a tie you bought this morning, and a smile you've been practicing all week.
+    [ESCAPE] The suit is soaked, the tie is gone, and the smile went with it.
+    [SECRETS=1] One lump in your jacket. One isn't enough.
+    [SECRETS=2] Two lumps in your jacket, and you walk like a man carrying a lot more than paper.
+    [SECRETS=3] Your jacket is so full of evidence it practically has a filing system.
+
+-- nouns.ANY.plaque
+  examine:
+    [TOUR] A glossy mockup folded inside your briefing card: THE BELLANDI-REYES READING ROOM, in fake brass letters. It's the only thing in your jacket the Don actually wants.
+    [ESCAPE] Still in your jacket, a little damp. The Don never got his plaque. You never got a bookstore. Fair's fair.
+
+-- nouns.ANY.bookstore
+  examine:
+    [TOUR] The Dog-Eared Page: a cozy bookstore that exists entirely on one index card and in your ability to keep a straight face.
+    [Q2] The Dog-Eared Page. He liked the name. Nobody has ever liked anything you made up this much.
+    [ESCAPE] A bookstore on an empty lot, funded by a man currently running from a giraffe. You'd read that book.
+
+-- nouns.ANY.don
+  examine:
+    [ESCAPE] Gone, south, with every guard he could grab and all the cigars. He left you his house, his animals, and his secrets.
+
+-- nouns.ANY.nando
+  examine:
+    [TOUR] You haven't met Nando yet. You'd remember.
+    [ESCAPE&!CP7_DONE] Not here. You can hear guards shouting somewhere, though. One of them sounds very large.
+    [ESCAPE&CP7_DONE] Somewhere in the palace, busy with an animal you gave him. Keep it that way.
+
+-- nouns.ANY.giraffe
+  examine:
+    [OUT_GIRAFFE] She's around. You can hear her eating the Don's decorations, one expensive bite at a time.
+
+-- nouns.ANY.jaguar
+  examine:
+    [OUT_JAGUAR] Not in here. Probably. You check the shadows twice.
+
+-- nouns.ANY.reina
+  examine:
+    [OUT_PEACOCKS] Somewhere close, Reina is screaming at the furniture.
+
+-- nouns.ANY.tony
+  examine:
+    [TOUR] The Don mentioned the family. He didn't mention anyone called Tony. Yet.
+    [ESCAPE] You haven't seen him. You've seen his footprints, his bent bars, and his banana bill. That's plenty.
+    [BAND_C] You haven't seen him. You can smell him now, though.
+    [BAND_D] You're about to see him.
+  *:
+    [TOUR] Whatever [tony] is, he isn't here. You'd know.
+    [ESCAPE] He isn't in this room. Yet. Don't go looking.
+
+-- nouns.ANY.accountant
+  examine:
+    [TOUR] The Don's accountant is on a "leave of absence," according to the Don. You decide not to ask where he's spending it.
+    [ESCAPE] You never saw him. You can see his work: every open cage in this building.
+  *:
+    [TOUR] He isn't here. According to the Don, he isn't anywhere.
+    [ESCAPE] He isn't here. Wherever he is, he's running faster than you.
+
+-- nouns.ANY.animals
+  examine:
+    [TOUR] Peacocks, a giraffe, a jaguar, lemurs, and one bronze hippo. The Don collects the way other men breathe.
+    [ESCAPE] Loose, everywhere, and every one of them is more at home here than you are.
+
+==============================================================================
+STRIKES
+==============================================================================
+
+-- strike.say
+    [strikes>=2] (same as rooms.foyer.on.use)
+    [any(noted(STRUCK R8.hippo) | noted(STRUCK hippo))] (same as rooms.foyer.on.use)
+    [noted(STRIKE3_BY HIPPO)] (same as rooms.foyer.on.use)
+    [noted(STRIKE3_BY STEP)] (same as rooms.foyer.on.use)
+    [noted(STRIKE3_BY PIANO)] (same as rooms.foyer.on.use)
+    [always] (same as rooms.foyer.on.use)
+
+==============================================================================
+CATEGORY REPLIES (anything of that type)
+==============================================================================
+
+-- categories.ART
+  handle:
+    [TOUR] The Don's eyes follow your hand. You turn the gesture into a thoughtful chin-scratch.
+    [ESCAPE] It doesn't budge, and it doesn't help.
+  open:
+    [always] There's nothing to open. It's art. It opens your mind, allegedly.
+  close:
+    [always] (same as categories.ART.open)
+  search:
+    [always] You check behind it and underneath it. Dust, a hook, a very nice wall.
+  smell:
+    [always] Varnish and money.
+  listen:
+    [always] Art is quiet. That's most of its appeal.
+  sit:
+    [always] No.
+  climb:
+    [always] (same as categories.ART.sit)
+  knock:
+    [always] A solid, expensive sound.
+  break:
+    [TOUR] You'd be out of his house before the pieces stopped bouncing. You keep your hands to yourself.
+    [ESCAPE] Vandalism isn't the job. Getting out is.
+  hit:
+    [TOUR] (same as categories.ART.break)
+    [ESCAPE] (same as categories.ART.break)
+  eat:
+    [always] You're hungry, not desperate.
+  talk:
+    [always] You say a few words to it. It keeps its opinions to itself.
+
+-- categories.FURNITURE
+  handle:
+    [TOUR] It shifts an inch. The Don's eyebrow shifts an inch too. You put it back.
+    [ESCAPE] It scrapes across the floor, very loudly, which helps nobody.
+  open:
+    [always] Nothing to open that you haven't already seen.
+  close:
+    [always] (same as categories.FURNITURE.open)
+  search:
+    [always] You check underneath. Gum? In this house? No. Just very good wood.
+  smell:
+    [always] Polish, wood, and old money.
+  listen:
+    [TOUR] Not a creak. Good furniture keeps quiet.
+    [ESCAPE] It creaks, a little, every time the floor shakes.
+  sit:
+    [TOUR] You sit. The Don waits for you to finish sitting. You stand up again.
+    [ESCAPE] You sit for half a second, remember the clock, and don't.
+  climb:
+    [always] You climb up, look around, and climb down again. Nothing up there but the view of a man wasting time.
+  knock:
+    [always] Solid. Expensive. Hollow nowhere.
+  break:
+    [always] You'd need an axe and a better reason.
+  hit:
+    [always] (same as categories.FURNITURE.break)
+  eat:
+    [always] (same as categories.ART.eat)
+  burn:
+    [always] No matches, no lighter, and no plan for what happens after.
+  talk:
+    [always] (same as categories.ART.talk)
+
+-- categories.FIXTURE
+  handle:
+    [always] Solid. Built by people who were paid very well not to cut corners.
+  open:
+    [always] It doesn't open. Not everything in this house is a secret.
+  close:
+    [always] (same as categories.FIXTURE.open)
+  search:
+    [always] Nothing hidden here. You check anyway. Habit.
+  smell:
+    [always] Polish, marble dust, and the faint smell of fear, which is probably yours.
+  listen:
+    [TOUR] The building hums, quietly, the way expensive buildings do.
+    [ESCAPE] The building hums, and every few seconds, somewhere, something thuds.
+  sit:
+    [always] You lean on it for one second. It holds. Good for it.
+  climb:
+    [TOUR] The Don is watching. Adults don't climb things in this house.
+    [ESCAPE] Up and down, going nowhere. Use the stairs and doors like a normal fugitive.
+  knock:
+    [always] You knock. Nobody answers. Everybody's busy tonight.
+  break:
+    [always] You hurt your hand. The building is fine.
+  hit:
+    [always] (same as categories.FIXTURE.break)
+  eat:
+    [always] (same as categories.ART.eat)
+  burn:
+    [always] (same as categories.FURNITURE.burn)
+  talk:
+    [always] (same as categories.ART.talk)
+
+-- categories.ANIMAL
+  handle:
+    [TOUR] The Don shakes his head. "They bite, amigo. Not all of them. But you won't know which until it's over."
+    [ESCAPE] It gives you a look that ends the idea.
+  pet:
+    [TOUR] (same as categories.ANIMAL.handle)
+    [ESCAPE] (same as categories.ANIMAL.handle)
+  search:
+    [always] You're not searching a live animal. That's how people end up in documentaries.
+  smell:
+    [always] Musk, hay, and outrage.
+  listen:
+    [always] Screaming, chattering, or silent, depending on the animal. All three are bad signs.
+  chase:
+    [always] You chase it for two steps and it chases you back for three.
+  call:
+    [always] You call it. It ignores you, like a cat, even the ones that aren't cats.
+  feed:
+    [always] It doesn't want what you've got.
+  eat:
+    [always] (same as kinds.animal.eat)
+  ride:
+    [always] You picture it. It pictures something else.
+  break:
+    [always] No. Absolutely not. Not in this game.
+  hit:
+    [always] (same as categories.ANIMAL.break)
+  talk:
+    [always] It doesn't answer. It doesn't have to.
+  open:
+    [always] It's an animal, not a door. The gates are what open.
+
+-- categories.FOOD
+  eat:
+    [TOUR] The Don's hand covers yours. "After business."
+    [ESCAPE] One bite. It's incredible. It costs you a turn. Worth it? Debatable.
+  taste:
+    [TOUR] (same as categories.FOOD.eat)
+    [ESCAPE] (same as categories.FOOD.eat)
+  smell:
+    [always] It smells like somebody's grandmother loves them.
+  handle:
+    [always] You stir it. Nobody asked you to stir it.
+  break:
+    [always] Spill Mama's pozole? You'd be out of the house before it hit the floor.
+  talk:
+    [always] (same as categories.ART.talk)
+  search:
+    [always] Just food. Very, very good food.
+  open:
+    [always] It's dinner, not a safe.
+  listen:
+    [always] A slow, happy simmer.
+
+-- categories.PERSON
+  handle:
+    [TOUR] Better not. In this house, people notice hands.
+    [ESCAPE] Better not. Hands to yourself, even now.
+    [TOUR] You touch his sleeve. He looks at your hand until you remove it.
+  search:
+    [always] You're not frisking anybody tonight.
+    [always] You'd lose the hand. You keep the hand.
+  smell:
+    [always] Cologne and nerves. Everybody here wears both.
+    [always] Cologne, cigar, and confidence.
+  listen:
+    [always] You listen. Nobody's saying anything useful.
+    [always] He hums when he's pleased. He isn't humming.
+  hit:
+    [TOUR] You picture it. You picture what happens next. You decide to picture something else.
+
+-- categories.PUZZLE
+  *:
+    [TOUR] The Don is watching. "Admire. Don't touch."
+    [ESCAPE] It's hiding something. This isn't how it opens.
+    [ESCAPE&SOLVED] You already got what it was hiding.
+  talk:
+    [always] (same as categories.ART.talk)
+  smell:
+    [always] Polish, and the particular smell of something expensive being guarded.
+  listen:
+    [TOUR] Silent. It keeps its secrets the way the Don keeps his.
+    [ESCAPE] Silent. Whatever it's hiding, it isn't going to announce it.
+    [ESCAPE&SOLVED] Silent. It already gave up its secret.
+
+-- categories.OWN
+  handle:
+    [always] You pat your jacket. Still there. Good.
+  open:
+    [always] It opens by reading it. Try "read card."
+    [always] Later. In a car, far from here, with the doors locked.
+  smell:
+    [always] Printer ink and nerves.
+    [always] Paper, rubber bands, and a very long prison sentence for somebody.
+  break:
+    [always] You didn't come this far to destroy the evidence.
+  eat:
+    [always] It's not that kind of job.
+
+-- categories.OBJECT
+  handle:
+    [TOUR] You nudge it straight. The Don notices. The Don notices everything.
+    [ESCAPE] You turn it over. It isn't what you came for.
+  open:
+    [always] There's nothing to open. It is what it looks like.
+  close:
+    [always] (same as categories.OBJECT.open)
+  search:
+    [always] You turn it over. Nothing hidden, nothing written on the back.
+  smell:
+    [always] Polish, and somebody else's money.
+  listen:
+    [always] It isn't saying anything.
+  sit:
+    [always] (same as categories.ART.sit)
+  climb:
+    [always] (same as categories.ART.sit)
+  knock:
+    [always] A small, expensive tap.
+  eat:
+    [always] (same as categories.ART.eat)
+  break:
+    [TOUR] (same as categories.ART.break)
+    [ESCAPE] (same as categories.ART.break)
+  hit:
+    [TOUR] (same as categories.ART.break)
+    [ESCAPE] (same as categories.ART.break)
+  talk:
+    [always] (same as categories.ART.talk)
+
+-- categories.OUTDOOR
+  handle:
+    [always] Wet, cold, and no help at all.
+  open:
+    [always] It doesn't open. Up here, only the gates do.
+  close:
+    [always] (same as categories.OUTDOOR.open)
+  search:
+    [always] Rain, leaves, and nothing useful.
+  smell:
+    [always] Wet roses, hay, and animal.
+  listen:
+    [always] Rain and alarms. Mostly alarms.
+  sit:
+    [always] Not in this rain, and not with that clock.
+  climb:
+    [always] Up and down, going nowhere. The way out is inside.
+  knock:
+    [always] You knock. The rain doesn't care.
+  eat:
+    [always] (same as categories.ART.eat)
+  break:
+    [always] You hurt your hand. The roof is fine.
+  hit:
+    [always] (same as categories.OUTDOOR.break)
+  talk:
+    [always] (same as categories.ART.talk)
+
+-- categories.AIR
+  *:
+    [always] There's nothing there to get your hands on.
+  smell:
+    [always] You breathe in. It doesn't help.
+  listen:
+    [always] You listen hard. It doesn't tell you anything new.
+  talk:
+    [always] (same as categories.ART.talk)
+
+==============================================================================
+REPLIES ANYWHERE
+==============================================================================
+
+-- anywhere.hide
+    [TOUR] Hide from your own host? Bold. The Don finds that funny for about a second.
+    [ESCAPE] There's nowhere in this house Big Tony can't reach. Keep moving.
+
+-- anywhere.sneak
+    [always] You tiptoe. On marble. In dress shoes. It's very loud.
+
+-- anywhere.steal
+    [TOUR] Your hand goes toward your pocket and the Don's eyes go to your hand. Not yet.
+    [ESCAPE] You're not a thief. You're a detective removing evidence. It's very different, legally.
+
+-- anywhere.shoot
+    [always] You didn't bring a gun to a meeting with the Don. That was the smartest thing you did today.
+
+-- anywhere.drink
+    [always] A drink would be nice. A drink would be very nice. Later.
+
+-- anywhere.sing
+    [TOUR] You hum a few bars. The Don doesn't join in.
+    [ESCAPE] You hum to keep calm. It doesn't work.
+
+-- anywhere.dance
+    [always] You dance. Nobody sees. That's the first good news tonight.
+
+-- anywhere.sleep
+    [always] Not here. Not tonight. Not with Big Tony up.
+
+-- anywhere.pray
+    [always] You send one up. Couldn't hurt.
+
+-- anywhere.swear
+    [always] You say something your mother wouldn't like. You feel a little better.
+
+-- anywhere.xyzzy
+    [always] A hollow voice says, "Wrong game, detective."
+
+-- anywhere.hello
+    [TOUR] The Don: "Hello, Walter." Every time, like it's the first time.
+    [ESCAPE] Nobody's saying hello back tonight.
+
+-- anywhere.thank
+    [TOUR] The Don: "Thank me with a plaque."
+    [ESCAPE] You thank your lucky stars. They're overworked.
+
+-- anywhere.sorry
+    [TOUR] The Don: "Don't be sorry. Be careful."
+    [ESCAPE] Say it to the giraffe.
+
+-- anywhere.lie
+    [TOUR] You're already lying. You're doing great.
+    [ESCAPE] Save it for Nando.
+
+-- anywhere.bribe
+    [always] There's nobody here to try that on.
+
+-- anywhere.flatter
+    [always] (same as anywhere.bribe)
+
+-- anywhere.shake
+    [always] (same as anywhere.bribe)
+
+-- anywhere.tell
+    [always] (same as anywhere.bribe)
+
+-- anywhere.show
+    [always] (same as anywhere.bribe)
+
+-- anywhere.ask
+    [always] (same as anywhere.bribe)
+
+-- anywhere.hug
+    [always] (same as anywhere.bribe)
+
+-- anywhere.wait
+    [always] You wait. The thudding doesn't.
+    [always] You hold your breath. The house doesn't hold its.
+    [always] You count to three. Big Tony counts faster.
+
+-- anywhere.poison
+    [always] You didn't bring anything but a plaque proposal and bad intentions. Mostly the plaque.
+
+-- anywhere.provoke
+    [always] You glare at nothing in particular. It helps a little.
+
+==============================================================================
+BARE VERBS (no object)
+==============================================================================
+
+-- alone.search
+    [always] You scan the room. Everything you can see is in the description; everything you can touch is in the description too. Try "search <thing>."
+
+-- alone.smell
+    [always] Money, polish, and tension.
+
+-- alone.break
+    [always] Break what?
+
+-- alone.hit
+    [always] You swing at the air. The air wins.
+
+-- alone.chase
+    [always] Chase what? Everything here is faster than you.
+
+-- alone.call
+    [always] You call out. Somewhere, a peacock answers. It isn't helpful.
+
+-- alone.eat
+    [always] You're too nervous to eat, and there's no time.
+
+-- alone.knock
+    [always] Knock on what?
+
+-- alone.sit
+    [always] You sit on the floor for a moment. It's very clean. You get up.
+
+-- alone.climb
+    [always] Climb what? Try "up" or "down."
+
+-- alone.swim
+    [always] No pool. Not even for you.
+
+-- alone.listen
+    [TOUR] Violins somewhere, footsteps on marble, and the Don breathing through his nose.
+
+-- alone.take
+    [always] Take what?
+
+-- alone.touch
+    [always] Touch what?
+
+-- alone.push
+    [always] Push what?
+
+-- alone.pull
+    [always] Pull what?
+
+-- alone.open
+    [always] Open what?
+
+-- alone.close
+    [always] Close what?
+
+==============================================================================
+ROOM TAILS (after a move)
+==============================================================================
+
+-- tails.foyer
+    [always] A giraffe's head hangs over the upper banister, chewing a silk lily.
+    [always] Peacock feathers skid across the marble in the draft.
+    [always] Somewhere nearby, a man yells "GATO! GATO!" and a door slams.
+    [always] Nando's flashlight rolls in a slow circle at the foot of the stairs, still switched on.
+    [always] The jaguar is in here with you. You make no sudden moves.
+
+-- tails.landing
+    [always] The lily vase lies smashed on the carpet.
+    [always] Below, a flashlight beam sweeps the foyer, back and forth, back and forth. Someone's down there.
+    [always] A radio crackles somewhere: "The GATO is in the dining room! It's eating the pozole!"
+    [always] A radio crackles somewhere: "Giraffe on the stairs! I repeat, giraffe on the stairs!"
+    [always] A radio crackles somewhere: "They're in the gallery! No, the atrium! They're everywhere!"
+    [always] The giraffe is in here with you, browsing the ceiling.
+
+-- tails.gallery
+    [always] Loose feathers drift down the hall.
+    [always] Nando's cap lies upside down on the carpet. Somewhere far off, he's shouting at something with four legs.
+    [always] Reina is in here with you, screaming at nothing.
+    [always] (same as tails.landing)
+
+-- tails.atrium
+    [always] Past the fountain, a flashlight beam slides along the portraits in the gallery. Someone's waiting.
+    [always] The tops of the palms have been stripped bare.
+    [always] (same as tails.gallery)
+
+-- tails.aviary
+    [always] Through the glass, a long neck glides past, heading somewhere it definitely isn't allowed.
+
+-- tails.terrace
+    [always] For one second the roof is quiet. Then the palace below you erupts.
+
+-- tails.dining
+    [always] (same as tails.foyer)
+
+==============================================================================
+ONE THING AT A TIME
+==============================================================================
+  :
+    [always] One thing at a time, detective.
+
+==============================================================================
+NPC LINES
+==============================================================================
+
+-- npcLines.0
+    [always] (same as events.25)
+
+-- npcLines.1
+    [always] (same as events.26)
+
+-- npcLines.2
+    [always] (same as events.26)
+
+==============================================================================
+WARNINGS
+==============================================================================
+
+-- warnings.0
+    [always] (same as events.22)
+
+-- warnings.1
+    [always] (same as events.23)
+
+-- warnings.2
+    [always] (same as events.24)
+
+==============================================================================
+BIGFOOT CLOCK BANDS
+==============================================================================
+
+-- bands.lines
+  BAND_A.MARBLE:
+    [always] Far off, something heavy lands. The marble carries it like a drum.
+    [always] A long way off, a door gives up with a crack.
+  BAND_A.GLASS:
+    [always] Somewhere in the building, a thud. Every pane in here hums.
+    [always] The glass ticks, once, like it heard something you didn't.
+  BAND_A.OPEN:
+    [always] Below the roof, far down the stairs, something knocks over something expensive.
+    [always] Under the rain, a low, far-off grunt.
+  BAND_B.MARBLE:
+    [always] A thud, closer. Dust sifts down from the ceiling.
+    [always] Heavy footsteps, two rooms away, maybe one.
+  BAND_B.GLASS:
+    [always] The glass rattles in its frames, and the rattling doesn't stop.
+    [always] A thud shakes every pane at once. A crack runs, then stops.
+  BAND_B.OPEN:
+    [always] The whole roof shivers. Rain jumps on the tiles.
+    [always] The breathing is back, somewhere close, under the wind.
+  BAND_C.MARBLE:
+    [always] Wet dog and bananas. He's close enough to smell.
+    [always] Slow breathing, just past the doorway. Big breaths.
+  BAND_C.GLASS:
+    [always] A shape crosses behind the glass. Tall. Much too tall.
+    [always] The glass fogs from the outside, a big patch, like something is breathing on it.
+  BAND_C.OPEN:
+    [always] Footsteps on the stairs below, and every step shakes the roof.
+    [always] A shadow on the terrace that isn't yours. It moves when you don't.
+  BAND_D.MARBLE:
+    [always] A shadow fills the doorway, and it's still growing.
+    [always] The breathing stops. That's worse.
+  BAND_D.GLASS:
+    [always] A hand the size of a car door presses flat against the glass.
+    [always] Every pane in the room goes dark at once, blocked by something enormous.
+  BAND_D.OPEN:
+    [always] Right behind you, a very large someone clears his throat.
+    [always] The rain stops hitting you. Something is standing over you.
+
+==============================================================================
+TURN FEEDBACK
+==============================================================================
+
+-- feedback.0
+    [always] That cost you a moment.
+
+-- feedback.1
+    [always] Somewhere behind you, the thudding keeps time.
+
+-- feedback.2
+    [always] Wasted breath. Big Tony isn't wasting his.
+
+-- feedback.3
+    [always] The clock doesn't care how that went.
+
+==============================================================================
+NOT HERE
+==============================================================================
+  :
+    [always] (same as messages.cantGo)
+
+==============================================================================
+THE DON'S REACTIONS
+==============================================================================
+
+-- reactions.R3.rifle
+    [always] "Beautiful, no? Admire. Don't touch."
+
+-- reactions.R3.pistol
+    [always] "A gift from a man who is no longer giving gifts."
+
+-- reactions.R4.piano
+    [always] "You like her? She likes very few people."
+
+-- reactions.R4.fresco
+    [always] "The angel on the left? A coincidence." He strokes his mustache.
+
+-- reactions.R5.placecards
+    [always] "I seated you next to me. So I can keep an eye on my investment."
+
+-- reactions.R7.portraits
+    [always] "Don't count them. Nobody likes a man who counts portraits."
+
+-- reactions.R8.hippo
+    [always] "Pepita. Say hello. She won't say it back."
+
+-- reactions.R10.peacocks
+    [always] "Reina. The loud one. She's my favorite."
+
+-- reactions.R2.step
+    [always] "Careful where you look, Walter." Pleasant. Too pleasant.
+
+==============================================================================
+FIRST CLOSE LOOK AT EACH SECRET
+==============================================================================
+
+-- firstLook.ledger
+    [always] You thumb it open. Neat columns of initials and numbers, payments to people with titles instead of names: the Judge, the Captain, the Harbor. Two whole pages are nothing but rubber band orders, thousands of them, because with that much cash you run out of ways to hold it. In the margin, in a different, shakier hand: "He is not paying me enough for this." The accountant.
+
+-- firstLook.manifest
+    [always] Dates, ports, container numbers, and thousands of cases of "premium chiles," shipping every Tuesday, always to the same three ports, always insured for more than chiles could ever be worth. Somebody at customs is about to have a very long week.
+
+-- firstLook.photos
+    [always] A yacht at night, strung with party lights. The Don shaking hands with men whose faces would end careers: a uniform, a politician's smile, a banker's watch. On the back of each one, a date and one word in the Don's handwriting: "Partners."
+
+==============================================================================
+RUN REPORT
+==============================================================================
+
+-- report.lines
+    [always] Secrets: {secrets} of 3 (
+    [any(noted(ENDING W1) | noted(ENDING W2) | noted(ENDING L2))] Turns to spare: {clock}
+    [always] Strikes: {strikes} of 3
+    [always] Alibis used: 
+    [always] . Run: 
+    [always] not used
+    [always] Things examined: {examined} of {examinable}
+    [always] Bonus finds: {bonus} of {bonuses}
+    [noted(ENDING L1)] The tour is the map. The Don told you everything you'd need.
+    [noted(ENDING L2)] A guard wants a reason. Loose animals make good reasons.
+    [noted(ENDING L3)] Big Tony is the clock. Plan the walk back before you start it.
+    [noted(ENDING W1) & key !P1] One secret stayed home. Mama would know where.
+    [noted(ENDING W1) & key !P2] One secret stayed home. Pepita has expensive taste.
+    [noted(ENDING W1) & key !P3] One secret stayed home. Count the steps.
+    [noted(ENDING W2) & examined<=98] Every secret. Not every corner. There's more to see in this house.
+    [noted(ENDING W2)] Every secret, every corner. The Don never stood a chance.
+
+-- report.after
+    [any(noted(ENDING L1) | noted(ENDING L2) | noted(ENDING L3))] 
+
+      Type RESTART to try again, or QUIT to walk away.
+
+==============================================================================
+LOOK CLOSER
+==============================================================================
+
+-- lookCloser.prefix
+    [always] You look closer. 
