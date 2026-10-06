@@ -51,7 +51,8 @@ addon({
   input(words, raw)     before a typed line is read: return new words, or true to stop (handled)
   before(verb, arg, ids)  before every command, including the engine's own (look on entering); true stops it.
                         Runs before the core asks "Which do you mean?", so an add-on can resolve names itself.
-                        It also runs before the game's own replies: use it to block (darkness), not to add
+                        It also runs before the game's own replies: use it to block (darkness), not to add.
+                        When "take all" / "drop all" finds nothing, before hooks get one call with no ids to say why
   reach(ids)            filter what the player can touch or name now (darkness, distance, perception): return the ids
                         to keep. Every command, "take all", talk, ask, look up/down and "arrives"/"leaves" lines use it.
                         Don't call reach() inside it
@@ -109,9 +110,11 @@ Rules:
 5. **Condition.** `conditions: { dark: v => inDark() === v }` lets any game write `if: { dark: true }`.
 6. **Out of reach.** `reach(ids)` keeps only what the player carries while it's dark. Every command finds things through
    `reach()`, so no verb (eat, push, give, take all, talk...) can touch what's in the dark room, without listing verbs.
-7. **Saying so.** `before(v, a, ids)` prints the dark message for `look`, and for a line that names something here that
-   is out of reach now (`ids` is empty, but the name fits a thing in the room). Entering a room runs `look` through `exec`,
-   so walking into the dark is covered.
+7. **Saying so.** `before(v, a, ids)` prints the dark message instead of "You don't see that here." only while it's dark:
+   for `look`, `talk` alone, and a hands-on command that found nothing in reach (`ids` is empty): take, open, examine, use,
+   put, give, show, any verb a thing or kind has a reply for, or any line naming something in the room. Speaking, moving
+   and `drop` are left alone. "take all" that finds nothing also asks the `before` hooks (with no ids), so it gets the dark
+   message too. Entering a room runs `look` through `exec`, so walking into the dark is covered.
 8. **Reacting to changes.** `afterTurn()` handles light changing while the player stands still.
 9. **Checking data.** `validate(need)` reports a dark room when no item gives light.
 

@@ -743,7 +743,10 @@ function turn(v, a, said) {
   if (TURN.cost) { UNDO = JSON.stringify(S); S.count.turns++; }   // count before acting so marks stamp this turn
   const each = MULTI.includes(v) && many(v, a);
   if (!each) return exec(v, a, said);
-  if (!each.length) return EFFECT.free(true), print(msg("nothingAll", { verb: v }));
+  if (!each.length) {   // nothing to take or drop: free, and add-ons' before hooks may say why (darkness), with no ids
+    EFFECT.free(true);
+    return HOOKS.before.some(h => h(v, a, [])) || print(msg("nothingAll", { verb: v }));
+  }
   each.forEach(id => exec(v, id));
 }
 // the things "all"/"everything" (less "except X" / "but X"), "both" or "X and Y" stand for, or null for a single thing

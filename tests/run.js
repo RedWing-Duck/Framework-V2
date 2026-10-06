@@ -236,14 +236,23 @@ test("reach: the light add-on's reach hook makes darkness cover every verb, not 
   for (const c of ["eat bread", "smell the bread", "give bread to rat", "look up", "x bread", "take the loaf"]) {
     g.type(c); assert.equal(g.last(), "It's pitch dark. You can't see a thing.", c); }
   assert.equal(g.get("reach()").includes("bread"), false, "out of reach in the dark");
-  g.type("take all");
+  for (const c of ["take all", "take the moon", "open the moon", "eat the moon"]) {   // finding nothing in the dark: the dark's fault
+    g.type(c); assert.equal(g.last(), "It's pitch dark. You can't see a thing.", c); }
   assert.equal(g.get("S.loc.bread"), "cellar", "take all finds nothing it can reach");
+  g.type("talk");
+  assert.equal(g.last(), "It's pitch dark. You can't see a thing.", "talk to whoever's here: you can't see anyone");
+  g.type("drop the moon");
+  assert.equal(g.last(), "You don't have that.", "dropping what you carry doesn't need light");
   g.type("u", "e", "take lantern", "w", "d", "smell bread", "eat bread");
   assert.deepEqual(g.lines().slice(-3), ["Mold.", "> eat bread", "Crunchy."], "with a light, every verb reaches it again");
+  g.type("take the moon");
+  assert.equal(g.last(), "You don't see that here.", "with a light, the usual message");
+  g.type("take bread", "take all");
+  assert.equal(g.last(), "There's nothing here to take.");
   g.type("drop lantern", "x lantern");
   assert.equal(g.last(), "An oil lantern, burning steadily.", "a light on the floor still lights the room");
   g.type("u", "inventory");
-  assert.equal(g.last(), "You carry nothing.");
+  assert.equal(g.last(), "You carry: stale bread");
 });
 
 test("light: Continue and undo don't reveal a dark room", () => {
