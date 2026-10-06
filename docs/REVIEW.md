@@ -235,3 +235,12 @@ Step 3 of the systems groundwork.
 |---|---|---|
 | The light add-on blocked only `look`, `take` and `examine` in the dark, so you could eat, smell, push or give what you couldn't see | Hook `reach(ids)`: add-ons filter `reach()`, which every command reads; `take all`, `talk`, `ask`, `look up/down` and the arrive/leave lines read it too (`around()`). light keeps only what you carry in the dark, and its `before` says so instead of "You don't see that here.", only while it's dark: for `look`, `talk` alone, and any hands-on command that finds nothing (take, take all, open, examine, use, give...). Speaking, moving and `drop` are untouched. "take all" finding nothing now asks `before` hooks why | reach: the light add-on's reach hook makes darkness cover every verb, not only look, take and examine |
 
+## Tenth pass: dice and skill checks
+
+Step 4 of the systems groundwork.
+
+| Item | Change | Test |
+|---|---|---|
+| Only `rand(n)` and `chance: n`: every game wrote its own dice | Helpers `roll(sides, mod)` and `dice("2d6+1")`; condition `check: { dice, plus, vs }` (total in `{rolled}`); `add` takes dice ("-1d6"). Checks roll once per condition per command, from the seeded generator, so undo and `G.seed` stay honest. The validator checks dice strings and `check` names | dice: check rolls once per condition, {rolled} shows the total, add takes dice; seeded and undo-proof |
+| sundown had no use for props | The player's nerve (`self.nerve`): the coffee raises it, climbing a pine in the yard is a d20 + nerve check against 14 | same test |
+

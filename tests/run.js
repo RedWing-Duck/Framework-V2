@@ -499,6 +499,38 @@ test("unhandled: add-ons answer only after the game's replies, before the built-
   assert.equal(d.get("S.flags.boarded || false"), false);
 });
 
+test("dice: check rolls once per condition, {rolled} shows the total, add takes dice; seeded and undo-proof", () => {
+  const seeded = s => { const g = load(build("tests/words")).boot(); g.run(`G.seed = ${s}`); g.click("bs"); return g; };
+  const play = s => { const g = seeded(s), out = [];
+    for (let i = 0; i < 12; i++) { g.type("wrestle"); out.push(g.last()); }
+    return out; };
+  const a = play(4);
+  assert.deepEqual(play(4), a, "the same seed, the same rolls");
+  for (const l of a) {
+    const [, how, n] = /^(You pin Big Tony!|Big Tony pins you\.) \(Rolled (\d+)\.\)$/.exec(l) || [];
+    assert.ok(how, l); assert.ok(n >= 3 && n <= 22, l);   // 1d20 + 0 nerve + 2
+    assert.equal(how === "You pin Big Tony!", Number(n) >= 12, `${l}: the check compares the total with vs`);
+  }
+  assert.ok(new Set(a).size > 2, "the rolls vary");
+  const g = seeded(9);
+  g.type("poke tony", "wrestle");   // nerve 1 now
+  const first = g.last(); g.type("undo", "wrestle");
+  assert.equal(g.last(), first, "undo can't re-roll a check");
+  g.type("brawl");
+  const b = Number(/Bruises: (\d+)/.exec(g.last())[1]); assert.ok(b >= 2 && b <= 5, "add: \"1d4+1\"");
+  const bad = load(build("tests/words").replace('dice: "1d20", plus', 'dice: "d", plus').replace('bruises: "1d4+1"', 'bruises: "lots"')).boot().problems();
+  assert.ok(bad.some(p => p.includes('"d": dice look like')) && bad.some(p => p.includes('"lots": add takes a number or dice')), bad.join("\n"));
+  // sundown: d20 + the player's nerve against 14; coffee raises nerve
+  const s = newGame(SUN);
+  assert.equal(s.get("prop('self.nerve')"), 0);
+  s.type("drink mug");
+  assert.equal(s.get("prop('self.nerve')"), 4);
+  s.type("s"); for (let i = 0; i < 20 && !s.get("!!S.flags.lookout"); i++) s.type("climb tree");
+  assert.equal(s.get("!!S.flags.lookout"), true, "a d20 + 4 against 14 succeeds sooner or later");
+  s.type("climb tree");
+  assert.equal(s.last(), "Once was enough.");
+});
+
 test("pointing: a word narrows a name before asking, 'the other one', 'both', 'all except'", () => {
   const g = WORDS();
   g.type("take chipped cup");

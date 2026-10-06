@@ -2,7 +2,8 @@
 // Test game for the word layer: two slots, narrowing by a word, "the other one", "both", "all except",
 // pronouns by kind, proper names, names that follow the state, narrated moves, oops, brief, transcript;
 // replies in slot order (the letter's own "show" vs Big Tony's); up and down in the hall (look up / look down, level);
-// props (Big Tony's patience and mood, the player's nerve) and the changed and unhandled hooks (./watch.js).
+// props (Big Tony's patience and mood, the player's nerve) and the changed and unhandled hooks (./watch.js);
+// dice: a check (wrestle) and a dice add (brawl).
 // The study holds a name with a role word in it, articles, and a proper name that shares a word with an item.
 // ./first.js and ./second.js both answer "ring" in a before hook: the one listed first in build.json wins.
 const G = {
@@ -46,6 +47,9 @@ const G = {
     poke: [{ if: { here: "tony", min: { "tony.patience": 1 } }, add: { "tony.patience": -1, "self.nerve": 1 }, say: "You poke {the:what}. Nerve: {self.nerve}." },
       { if: { prop: { "tony.mood": ["furious", "sulking"] } }, say: "Better not." }, "Poke what?"],
     gauge: "Patience: {tony.patience}, mood: {tony.mood}.",
+    wrestle: [{ if: { here: "tony", check: { dice: "1d20", plus: ["self.nerve", 2], vs: 12 } }, say: "You pin Big Tony! (Rolled {rolled}.)" },
+      { if: { here: "tony" }, say: "Big Tony pins you. (Rolled {rolled}.)" }, "Nobody to wrestle."],
+    brawl: { add: { bruises: "1d4+1" }, say: "Bruises: {bruises}." },
     calm: { prop: { "tony.patience": null, "tony.mood": null }, say: "Big Tony takes a deep breath." },
     hit: [{ if: { with: "lamp" }, say: "You swing {the:with} at {the:what}." }, "Hit it with what?"] },
   events: [{ every: 2, if: { flag: "walking" }, move: { ana: ["hall", "kitchen"] } }]

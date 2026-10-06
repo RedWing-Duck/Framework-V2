@@ -193,6 +193,19 @@ on: { clap: [{ if: { level: { bat: "up" } }, level: { bat: "down" }, say: "The [
 `look up` shows the rafters and the bat; `look down` the dust and the mouse. The clap moves the bat down for good (the game
 remembers it), and `level: { bat: null }` would send it back up. A level can also follow the state with TEXT variants.
 
+## A skill check
+
+```js
+self: { name: "yourself", props: { nerve: 0 } },
+mug: { ..., on: { drink: { add: { "self.nerve": 4 }, say: "Cold, bitter, heroic." } } },
+yard: { ..., on: { climb: [{ if: { flag: "lookout" }, free: true, say: "Once was enough." },
+  { if: { check: { plus: "self.nerve", vs: 14 } }, set: "lookout", say: "Up to the first fork..." },
+  "Your boot slips on the sap. You'd need more nerve for that."] } }
+```
+
+From sundown: a d20 plus the player's nerve against 14. Each try costs a turn, the coffee makes it likelier, and the fail line
+says what would help. Show the roll with `{rolled}` if the game is that kind of game; damage is `add: { "guard.hp": "-1d6" }`.
+
 ## Gotchas
 
 - Break-test every game before it ships: paste a few thousand words, type `[some_id]`, `constructor` and `__proto__`, reload mid-game, and tamper with localStorage. The engine handles all of these; the test suite checks them for the samples.

@@ -56,7 +56,7 @@ const G = {
   verbs: { smell: { free: true }, listen: { free: true }, think: { free: true, aliases: ["ponder"] },
     search: { fail: "You find nothing." }, board: { aliases: ["nail"], fail: "There's nothing to board up there." } },
   messages: { huh: { rotate: ["Huh?", "Say that again, slower.", "The wind doesn't understand you either."] } },
-  self: { name: "yourself", on: { smell: "Sawdust and nerves.", think: { hints: "You take stock." } } },
+  self: { name: "yourself", props: { nerve: 0 }, on: { smell: "Sawdust and nerves.", think: { hints: "You take stock." } } },   // "self.nerve": coffee raises it, climbing tests it
   on: { pray: "Couldn't hurt.", sleep: [{ if: "DUSK", say: "Not now. Not with the light going." }, "You're not tired. You're terrified."] },
 
   rooms: {
@@ -68,7 +68,10 @@ const G = {
       up: [{ if: "DUSK", text: "The sky over the pines is going orange, then bruise-purple." }, "Tall pines, and a sky that's running out of daylight."],
       down: "Pine needles, and in them, prints much bigger than your boots.",
       desc: "Pine needles and long shadows. The cabin is north, the shed east.",
-      on: { listen: { say: { random: ["Something big moves, far off in the trees.", "A branch cracks. Then nothing.", "Wind, and under it, breathing?"] } } } },
+      on: { listen: { say: { random: ["Something big moves, far off in the trees.", "A branch cracks. Then nothing.", "Wind, and under it, breathing?"] } },
+        climb: [{ if: { flag: "lookout" }, free: true, say: "Once was enough." },   // a skill check: d20 + nerve against 14
+          { if: { check: { plus: "self.nerve", vs: 14 } }, set: "lookout", say: "Up to the first fork, sap on your palms. Pines in every direction, and no road. Something big is moving between them, slowly, toward the cabin." },
+          "Your boot slips on the sap, and you land on your back in the needles. You'd need more nerve for that."] } },
     shed: { name: "Tool Shed", exits: { west: "yard" }, up: "Cobwebs in every corner of the roof.", down: "Oil stains on a dirt floor.",
       desc: [{ if: { visited: "shed" }, text: "The shed, smelling of oil. A [toolbox] on the bench. The yard is west." },
         "A lean-to shed that smells of oil and rust. Cobwebs in every corner, and a [toolbox] on the bench. The yard is west."] }
@@ -91,7 +94,7 @@ const G = {
     plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window." },
     crowbar: { name: "crowbar", kind: "tool", desc: "Cold iron. Better than nothing." },   // the rug's level effect puts it on the floor   // no "at": offstage until the rug is searched
     mug: { name: "mug of coffee", at: "shelf", kind: "food", desc: "Cold. This morning's.",
-      on: { drink: [{ if: { not: { flag: "drank" } }, set: "drank", log: "coffee", say: "Cold, bitter, heroic." }, "The mug is empty."] } }
+      on: { drink: [{ if: { not: { flag: "drank" } }, set: "drank", log: "coffee", add: { "self.nerve": 4 }, say: "Cold, bitter, heroic." }, "The mug is empty."] } }
   },
 
   kinds: {   // replies every thing of a kind shares; {it} is the thing
@@ -319,6 +322,16 @@ function print(t, c, plain) {
 
 // ---- random: a seeded generator kept in S, so saves, undo and "again" can't re-roll a result.
 // rand(n) is a whole number from 0 to n-1. Set G.seed for the same rolls every game (handy in tests).
+// roll(sides, mod): one die, 1..sides, plus mod. dice("2d6+1"): a dice string ("d20", "3d6", "-1d4"; a number is itself)
+const roll = (sides = 6, mod = 0) => 1 + rand(sides) + mod;
+const DICE = /^([+-]?)(\d*)d(\d+)([+-]\d+)?$/i;
+function dice(d) {
+  if (typeof d === "number") return d;
+  const m = DICE.exec(String(d).replace(/\s+/g, ""));
+  if (!m) return 0;
+  let t = 0; for (let i = 0; i < (Number(m[2]) || 1); i++) t += roll(Number(m[3]));
+  return (m[1] === "-" ? -t : t) + Number(m[4] || 0);
+}
 function rand(n) {
   let t = S.seed = (S.seed + 0x6D2B79F5) | 0;   // mulberry32
   t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
@@ -384,18 +397,22 @@ const COND = tbl({
   prop: o => Object.entries(o).every(([k, v]) => list(v).includes(prop(k))),   // prop:{ "guard.mood": "angry" } (or a list: any of them)
   what: v => list(v).includes(LINE.what),                   // the direct thing is one of these: "give BREAD to the guard"
   with: v => list(v).includes(LINE.with),                   // the second thing is one of these: "give the bread to the GUARD"
-  chance: n => rand(100) < n                               // passes n times in 100 (test() rolls it once per command)
+  chance: n => rand(100) < n,                              // passes n times in 100 (test() rolls it once per command)
+  // a skill check: dice (default "1d20") plus props, counters or numbers, against a number or a prop. The total is {rolled}
+  check: c => { const t = dice(c.dice ?? "1d20") + list(c.plus ?? []).reduce((s, p) => s + (typeof p === "number" ? p : propNum(p)), 0);
+    S.count.rolled = t; return t >= (typeof c.vs === "number" ? c.vs : propNum(c.vs)); }
 });
-// chance is rolled once per condition per command, so checking the same "if" twice in a turn gives one answer
-const ROLLS = new Map(), roll = c => { if (!ROLLS.has(c)) ROLLS.set(c, COND.chance(c.chance)); return ROLLS.get(c); };
+// chance and check roll once per condition per command, so testing the same "if" twice in a turn gives one answer
+const ROLLS = new Map(), once = (c, k) => { const key = `${k}`; if (!ROLLS.has(c)) ROLLS.set(c, {}); const r = ROLLS.get(c);
+  if (!(key in r)) r[key] = COND[k](c[k]); return r[key]; };
 const test = c => !c ? true : typeof c === "string" ? COND.is(c)
-  : Object.keys(c).every(k => k === "chance" ? roll(c) : !own(COND, k) || COND[k](c[k]));
+  : Object.keys(c).every(k => k === "chance" || k === "check" ? once(c, k) : !own(COND, k) || COND[k](c[k]));
 
 // ---- effects: run in table order; say, do, goto and end always run last
 const EFFECT = tbl({
   set: v => list(v).forEach(f => S.flags[f] = true),
   unset: v => list(v).forEach(f => delete S.flags[f]),
-  add: o => { for (const k in o) setProp(k, propNum(k) + o[k]); },   // a counter, or a prop: add:{ "guard.hp": -3 }
+  add: o => { for (const k in o) setProp(k, propNum(k) + dice(o[k])); },   // a counter, or a prop: add:{ "guard.hp": -3 } or "-1d6"
   mark: v => list(v).forEach(m => S.mark[m] = S.count.turns),
   move: o => { for (const id in o) { const r = o[id], was = shown(id), from = where(id);   // a list is a route: step to the next room
     setLoc(id, Array.isArray(r) ? r[(r.indexOf(S.loc[id]) + 1) % r.length] : r);
@@ -856,7 +873,13 @@ function validate() {
         if (k === "set" || k === "unset") list(x).forEach(f => made.flag[f] = 1);
         if (k === "mark") list(x).forEach(m => made.mark[m] = 1);
         if (k === "since") for (const m in x) used.mark[m] = q;
-        if (k === "add") for (const c in x) made.counter[c] = 1;
+        if (k === "add") for (const c in x) { made.counter[c] = 1;
+          need(typeof x[c] === "number" || DICE.test(String(x[c]).replace(/\s+/g, "")), q, `"${x[c]}": add takes a number or dice ("1d6", "-2d4+1")`); }
+        if (k === "check" && x && typeof x === "object") { made.counter.rolled = 1;
+          need(x.dice == null || DICE.test(String(x.dice).replace(/\s+/g, "")), q, `"${x.dice}": dice look like "1d20" or "2d6+1"`);
+          need(x.vs != null, q, 'check needs "vs": a number or a prop to beat');
+          for (const p of [...list(x.plus ?? []), x.vs]) if (typeof p === "string") { const [id] = propKey(p);
+            need(id === null || isThing(id) || id === "self", q, `"${p}": no item or NPC "${id}"`); } }
         if (["min", "max", "eq", "add", "prop"].includes(k) && x && typeof x === "object") for (const c in x) {   // "guard.hp": a thing's prop
           const [id, p] = propKey(c);
           if (id !== null) need(isThing(id) || id === "self", q, `"${c}": no item or NPC "${id}"`);
@@ -864,7 +887,7 @@ function validate() {
           if (k === "prop") made.counter[c] = 1; }
         if (own(REFS, k)) REFS[k](x, (ok, m) => need(ok, q, m));
       }
-      if (!["add", "min", "max", "eq", "since", "move", "level", "prop"].includes(k)) walk(x, q, "data");   // their keys are names
+      if (!["add", "min", "max", "eq", "since", "move", "level", "prop", "check"].includes(k)) walk(x, q, "data");   // their keys are names
     }
   };
   need(room(G.start), "start", `no room "${G.start}"`);

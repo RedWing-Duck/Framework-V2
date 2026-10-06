@@ -86,7 +86,8 @@ to WITH")), `nm(id)` (a thing's current name), `levelOf(id)` ("up", "down" or nu
 `setProp("guard.hp", 7)` / `setLoc(id, where)` (change one and tell the `changed` hooks: use these, not `S.props` or `S.loc`), `bySlot(ids)` (the order
 replies are asked in: the second slot, the direct thing, then the rest), `the(id)` / `a1(id)` ("the [id]", "a [id]", or "[id]" for a proper name), `TURN` (`TURN.cost`: this command costs a turn; `TURN.free`: it was refunded),
 `store(key, value)` / `load(key)` (browser storage, namespaced by the game's title), `rand(n)` (a whole number
-from 0 to n-1, from the seeded generator in `S`: use it, never `Math.random`, so undo and saves stay honest), `$`, `out`.
+from 0 to n-1, from the seeded generator in `S`: use it, never `Math.random`, so undo and saves stay honest), `roll(sides, mod)`
+(one die, 1 to sides, plus mod), `dice("2d6+1")` (a dice string; a number is itself), `$`, `out`.
 Reusing a name that's already taken is reported as a problem on the start menu.
 
 Rules:

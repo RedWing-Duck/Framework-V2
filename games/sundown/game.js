@@ -12,7 +12,7 @@ const G = {
   verbs: { smell: { free: true }, listen: { free: true }, think: { free: true, aliases: ["ponder"] },
     search: { fail: "You find nothing." }, board: { aliases: ["nail"], fail: "There's nothing to board up there." } },
   messages: { huh: { rotate: ["Huh?", "Say that again, slower.", "The wind doesn't understand you either."] } },
-  self: { name: "yourself", on: { smell: "Sawdust and nerves.", think: { hints: "You take stock." } } },
+  self: { name: "yourself", props: { nerve: 0 }, on: { smell: "Sawdust and nerves.", think: { hints: "You take stock." } } },   // "self.nerve": coffee raises it, climbing tests it
   on: { pray: "Couldn't hurt.", sleep: [{ if: "DUSK", say: "Not now. Not with the light going." }, "You're not tired. You're terrified."] },
 
   rooms: {
@@ -24,7 +24,10 @@ const G = {
       up: [{ if: "DUSK", text: "The sky over the pines is going orange, then bruise-purple." }, "Tall pines, and a sky that's running out of daylight."],
       down: "Pine needles, and in them, prints much bigger than your boots.",
       desc: "Pine needles and long shadows. The cabin is north, the shed east.",
-      on: { listen: { say: { random: ["Something big moves, far off in the trees.", "A branch cracks. Then nothing.", "Wind, and under it, breathing?"] } } } },
+      on: { listen: { say: { random: ["Something big moves, far off in the trees.", "A branch cracks. Then nothing.", "Wind, and under it, breathing?"] } },
+        climb: [{ if: { flag: "lookout" }, free: true, say: "Once was enough." },   // a skill check: d20 + nerve against 14
+          { if: { check: { plus: "self.nerve", vs: 14 } }, set: "lookout", say: "Up to the first fork, sap on your palms. Pines in every direction, and no road. Something big is moving between them, slowly, toward the cabin." },
+          "Your boot slips on the sap, and you land on your back in the needles. You'd need more nerve for that."] } },
     shed: { name: "Tool Shed", exits: { west: "yard" }, up: "Cobwebs in every corner of the roof.", down: "Oil stains on a dirt floor.",
       desc: [{ if: { visited: "shed" }, text: "The shed, smelling of oil. A [toolbox] on the bench. The yard is west." },
         "A lean-to shed that smells of oil and rust. Cobwebs in every corner, and a [toolbox] on the bench. The yard is west."] }
@@ -47,7 +50,7 @@ const G = {
     plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window." },
     crowbar: { name: "crowbar", kind: "tool", desc: "Cold iron. Better than nothing." },   // the rug's level effect puts it on the floor   // no "at": offstage until the rug is searched
     mug: { name: "mug of coffee", at: "shelf", kind: "food", desc: "Cold. This morning's.",
-      on: { drink: [{ if: { not: { flag: "drank" } }, set: "drank", log: "coffee", say: "Cold, bitter, heroic." }, "The mug is empty."] } }
+      on: { drink: [{ if: { not: { flag: "drank" } }, set: "drank", log: "coffee", add: { "self.nerve": 4 }, say: "Cold, bitter, heroic." }, "The mug is empty."] } }
   },
 
   kinds: {   // replies every thing of a kind shares; {it} is the thing

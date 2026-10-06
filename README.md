@@ -72,11 +72,11 @@ To try them, download any file in `dist/`, open it in a browser, and type `help`
 - **Parser:** verb plus things, two-object commands ("give the bread to the guard"), "Which do you mean?", pronouns, `all` / `all except`, "the other one", `oops`, and `again`
 - **World:** rooms, containers and surfaces, things up high or underfoot (`look up` / `look down`), and names that change
 - **People:** branching dialogue, plus ask/tell topics
-- **Logic:** flags, counters, props (named numbers and words on any thing or the player: health, gold, mood), named conditions, timed and repeating events, random and rotating text
+- **Logic:** flags, counters, props (named numbers and words on any thing or the player: health, gold, mood), dice and skill checks, named conditions, timed and repeating events, random and rotating text
 - **Player tools:** undo, restart, brief mode, and transcripts
 - **Validator:** catches broken references and data mistakes at build time
 
-**Out of scope by design:** there's no combat, economy, skill checks, or NPC schedules. Counters, `rand`, `status` and hooks are the building blocks for those, and they get built as add-ons when a week's idea needs them.
+**Out of scope by design:** there's no combat, economy, or NPC schedules. Props, dice and skill checks (`check:`), `status` and hooks are the building blocks for those, and they get built as add-ons when a week's idea needs them.
 
 ---
 

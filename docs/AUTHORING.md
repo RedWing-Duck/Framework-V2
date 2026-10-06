@@ -36,8 +36,9 @@ TEXT:   a string, or a list of variants: [ { if:COND, text:TEXT }, ..., "fallbac
         [id] shows a thing's name, styled. {counter} shows a counter, {guard.hp} a prop. {it} is the thing being acted on,
         {what} and {with} the two slots. {the}, {The}, {a}, {A} add an article to {it}; {the:with}, {A:what}... to a slot.
 COND:   { has, here, in, flag, is, seen, visited, open, inside:{ item:"holder" }, level:{ id:"up" }, what, with, not:COND, any:[COND], all:[COND],
-          min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, prop:{ "id.key": value | [values] }, since:{ mark:n }, said:"a|b", chance:n }
-        A counter name with a dot ("guard.hp") is that thing's prop, in min/max/eq and add.
+          min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, prop:{ "id.key": value | [values] }, since:{ mark:n }, said:"a|b", chance:n,
+          check:{ dice:"1d20", plus:"self.dex" | [..], vs:15 | "guard.ac" } }
+        A counter name with a dot ("guard.hp") is that thing's prop, in min/max/eq and add. add also takes dice: "-1d6".
         has/here/flag/is/seen/visited take one name or a list (all must pass); in takes a room or a list (any).
 EFFECT: { say:TEXT, set, unset, give, take, open, close (one or a list), move:{ id: where }, level:{ id:"up" | "down" | null }, add:{ counter:n },
           prop:{ "id.key": value | null },
@@ -316,6 +317,7 @@ All keys in an `if` must pass. `if: "NAME"` is short for `if: { is: "NAME" }`.
 | `with: "guard"` or a list | the second thing is one of them ("give the bread to the **guard**", "hit the rat with the **stick**") |
 | `inside: { coin: "box" }` | that thing is directly in or on that holder |
 | `level: { kite: "up" }` | that thing's level now is `"up"` (or `"down"`) |
+| `check: { dice: "1d20", plus: "self.dex", vs: 15 }` | a skill check: the dice (default `"1d20"`), plus each of `plus` (props, counters or numbers; one or a list), reach `vs` (a number or a prop). The total is `{rolled}` in text. Rolled once per condition per command, like `chance`, from the seeded generator, so undo can't re-roll it |
 | `chance: n` | a random roll passes, n times in 100. Rolled once per condition per command, so checking the same `if` twice in one turn gives the same answer |
 
 Add-ons add more, such as `dark` (light), `logged` (journal).
@@ -329,7 +331,7 @@ reads the state after everything else changed.
 | Key | Does |
 |---|---|
 | `set` / `unset: "flag"` or a list | turns flags on or off |
-| `add: { counter: n }` | adds n (negative subtracts); `"guard.hp"` is a prop |
+| `add: { counter: n }` | adds n (negative subtracts), or dice: `add: { "guard.hp": "-1d6" }`; `"guard.hp"` is a prop |
 | `mark: "name"` | stamps the current turn, for `since` |
 | `move: { id: where }` | where is a room, `"player"`, a holder, `null` (offstage), or a list (a route: the next room in it, looping) |
 | `take: "item"` or a list | sends it offstage from wherever it is, with a "(Lost: …)" line (message `lost`; reword it to `""` to hide it) |
