@@ -422,6 +422,29 @@ test("up and down: look up / look down show the room's view and the things at th
   assert.ok(v.some(p => p.startsWith("items.kite.level")), v.join("\n"));
 });
 
+test("props: numbers and words on things (and the player), read by conditions and {text}, set by add and prop; the changed hook", () => {
+  const g = WORDS();
+  g.type("gauge tony");
+  assert.equal(g.last(), "Patience: 2, mood: calm.", "data values, in text");
+  g.type("poke tony");
+  assert.equal(g.last(), "You poke Big Tony. Nerve: 1.", "add on a prop, and on the player's (self) with no data value");
+  assert.deepEqual(g.get("S.props"), { tony: { patience: 1 }, self: { nerve: 1 } }, "only what changed is saved");
+  g.type("poke tony");
+  assert.deepEqual(g.lines().slice(-2), ["Big Tony has had enough.", "You poke Big Tony. Nerve: 2."], "the changed hook reacts at once (its say runs first)");
+  g.type("x tony", "poke tony");
+  assert.deepEqual(g.lines().slice(-3), ["Big, and red in the face.", "> poke tony", "Better not."], "prop condition, with a list");
+  assert.ok(g.get("S.watch").includes("tony.patience: 1 -> 0") && g.get("S.watch").includes("tony.mood: calm -> furious"));
+  g.type("take letter");
+  assert.ok(g.get("S.watch").includes("letter.loc: kitchen -> player"), "moves are changes too (key loc)");
+  g.type("calm", "undo");
+  assert.equal(g.get("S.props.tony.mood"), "furious", "props are saved state: undo restores them");
+  g.type("calm", "gauge tony");
+  assert.equal(g.last(), "Patience: 2, mood: calm.", "null puts a prop back to its data value");
+  const bad = load(build("tests/words").replace('min: { "tony.patience": 1 }', 'min: { "tonny.patience": 1 }').replace('patience: 2, mood: "calm"', 'patience: 2, mood: true')).boot().problems();
+  assert.ok(bad.some(p => p.includes('"tonny.patience": no item or NPC "tonny"')), bad.join("\n"));
+  assert.ok(bad.some(p => p.startsWith("npcs.tony.props.mood")), bad.join("\n"));
+});
+
 test("pointing: a word narrows a name before asking, 'the other one', 'both', 'all except'", () => {
   const g = WORDS();
   g.type("take chipped cup");

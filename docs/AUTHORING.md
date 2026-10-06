@@ -14,11 +14,12 @@ rooms:  { id: { name, desc:TEXT, on:REPLIES, exits:{ dir: "roomId" | { to, if:CO
           up:TEXT, down:TEXT ("look up" / "look down") } }
 items:  { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES,
           holds:"in" | "on" (a container or a surface), closed:true | false (can be opened and closed),
-          proper:true (no "the"), article:"an" | "some" | "" (instead of "a"), level:"up" | "down" (or TEXT variants) } }
+          proper:true (no "the"), article:"an" | "some" | "" (instead of "a"), level:"up" | "down" (or TEXT variants),
+          props:{ hp: 10, mood: "calm" } (named numbers and words: see Props) } }
 npcs:   { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, proper, article, level, pronoun:"her" | "him" | "them" | "it",
           on:REPLIES, topics:{ "a|b": REPLY, "*": REPLY },
           dialogue:{ nodeId:{ text:TEXT, options:[{ text, next, if:COND, ...EFFECT }] } } } }
-self:   { name, aliases:[], kind, on:REPLIES }   the player as a target: "smell me", "think"
+self:   { name, aliases:[], kind, on:REPLIES, props }   the player as a target: "smell me", "think"; "self.hp" is the player's prop
 on:     REPLIES   the game's own replies, tried after the room's
 kinds:  { kind: REPLIES }   replies every thing of that kind shares ("eat" for every "tool")
 verbs:  { verb: { aliases:[], free:true, fail:TEXT, hidden:true, carry:true (take the direct thing first) } }
@@ -32,12 +33,14 @@ REPLIES: { verb: REPLY }   REPLY = a string, or a list of { if:COND, ...EFFECT }
 TEXT:   a string, or a list of variants: [ { if:COND, text:TEXT }, ..., "fallback" ]
         { rotate:[TEXT, ...] } shows the next line each time and loops; { ladder:[...] } stays on the last;
         { random:[TEXT, ...] } picks one at random.
-        [id] shows a thing's name, styled. {counter} shows a counter. {it} is the thing being acted on,
+        [id] shows a thing's name, styled. {counter} shows a counter, {guard.hp} a prop. {it} is the thing being acted on,
         {what} and {with} the two slots. {the}, {The}, {a}, {A} add an article to {it}; {the:with}, {A:what}... to a slot.
 COND:   { has, here, in, flag, is, seen, visited, open, inside:{ item:"holder" }, level:{ id:"up" }, what, with, not:COND, any:[COND], all:[COND],
-          min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, since:{ mark:n }, said:"a|b", chance:n }
+          min:{ counter:n }, max:{ counter:n }, eq:{ counter:n }, prop:{ "id.key": value | [values] }, since:{ mark:n }, said:"a|b", chance:n }
+        A counter name with a dot ("guard.hp") is that thing's prop, in min/max/eq and add.
         has/here/flag/is/seen/visited take one name or a list (all must pass); in takes a room or a list (any).
 EFFECT: { say:TEXT, set, unset, give, take, open, close (one or a list), move:{ id: where }, level:{ id:"up" | "down" | null }, add:{ counter:n },
+          prop:{ "id.key": value | null },
           mark, free:true, do:"command", goto:"roomId", end:TEXT }
 ```
 
@@ -105,6 +108,28 @@ key: { name: "iron key", desc: TEXT, at: "cell", aliases: ["rusty"], kind: "tool
 - Pronouns: `it` is the last item acted on, `him` and `her` the last person, `them` the last thing of either kind. A person is
   both `him` and `her` unless `pronoun` says which (`"her"`, `"him"`, `"them"`, or `"it"` for an animal).
   "x letter", "x tony", "show it to him" shows the letter to Tony.
+
+### Props
+
+```js
+guard: { name: "guard", at: "gate", props: { hp: 10, mood: "calm" }, desc: [
+  { if: { prop: { "guard.mood": "angry" } }, text: "He's glaring at you." }, "Bored. ({guard.hp} hp)"],
+  on: { hit: [{ if: { min: { "guard.hp": 4 } }, add: { "guard.hp": -3 }, prop: { "guard.mood": "angry" }, say: "He staggers." },
+              { add: { "guard.hp": -3 }, say: "He goes down." }] } },
+self: { name: "yourself", props: { nerve: 3 } }          // the player: "self.nerve"
+```
+
+- A prop is a named number or word on a thing, an NPC, or the player (`self`). Health, gold, suspicion, fuel, a mood, a faction
+  or the id of another thing (`"player.wielding": "sword"`) are all props. Flags stay flags, and a name without a dot is still a
+  game-wide counter.
+- Name one as `"id.key"`. Numbers work wherever counters do: `min`, `max`, `eq` and `add`, and `{guard.hp}` in any TEXT
+  (the status line too). An unset number is 0. The condition `prop: { "guard.mood": "angry" }` tests any value (a list: any of
+  them), and the effect `prop: { "guard.mood": "angry" }` sets one; `null` puts it back to its data value.
+- `props` in the data are the starting values. Only what changes in play is saved (`S.props`), so undo, Continue and `G.seed`
+  treat props like everything else, and adding a prop to the data later doesn't break saves.
+- The validator checks that `"id.key"` names a real thing (or `self`) and that data values are numbers or words.
+- Add-ons hear every change through the `changed` hook (see `docs/ADDONS.md`): props, counters changed by `add`, and moves.
+  A game without add-ons reacts with events, as with counters: `{ if: { max: { "guard.hp": 0 } }, ... }`.
 
 ### Up and down
 
@@ -281,7 +306,8 @@ All keys in an `if` must pass. `if: "NAME"` is short for `if: { is: "NAME" }`.
 | `visited: "room"` | the player has been there before |
 | `not: COND` | the nested condition fails |
 | `any: [COND, ...]` / `all: [COND, ...]` | at least one / every one passes |
-| `min` / `max` / `eq: { counter: n }` | counter ≥ / ≤ / = n |
+| `min` / `max` / `eq: { counter: n }` | counter ≥ / ≤ / = n; `"guard.hp"` is a prop (see Props) |
+| `prop: { "guard.mood": "angry" }` | that prop has that value (a list: any of them) |
 | `since: { mark: n }` | at least n turns since the mark was set |
 | `said: "a\|b"` | the typed words contain one of the phrases |
 | `open: "box"` | that holder is open |
@@ -302,13 +328,14 @@ reads the state after everything else changed.
 | Key | Does |
 |---|---|
 | `set` / `unset: "flag"` or a list | turns flags on or off |
-| `add: { counter: n }` | adds n (negative subtracts) |
+| `add: { counter: n }` | adds n (negative subtracts); `"guard.hp"` is a prop |
 | `mark: "name"` | stamps the current turn, for `since` |
 | `move: { id: where }` | where is a room, `"player"`, a holder, `null` (offstage), or a list (a route: the next room in it, looping) |
 | `take: "item"` or a list | sends it offstage from wherever it is, with a "(Lost: …)" line (message `lost`; reword it to `""` to hide it) |
 | `give: "item"` or a list | puts it in the inventory, with a "(Received: …)" line (message `received`) |
 | `open` / `close: "box"` or a list | opens or closes a holder, silently |
 | `level: { id: "up" }` | moves a thing up or down in its room; `null` puts it back to its data `level` |
+| `prop: { "guard.mood": "angry" }` | sets a prop (a number or a word); `null` puts it back to its data value |
 | `free: true` | this command costs no turn |
 | `say: TEXT` | prints the text. The variant is picked after the other effects ran |
 | `do: "command"` | runs one command: a verb and its words, as the engine names them (`do: "look"`, `do: "go north"`, `do: "examine coin"`). Aliases, directions alone and phrasal verbs aren't read here: not `do: "x coin"` or `do: "north"` |
@@ -405,10 +432,11 @@ When the page loads, `validate()` checks the data. Every problem is listed on th
 - unknown effect keys in events, replies and dialogue options;
 - missing dialogue nodes, and dialogue with no `start` node;
 - ids used by both an item and an NPC, and things with no name;
-- flags, marks and counters that are checked but never set;
+- flags, marks and counters that are checked but never set (a prop with a data value counts as set);
 - verb aliases that clash with another command, and `aliases` / `phrasal` entries that lead to no command;
 - containers: `holds` must be `"in"` or `"on"`, `at` chains must end in a room, `inside` needs a holder, `open`/`close` need an openable one (`closed: true` or `false`);
 - levels: a thing's `level`, and the `level` effect and condition, take `"up"` or `"down"` (the effect also `null`);
+- props: `"id.key"` must name a thing or `self`, and data `props` hold numbers or words;
 - add-on checks, such as a dark room with no light, or a `log` with no journal entry.
 
 A clean build prints `Validator: no problems`.

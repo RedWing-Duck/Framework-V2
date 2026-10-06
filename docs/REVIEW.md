@@ -207,3 +207,12 @@ A final check of the docs against the code found two engine gaps, fixed for ever
   the `take` effect does, `inside` vs `open`/`close` targets, the missing aliases, and that game aliases override built-in ones.
   PATTERNS: where the honk gag goes, and when "give her the ticket" works. README: the build writes `dist/` even with problems.
 
+## Seventh pass: props and the changed hook
+
+Step 1 of the systems groundwork (props, then `unhandled`, `reach`, `roll`, actors), each its own pass with tests.
+
+| Item | Change | Test |
+|---|---|---|
+| Numbers lived only in game-wide counters, so a guard's health was a counter named `guard_hp` | **Props**: `items.X.props`, `npcs.X.props`, `self.props` (numbers and words). `"guard.hp"` works in `min`/`max`/`eq`/`add` and `{guard.hp}`; condition and effect `prop`. Only changes are saved (`S.props`). damp-cell's `annoyed` counter is now the guard's own prop | props: numbers and words on things (and the player)... |
+| Add-ons had to poll every turn to react to a change | Hook `changed(id, key, from, to)`: props, counters changed by `add`, and every move (key `"loc"`), through `setProp` / `setLoc`. A nesting limit stops loops | same test, with `tests/words/watch.js` |
+

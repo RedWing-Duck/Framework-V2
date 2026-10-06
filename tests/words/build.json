@@ -1,1 +1,1 @@
-{ "addons": ["./first", "./second"] }
+{ "addons": ["./first", "./second", "./watch"] }

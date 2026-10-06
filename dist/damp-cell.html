@@ -70,7 +70,7 @@ const G = {
   },
   npcs: {
     rat: { name: "rat", at: "cell", pronoun: "it", level: "down", desc: "Fat, grey, and entirely unbothered by you." },   // "it", not "him"/"her"
-    guard: { name: "Guard", at: "corridor", pronoun: "him", desc: [
+    guard: { name: "Guard", at: "corridor", pronoun: "him", props: { annoyed: 0 }, desc: [   // props: his own counter, "guard.annoyed"
       { if: { flag: "fed" }, text: "Crumbs on his chin. He looks almost friendly." },
       { if: { has: "bread" }, text: "Bored and clearly hungry. He keeps eyeing your [bread]." },
       "Bored and clearly hungry." ],
@@ -83,9 +83,9 @@ const G = {
         "He doesn't want {the:what}." ] },
       dialogue: {
         start: { text: [{ if: { flag: "fed" }, text: "Thanks for the bread. Now scram." },
-          { if: { min: { annoyed: 2 } }, text: "You again? Ask me that once more, I dare you." }, "What do you want, prisoner?"], options: [
+          { if: { min: { "guard.annoyed": 2 } }, text: "You again? Ask me that once more, I dare you." }, "What do you want, prisoner?"], options: [
           { text: "Offer the bread.", if: { has: "bread" }, take: "bread", give: "key", set: "fed", next: "thanks" },
-          { text: "Let me out!", if: { not: { flag: "fed" } }, add: { annoyed: 1 }, next: "no" },
+          { text: "Let me out!", if: { not: { flag: "fed" } }, add: { "guard.annoyed": 1 }, next: "no" },
           { text: "Nothing." } ] },
         thanks: { text: "Food! ...Here. I never saw you." },
         no: { text: "Ha! Not a chance." } } }
@@ -144,19 +144,20 @@ const NOOBJ = ["inventory", "wait", "help", "again", "undo", "restart", "menu", 
 // a word that opens the second slot: "give the bread TO the guard", "open the gate WITH the key" (LINE.what / LINE.with)
 const ROLES = ["to", "with", "on", "onto", "in", "into", "inside", "at", "about", "from", "for", "under", "behind"];
 const BREAK = ["and", "then", "except", "but", ...ROLES];   // words that end a noun phrase (see named())
-const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [] };
+const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [], changed: [] };
 // validator tables: REFS = add-on checks per data key; META = keys allowed next to effects;
 // MAPS = keys whose own keys are names ("def": each value is a definition, "data": each value is data, "map": a map of maps)
 const REFS = tbl({}), META = ["if", "repeat", "every", "text", "next"], MAPS = tbl({ rooms: "def", items: "def", npcs: "def", kinds: "map",
-  exits: "data", dialogue: "data", on: "data", topics: "data", verbs: "data", messages: "data", conds: "data", aliases: "data", phrasal: "data" });
+  exits: "data", dialogue: "data", on: "data", topics: "data", props: "data", verbs: "data", messages: "data", conds: "data", aliases: "data", phrasal: "data" });
 // S = the game state (plain JSON: saved, undone, restored). SAVE = the Continue snapshot, UNDO = one step back,
 // LAST = the last command's words (for "again"), VERBS = every verb the game's data answers, VER = the save version
 let S, SAVE = null, UNDO = null, LAST = null, VERBS = new Set(), VER = "";
 // S.loc: where each thing is; S.shut: closed holders; S.level: things moved up or down (the level effect);
+// S.props: props changed in play ({ guard: { hp: 7 } }; the rest are still the data's, see prop());
 // S.it: the last thing acted on; S.pro: what each pronoun means ({ it, him, her, them }); S.pick: the last "Which do you mean?" set and the one chosen (for "the other one", "both");
 // S.ask: a command waiting for "Which do you mean?"; S.talk: a conversation waiting for an option
 const blank = () => ({ room: G.start, prev: null, loc: {}, shut: {}, flags: {}, count: { turns: 0 }, mark: {}, fired: {},
-  seen: {}, been: {}, seq: {}, level: {}, seed: G.seed ?? Date.now() % 2147483647, it: null, pro: {}, pick: null, ask: null, talk: null, over: false });
+  seen: {}, been: {}, seq: {}, level: {}, props: {}, seed: G.seed ?? Date.now() % 2147483647, it: null, pro: {}, pick: null, ask: null, talk: null, over: false });
 // LINE = the command being answered: said: and {verb}; it = the thing answering ({it}); what = the direct thing and
 // with = the second one ("give WHAT to WITH", "use WHAT on WITH"). TURN = whether this command costs a turn, and was refunded.
 // ROLE = how the typed line splits around its role word, before filler words were dropped (see roles()).
@@ -247,7 +248,27 @@ const reach = () => [...nested([...inv(), ...at(G.items)]), ...at(G.npcs), ...(G
 const contents = ids => nested(ids).filter(id => inside(id).length)
   .forEach(id => print(msg(holder(id) === "on" ? "onIt" : "inIt", { it: `[${id}]`, list: names(inside(id)) })));
 const names = ids => ids.map(i => `[${i}]`).join(", ");
-const all = (o, f) => Object.entries(o || {}).every(([k, n]) => f(S.count[k] || 0, n, k));
+// ---- props: named numbers and words on any thing (items.X.props, npcs.X.props, self.props). "guard.hp" names one;
+// a name without a dot is a game-wide counter (S.count). Changes in play are kept in S.props, over the data's values.
+const propKey = k => { const i = k.indexOf("."); return i < 0 ? [null, k] : [k.slice(0, i), k.slice(i + 1)]; };
+const prop = k => { const [id, p] = propKey(k);
+  return id === null ? S.count[k] || 0 : own(S.props[id], p) ?? own(thing(id)?.props, p); };
+const propNum = k => { const v = prop(k); return typeof v === "number" ? v : 0; };
+// set a prop or counter (null: back to its data value), and tell the changed hooks
+function setProp(k, v) {
+  const [id, p] = propKey(k), from = prop(k);
+  if (id === null) S.count[k] = v ?? 0; else if (v == null) { if (S.props[id]) delete S.props[id][p]; } else (S.props[id] ??= {})[p] = v;
+  changed(id, p, from, prop(k));
+}
+// where a thing is now (a room, "player", a holder, or null), and the changed hooks hear about it as key "loc"
+function setLoc(id, where) { const from = S.loc[id] ?? null; S.loc[id] = where; changed(id, "loc", from, where); }
+let DEPTH = 0;   // a changed hook that changes something calls the hooks again; stop a runaway loop
+function changed(id, key, from, to) {
+  if (from === to || !HOOKS.changed.length) return;
+  if (DEPTH > 8) return console.warn(`changed: stopped a loop at ${id ?? ""}.${key}`);
+  DEPTH++; try { HOOKS.changed.forEach(h => h(id, key, from, to)); } finally { DEPTH--; }
+}
+const all = (o, f) => Object.entries(o || {}).every(([k, n]) => f(propNum(k), n, k));
 const list = v => [].concat(v);
 
 function print(t, c, plain) {
@@ -292,7 +313,7 @@ function pick(v) {
 }
 const cap = s => s && s[0].toUpperCase() + s.slice(1);
 // {name} in a TEXT: a value passed in vars, else {it} (the thing acted on, as a tag), {what}/{with} (the two slots),
-// {verb}/{Verb} (the verb typed), else a counter. {the}, {The}, {a}, {A} put an article before {it}, and {the:to}
+// {verb}/{Verb} (the verb typed), else a counter or a prop ({guard.hp}). {the}, {The}, {a}, {A} put an article before {it}, and {the:to}
 // before another value that is a tag: "the [mug]", "a [mug]", or "[Tony]" for a proper name.
 function fill(k, vars, of) {
   if ((k in vars) && !of) return vars[k];
@@ -304,9 +325,9 @@ function fill(k, vars, of) {
   if (k === "what" || k === "with") return LINE[k] ? `[${LINE[k]}]` : "";
   if (k === "verb") return LINE.verb;
   if (k === "Verb") return cap(LINE.verb || "do");
-  return S.count[k] || 0;
+  return prop(k) ?? "";   // a counter ({turns}) or a prop ({guard.hp}, {guard.mood})
 }
-const txt = (v, vars = {}) => pick(v).replace(/\{(\w+)(?::(\w+))?\}/g, (m, k, of) => of && !/^(the|a)$/i.test(k) ? m : fill(k, vars, of));
+const txt = (v, vars = {}) => pick(v).replace(/\{([\w.]+)(?::(\w+))?\}/g, (m, k, of) => of && !/^(the|a)$/i.test(k) ? m : fill(k, vars, of));
 // "the [a], the [b] or the [c]" (no article for a proper name)
 const either = ids => ids.map(the).join(", ").replace(/, ([^,]*)$/, " or $1");
 
@@ -330,6 +351,7 @@ const COND = tbl({
   inside: o => Object.entries(o).every(([id, h]) => S.loc[id] === h),   // inside:{ coin:"box" }: directly in or on that holder
   open: v => list(v).every(id => !S.shut[id]),
   level: o => Object.entries(o).every(([id, l]) => levelOf(id) === l),   // level:{ bat: "up" }: where it is now (see "up and down")
+  prop: o => Object.entries(o).every(([k, v]) => list(v).includes(prop(k))),   // prop:{ "guard.mood": "angry" } (or a list: any of them)
   what: v => list(v).includes(LINE.what),                   // the direct thing is one of these: "give BREAD to the guard"
   with: v => list(v).includes(LINE.with),                   // the second thing is one of these: "give the bread to the GUARD"
   chance: n => rand(100) < n                               // passes n times in 100 (test() rolls it once per command)
@@ -343,17 +365,18 @@ const test = c => !c ? true : typeof c === "string" ? COND.is(c)
 const EFFECT = tbl({
   set: v => list(v).forEach(f => S.flags[f] = true),
   unset: v => list(v).forEach(f => delete S.flags[f]),
-  add: o => { for (const k in o) S.count[k] = (S.count[k] || 0) + o[k]; },
+  add: o => { for (const k in o) setProp(k, propNum(k) + o[k]); },   // a counter, or a prop: add:{ "guard.hp": -3 }
   mark: v => list(v).forEach(m => S.mark[m] = S.count.turns),
   move: o => { for (const id in o) { const r = o[id], was = shown(id), from = where(id);   // a list is a route: step to the next room
-    S.loc[id] = Array.isArray(r) ? r[(r.indexOf(S.loc[id]) + 1) % r.length] : r;
+    setLoc(id, Array.isArray(r) ? r[(r.indexOf(S.loc[id]) + 1) % r.length] : r);
     // an event that moves something into or out of sight without saying so gets a line ("The [rat] arrives.")
     if (TELL && was !== shown(id)) print(msg(was ? "leaves" : "arrives", { it: `[${id}]`, dir: exitTo(was ? where(id) : from) })); } },
-  take: v => list(v).forEach(id => { S.loc[id] = null; print(msg("lost", { it: `[${id}]` }), "cmd"); }),
-  give: v => list(v).forEach(id => { S.loc[id] = "player"; print(msg("received", { it: `[${id}]` }), "cmd"); }),
+  take: v => list(v).forEach(id => { setLoc(id, null); print(msg("lost", { it: `[${id}]` }), "cmd"); }),
+  give: v => list(v).forEach(id => { setLoc(id, "player"); print(msg("received", { it: `[${id}]` }), "cmd"); }),
   open: v => list(v).forEach(id => delete S.shut[id]),
-  level: o => { for (const id in o) o[id] == null ? delete S.level[id] : S.level[id] = o[id]; },   // null: back to its data
   close: v => list(v).forEach(id => S.shut[id] = true),
+  level: o => { for (const id in o) o[id] == null ? delete S.level[id] : S.level[id] = o[id]; },   // null: back to its data
+  prop: o => { for (const k in o) setProp(k, o[k]); },   // prop:{ "guard.mood": "angry", "self.hp": 10 }; null: back to its data
   free: v => { if (v && !TURN.free && TURN.cost) { TURN.free = true; S.count.turns--; } },   // this command costs no turn
   say: v => print(txt(v)),
   do: v => { const [c, ...r] = words(v); exec(c, r.join(" ")); },   // run a command: do:"look"
@@ -465,13 +488,13 @@ const CMDS = tbl({
     if (!id) return notHere();
     if (S.loc[id] === "player") return notHere("have");
     if (thing(id).fixed || !own(G.items, id)) return print(msg("fixed"));
-    S.loc[id] = "player"; IMPLICIT ? print(msg("firstTake", { it: `[${id}]` }), "cmd") : print(msg("taken", { it: `[${id}]` }));
+    setLoc(id, "player"); IMPLICIT ? print(msg("firstTake", { it: `[${id}]` }), "cmd") : print(msg("taken", { it: `[${id}]` }));
   },
   drop(a, ids) {
     if (holder(LINE.with)) return exec("put", a);   // "drop the coin in the box"
     const id = LINE.what || ids[0];
     if (!id || S.loc[id] !== "player") return notHere("notHave");
-    S.loc[id] = S.room; if (levelOf(id)) S.level[id] = "down";   // a thing with a level lands on the floor
+    setLoc(id, S.room); if (levelOf(id)) S.level[id] = "down";   // a thing with a level lands on the floor
     print(msg("dropped", { it: `[${id}]` }));
   },
   // "put X in Y" / "put X on Y" (the holder decides which); "put X down" drops it; on a thing that
@@ -484,7 +507,7 @@ const CMDS = tbl({
     if (S.loc[x] !== "player") return notHere("notHave");
     if (S.shut[y]) return print(msg("isShut", { it: `[${y}]` }));
     if (nested([x]).includes(y)) return print(msg("cantPut"));
-    S.loc[x] = y; print(msg(holder(y) === "on" ? "putOn" : "putIn", { it: `[${x}]`, to: `[${y}]` }));
+    setLoc(x, y); print(msg(holder(y) === "on" ? "putOn" : "putIn", { it: `[${x}]`, to: `[${y}]` }));
   },
   open() {
     const id = LINE.it;
@@ -800,10 +823,14 @@ function validate() {
         if (k === "mark") list(x).forEach(m => made.mark[m] = 1);
         if (k === "since") for (const m in x) used.mark[m] = q;
         if (k === "add") for (const c in x) made.counter[c] = 1;
-        if (["min", "max", "eq"].includes(k)) for (const c in x) used.counter[c] = q;
+        if (["min", "max", "eq", "add", "prop"].includes(k) && x && typeof x === "object") for (const c in x) {   // "guard.hp": a thing's prop
+          const [id, p] = propKey(c);
+          if (id !== null) need(isThing(id) || id === "self", q, `"${c}": no item or NPC "${id}"`);
+          if (["min", "max", "eq"].includes(k) && (id === null || own(thing(id)?.props, p) === undefined)) used.counter[c] = q;   // a data value counts as set
+          if (k === "prop") made.counter[c] = 1; }
         if (own(REFS, k)) REFS[k](x, (ok, m) => need(ok, q, m));
       }
-      if (!["add", "min", "max", "eq", "since", "move", "level"].includes(k)) walk(x, q, "data");   // their keys are names
+      if (!["add", "min", "max", "eq", "since", "move", "level", "prop"].includes(k)) walk(x, q, "data");   // their keys are names
     }
   };
   need(room(G.start), "start", `no room "${G.start}"`);
@@ -812,6 +839,9 @@ function validate() {
     need(a == null || a === "player" || room(a) || (T === "items" && holder(a)), `${T}.${id}.at`, `no room or holder "${a}"`);
     const n = G[T][id].name; need(typeof n === "string" || (n && typeof n === "object"), `${T}.${id}.name`, "needs a name (a string, or TEXT variants)"); }
   for (const id in G.items) need(!own(G.npcs, id), `items.${id}`, "same id as an NPC");
+  for (const [T, id] of [...["items", "npcs"].flatMap(T => Object.keys(G[T] || {}).map(id => [T, id])), ["self", null]]) {   // props hold numbers and words
+    const P = (id ? G[T][id] : G.self)?.props;
+    for (const k in P || {}) need(typeof P[k] === "number" || typeof P[k] === "string", `${id ? `${T}.${id}` : T}.props.${k}`, "a prop is a number or a word"); }
   const levels = v => typeof v === "string" ? [v] : list(v).flatMap(x => typeof x === "string" ? [x] : x?.text != null ? levels(x.text) : []);
   for (const T of ["items", "npcs"]) for (const id in G[T]) levels(G[T][id].level ?? []).forEach(l => need(l === "up" || l === "down", `${T}.${id}.level`, `"${l}": a level is "up" or "down"`));
   for (const id in G.items) { const h = G.items[id].holds; need(h == null || h === "in" || h === "on", `items.${id}.holds`, 'must be "in" or "on"'); }

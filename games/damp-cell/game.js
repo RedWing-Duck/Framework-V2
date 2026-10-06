@@ -26,7 +26,7 @@ const G = {
   },
   npcs: {
     rat: { name: "rat", at: "cell", pronoun: "it", level: "down", desc: "Fat, grey, and entirely unbothered by you." },   // "it", not "him"/"her"
-    guard: { name: "Guard", at: "corridor", pronoun: "him", desc: [
+    guard: { name: "Guard", at: "corridor", pronoun: "him", props: { annoyed: 0 }, desc: [   // props: his own counter, "guard.annoyed"
       { if: { flag: "fed" }, text: "Crumbs on his chin. He looks almost friendly." },
       { if: { has: "bread" }, text: "Bored and clearly hungry. He keeps eyeing your [bread]." },
       "Bored and clearly hungry." ],
@@ -39,9 +39,9 @@ const G = {
         "He doesn't want {the:what}." ] },
       dialogue: {
         start: { text: [{ if: { flag: "fed" }, text: "Thanks for the bread. Now scram." },
-          { if: { min: { annoyed: 2 } }, text: "You again? Ask me that once more, I dare you." }, "What do you want, prisoner?"], options: [
+          { if: { min: { "guard.annoyed": 2 } }, text: "You again? Ask me that once more, I dare you." }, "What do you want, prisoner?"], options: [
           { text: "Offer the bread.", if: { has: "bread" }, take: "bread", give: "key", set: "fed", next: "thanks" },
-          { text: "Let me out!", if: { not: { flag: "fed" } }, add: { annoyed: 1 }, next: "no" },
+          { text: "Let me out!", if: { not: { flag: "fed" } }, add: { "guard.annoyed": 1 }, next: "no" },
           { text: "Nothing." } ] },
         thanks: { text: "Food! ...Here. I never saw you." },
         no: { text: "Ha! Not a chance." } } }
