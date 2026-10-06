@@ -2,6 +2,9 @@
 Build: `dist/big-footprint.html` (single file, runs offline). Branch `claude/penthouse-heist-game-o7k6w5`.
 Credits: **Retroment Gaming.** Week 01 was a process check (a dry run), so there are no chat contributors.
 
+## Week 01 rev8: engine audit
+Every engine feature checked against the game (GDD section 15). The alibi animals keep their state as their own props, "exactly" tests use `eq:`, and revisit text uses the core's `visited:` instead of twelve hand-set flags. Play and text unchanged. Features not used are listed with the reason (dice: the design is deterministic; `nouns.js` stays on `before` by request).
+
 ## Week 01 rev7: the animals are actors
 The loose giraffe, jaguar and Reina roam as actors (their own `acts`) instead of events, the first use of the engine's new actors. Play is unchanged, except that two animals arriving on the same turn are announced in data order. Design: GDD section 14; lessons for other games: `docs/AUTHORING.md`, "Actors".
 

@@ -23,6 +23,7 @@ const cond = c => {
     if (k === "any") return `any(${v.map(cond).join(" | ")})`;
     if (k === "min") return Object.entries(v).map(([a, n]) => `${a}>=${n}`).join(" & ");
     if (k === "max") return Object.entries(v).map(([a, n]) => `${a}<=${n}`).join(" & ");
+    if (k === "eq") return Object.entries(v).map(([a, n]) => `${a}=${n}`).join(" & ");
     if (k === "said") return `said "${v}"`;
     if (k === "in") return `in ${v}`;
     if (k === "here") return `${v} here`;

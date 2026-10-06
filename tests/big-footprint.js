@@ -605,7 +605,7 @@ test("Playtest round 2 P3s: NB-05 to NB-09", () => {
   assert.equal(p.get("S.loc.photos"), "player", "NB-07");
   const a = toEscape(); a.type("open giraffe gate and jaguar gate");
   assert.equal(a.last(), "One thing at a time, detective.", "NB-08");
-  assert.deepEqual([a.get("S.count.giraffe"), a.get("S.count.jaguar || 0")], [1, 0]);
+  assert.deepEqual([a.get("prop('giraffe.alibi')"), a.get("prop('jaguar.alibi')")], [1, 0]);   // rev 8: each animal's own prop
   const q = play("n", "w", "e", "e", "w", "n", "say pozole and gravy");
   assert.equal(q.get("S.flags.q1"), true, "NB-08 doesn't split what's said out loud");
 });
@@ -846,7 +846,7 @@ test("feature Which do you mean?: the two staircases, 'the right one', 'the othe
   assert.equal(roof.last(), "Which do you mean: the GIRAFFE GATE or the JAGUAR GATE?");
   assert.equal(roof.get("S.count.turns"), t0, "free (CP-02)");
   roof.type("jaguar");
-  assert.equal(roof.get("S.count.jaguar"), 1);
+  assert.equal(roof.get("prop('jaguar.alibi')"), 1);
 });
 test("feature proper names and pronouns: Don Chava, Nando and Big Tony are him", () => {
   const P = bigfoot().get("Object.fromEntries(['don', 'nando', 'tony'].map(id => [id, [G.npcs[id].proper, G.npcs[id].pronoun]]))");
@@ -959,4 +959,17 @@ test("feature up and down: look up / look down in every room; the giraffe is up,
 test("big-footprint: the full Script (design/SCRIPT_week01_rev6.txt) matches game.js", () => {
   const { script, OUT } = require("../games/big-footprint/design/make-script");
   assert.equal(fs.readFileSync(OUT, "utf8"), script(), "run: node games/big-footprint/design/make-script.js");
+});
+test("feature props, eq and visited (rev 8): each alibi animal's state is its own prop; revisits use the core's visited", () => {
+  const g = play(...TOUR);
+  assert.deepEqual(g.get("['giraffe', 'jaguar', 'reina'].map(id => G.items[id].props.alibi)"), [0, 0, 0], "declared on the animals");
+  g.type("open giraffe gate");
+  assert.equal(g.get("prop('giraffe.alibi')"), 1, "released: 1");
+  g.type("s", "s", "s", "say giraffe");
+  assert.equal(g.get("prop('giraffe.alibi')"), 2, "used on Nando: 2");
+  assert.deepEqual(g.get("S.props"), { giraffe: { alibi: 2 } }, "only what changed is saved");
+  assert.equal(g.get("Object.keys(S.flags).some(f => f.startsWith('been_'))"), false, "no hand-made been_ flags");
+  assert.ok(g.get("S.been.foyer") >= 1, "the core counts visits");
+  const conds = g.get("JSON.stringify(G.conds)");
+  assert.ok(!/"min":\{"(\w+)":(\d+)\},"max":\{"\1":\2\}/.test(conds), "equality is eq:, not a min/max pair");
 });

@@ -239,3 +239,31 @@ Two engine changes (for every game) after rev 4, and how this game uses them:
 ## 14. [REV7] The loose animals are actors
 The engine gained actors: things and people with their own rules (`acts`), run after each turn's events. The giraffe, the jaguar and Reina now roam through `acts` on themselves instead of three events. Nothing a player sees changed (15,000 seeded commands compared), except that two animals arriving on the same turn are announced in the order the game defines them (giraffe, jaguar, Reina). The Don's tour and Nando's checkpoints stay events: they're the plot, not behavior. What the conversion taught is written up for every game in `docs/AUTHORING.md`, "Actors".
 
+## 15. [REV8] Engine audit: every feature, and where this game uses it
+A once-over after the engine's systems groundwork (props, `changed`, `unhandled`, `reach`, dice, actors). Three things the game still did by hand now use the engine; play is unchanged (15,000 seeded commands compared, and the Script's text is identical).
+
+| Feature | In this game | Notes |
+|---|---|---|
+| Replies on things, rooms, the game (`on`), `kinds`, `said`, `conds` | Yes, everywhere | The Script's reply ladder |
+| Two slots, slot order, `carry` | Yes | Show the card to the Don (Q2), give the coin to the hippo, show a secret to Nando |
+| "Which do you mean?", "the other one" | Yes | The two staircases, the two gates |
+| Proper names, pronouns | Yes | Don Chava, Nando, Big Tony (him); Reina |
+| Names that follow state | Yes | OPEN GIRAFFE GATE, EMPTY AVIARY |
+| Topics (ask/tell) | Yes | The Don, Nando |
+| Holders, `open` effect and condition | Yes | The piano's tray, the hippo's mouth |
+| Up and down (`look up`/`look down`, `level`) | Yes | Every room; the giraffe up, Reina flies up and lands |
+| TEXT `rotate`, `ladder`, `random`; `G.seed` | Yes | Nando's repeats, hint ladders, waits, the animals |
+| `status`, `messages`, `free`, `mark`/`since`, `do` | Yes | The clock line, reworded engine lines |
+| `oops`, `brief`, `transcript`, undo | Yes | Named in `help` |
+| Actors (`acts`, `me`, `every`) | Yes (rev 7) | The three loose animals |
+| **Props** | **Yes (rev 8)** | Each alibi animal's state is its own prop, `giraffe.alibi` (0 penned, 1 loose, 2 used on Nando), not a game-wide counter. Reina carries the peacocks' |
+| **`eq:`** | **Yes (rev 8)** | "Exactly 1" was a `min`+`max` pair in nine places (strikes, secrets, tour legs, alibis), the v1 workaround |
+| **`visited:`** | **Yes (rev 8)** | Twelve hand-set `been_<room>` flags (one event each) for revisit text are gone. `escbeen_<room>` stays: "seen during the escape" is this game's own rule |
+| `seen:` | Yes | |
+| Dice, `check:`, `chance:` | No, on purpose | The design is "plan your route" (GDD 3, 7): outcomes are fixed, and only flavor text is random. Dice are shown off in sundown |
+| `reach` hook / light add-on | No, on purpose | No dark rooms in this game; nothing is out of reach that's in the room |
+| `unhandled`, `changed`, `agents` hooks | Not yet | They're for add-ons. `./nouns.js` still answers through `before`, with its tie and defer rules, and was left as it is by request; moving it onto `unhandled` would be its natural next step |
+| `move: "here"`, `goto` | No | Nobody follows the player; nobody teleports |
+| Core `put` / contents lists, `take all` | No, on purpose | `put` means `use` here (the hippo's mouth takes a coin, not a container action), and "take all" is refused by design (BG-12) |
+| `pronoun` on items | Engine gap | Things are always "it", so "pet her" doesn't find Reina |
+

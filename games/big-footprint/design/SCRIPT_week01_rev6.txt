@@ -96,7 +96,7 @@ ROOMS
   desc:
     [flag escbeen_elevator & key ESCAPE] Back in the gold box. The doors wait. So does the button.
     [flag escape] The gold box hums, waiting. One button, one way down. Behind you, the twin staircases and every problem you left on them.
-    [flag been_elevator] Mirrored gold, and your reflection trying hard to look like it belongs here. The foyer is north.
+    [visited elevator] Mirrored gold, and your reflection trying hard to look like it belongs here. The foyer is north.
     [always] The elevator doors open on a box of mirrored gold, and you see six versions of Walter Pryce, bookstore investor, all of them sweating a little. Don Chava's man hits the button and steps back out. The only way is north, into the foyer, where a voice is already saying your name like it's a deal.
   on.examine:
     [not(flag escape) & said "don|chava|don chava|salvatore"] You'll meet him in a second. You can already hear him.
@@ -135,7 +135,7 @@ ROOMS
     [flag escbeen_foyer & key ESCAPE&!P3] The foyer again: the elevator behind you, the [staircases] rising into the dark, the trophies to one side, the piano to the other, the long table ahead. The thirteenth step still sits a hair too high.
     [flag escape & not(not(flag p3))] The foyer lights flicker. Somewhere above, glass breaks. The two [staircases] rise into the dark; a panel in the right one stands open at the thirteenth step, breathing cold air. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead.
     [flag escape] The foyer lights flicker. Somewhere above, glass breaks. The two [staircases] rise into the dark; the right one gleams, and its thirteenth step sits a hair higher than the rest, like it's waiting to be pressed. The gold elevator waits behind you. The trophy cases glitter off to one side, the piano salon to the other, the long dinner table straight ahead.
-    [flag been_foyer] The twin [staircases], left for family and right for business, still curling up toward the landing. West to the trophies, east to the piano, north to dinner, up the stairs, or south to the elevator.
+    [visited foyer] The twin [staircases], left for family and right for business, still curling up toward the landing. West to the trophies, east to the piano, north to dinner, up the stairs, or south to the elevator.
     [always] White marble floors, gold banisters, and two [staircases] that curve up to the same landing like arms around a hug you didn't ask for. The left staircase is wide and carpeted; the right is narrower, polished to a shine. The trophy room glitters west, a piano waits in the salon east, a long table stretches north in the dining hall, the stairs lead up, and the elevator is south.
   on.use:
     [not(flag escape) & said "thirteenth|13th|step|steps|stair|stairs|staircase|staircases" & strikes>=2] The smile is gone. "Twice now. I don't like three."
@@ -187,7 +187,7 @@ ROOMS
   desc:
     [flag escbeen_trophy & key ESCAPE] The trophy cases again, rattling, the [rifle] still behind glass. The way out is back toward the staircases.
     [flag escape] The cases rattle each time something heavy hits a floor above. The [rifle] stares back at you, useless. The only way out is back toward the staircases.
-    [flag been_trophy] The glass cases, the [rifle], the diamonds, the headline with the missing name. East to the foyer.
+    [visited trophy] The glass cases, the [rifle], the diamonds, the headline with the missing name. East to the foyer.
     [always] Glass cases line the walls, lit like jewelry counters. Inside: a [rifle] engraved with roses, a pistol studded with enough diamonds to buy a small town, and a framed newspaper headline someone has carefully cut the name out of. The foyer is back east.
   on.use:
     [not(flag escape) & said "rifle" & strikes>=2] (same as rooms.foyer.on.use)
@@ -216,7 +216,7 @@ ROOMS
     [flag escbeen_salon & key ESCAPE&!P1] Mama's [piano] again, in the flashing light. The way out is back toward the staircases.
     [flag escape & not(not(flag p1))] The [piano]'s mirrored lid stands open, the hidden tray empty. Mama's piano kept her secret as long as she could. The way out is back toward the staircases.
     [flag escape] The [piano] waits in the half-light, its mirrored lid reflecting flashing alarm lights. Mama's piano. Mama's song. The way out is back toward the staircases.
-    [flag been_salon] The mirrored [piano], reflecting the chandelier and your nerves. West to the foyer.
+    [visited salon] The mirrored [piano], reflecting the chandelier and your nerves. West to the foyer.
     [always] A white grand [piano] sits in the middle of the room like the only guest who got a chair. Its lid is a sheet of mirror, and it shows you the chandelier, the ceiling fresco, and your own nervous smile. The foyer is west.
   on.use:
     [not(flag escape) & said "piano|lid|keys|keyboard|ivory|ivories" & strikes>=2] (same as rooms.foyer.on.use)
@@ -267,7 +267,7 @@ ROOMS
   desc:
     [flag escbeen_dining & key ESCAPE] The wrecked dinner again. The lemur hasn't moved and has no plans to. The way out is back toward the staircases.
     [flag escape] Chairs knocked over, a lemur on the table eating grapes out of a silver bowl. It doesn't care about you. The way out is back toward the staircases.
-    [flag been_dining] The endless table, the two grandmothers watching each other like rival dons. South to the foyer.
+    [visited dining] The endless table, the two grandmothers watching each other like rival dons. South to the foyer.
     [always] A table long enough to seat a jury, set for twenty. Two portraits face each other across it: a stern woman in a rebozo and a sterner woman holding a wooden spoon. Chili, garlic, and slow-cooked tomato hang in the air. The foyer is south.
   on:
     [not(flag q1) & said ""] "So tell me, Walter. Sunday dinner: my mother's pozole or my nonna's Sunday gravy?"
@@ -295,7 +295,7 @@ ROOMS
   desc:
     [flag escbeen_landing & key ESCAPE] The balcony again, trembling. The portraits one way, the stairs down to the foyer the other.
     [flag escape] The balcony shakes under a distant thud. Cigar smoke still drifts from the office. The hall of portraits stretches one way; the staircases drop down to the foyer.
-    [flag been_landing] The balcony where the two staircases meet. West to the portraits, east to the office, down to the foyer.
+    [visited landing] The balcony where the two staircases meet. West to the portraits, east to the office, down to the foyer.
     [always] Both staircases meet here at a balcony that looks down on the foyer. A gallery of portraits stretches west, and a heavy office door stands open to the east, leaking cigar smoke. The stairs lead back down.
   verbs.listen:
     [TOUR] The foyer's echo rising up the stairwell, and the Don's shoes on marble.
@@ -313,7 +313,7 @@ ROOMS
   desc:
     [flag escbeen_gallery & key ESCAPE] The painted Dons again, still glaring. Chlorine at one end, the balcony at the other.
     [flag escape] The painted Dons glare down, and one portrait is hanging crooked, torn by claws. One end of the hall smells of chlorine; the other opens onto the balcony above the stairs.
-    [flag been_gallery] A hundred painted Don Chavas watch you walk. North to the atrium, east to the landing.
+    [visited gallery] A hundred painted Don Chavas watch you walk. North to the atrium, east to the landing.
     [always] A long hall of oil portraits, all of them the Don: the Don on a horse, the Don with a lion, the Don as a saint. The wallpaper is peacock feathers. The atrium is north, the landing east.
   verbs.smell:
     [always] Linseed oil, candle wax, and chlorine drifting in from one end.
@@ -335,7 +335,7 @@ ROOMS
     [flag escbeen_atrium & key ESCAPE&!P2] Pepita the [hippo] again, mouth shut, lemurs overhead. Peacocks one way, portraits the other.
     [flag escape & not(not(flag p2))] Water sloshes over the fountain's edge. Lemurs chatter in the palms, pelting the floor with fruit. The bronze [hippo] gapes, jaw hanging open, very pleased with itself. One way, the peacocks scream; the other, the hall of portraits.
     [flag escape] Water sloshes over the fountain's edge. Lemurs chatter in the palms, pelting the floor with fruit. The bronze [hippo] waits, mouth shut. One way, the peacocks scream; the other, the hall of portraits.
-    [flag been_atrium] The bronze [hippo] spouts water, mouth shut, in its cloud of chlorine. South to the gallery, north to the birds.
+    [visited atrium] The bronze [hippo] spouts water, mouth shut, in its cloud of chlorine. South to the gallery, north to the birds.
     [always] A glass roof, tropical plants, and the sharp, clean smell of chlorine. In the center, a bronze [hippo] fountain spouts water from its nostrils with great dignity. Its mouth is closed tight. The gallery is south and a chorus of shrieking birds comes from the north.
   on.use:
     [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth" & strikes>=2] (same as rooms.foyer.on.use)
@@ -386,7 +386,7 @@ ROOMS
   desc:
     [flag escbeen_office & key ESCAPE] The ransacked office again. The only way out is the balcony.
     [flag escape] Papers everywhere, a chair knocked over, the humidor open and empty. Whatever mattered in here, the Don took it. The only way out is back to the balcony.
-    [flag been_office] The leather, the cigars, the sign that protests too much. West to the landing.
+    [visited office] The leather, the cigars, the sign that protests too much. West to the landing.
     [always] Leather, mahogany, a humidor the size of a coffin, and a window that looks down on a city he probably owns part of. A framed sign on the desk reads "LEGITIMATE BUSINESS." The landing is west.
   on:
     [not(flag q2) & said "dog eared page|dog eared"] "The Dog-Eared Page. Cute. I like cute." He flips you a GOLD COIN. "Your first dividend, partner. Now let me show you my real investments. West, west, then north." He's already out the door and heading for the portraits.
@@ -412,13 +412,13 @@ ROOMS
   desc:
     [flag escbeen_aviary & key ESCAPE&OUT_PEACOCKS] The [aviary] again, feathers still falling. Night air one way, chlorine the other.
     [flag escbeen_aviary & key ESCAPE&!OUT_PEACOCKS] The screaming [aviary] again. Night air one way, chlorine the other.
-    [flag escape & not(not(peacocks>=1))] The door of the [aviary] hangs open, the keypad smashed. Feathers everywhere, and the peacocks are screaming their way through the palace. One doorway breathes fresh night air; the other smells of chlorine.
+    [flag escape & not(not(OUT_PEACOCKS))] The door of the [aviary] hangs open, the keypad smashed. Feathers everywhere, and the peacocks are screaming their way through the palace. One doorway breathes fresh night air; the other smells of chlorine.
     [flag escape] The [aviary] keypad is smashed, its door rattling. The peacocks are screaming louder than ever. One doorway breathes fresh night air; the other smells of chlorine.
-    [flag been_aviary] The peacocks, the screaming, the red keypad on the [aviary] door. South to the atrium, north to the terrace.
+    [visited aviary] The peacocks, the screaming, the red keypad on the [aviary] door. South to the atrium, north to the terrace.
     [always] A glass room full of peacocks that scream like car alarms with feelings. The [aviary] door has a keypad lock, glowing red. The atrium is south, and fresh night air blows in from the terrace north.
   on.open:
     [not(flag escape) & said "aviary|door|keypad|cage|peacock|peacocks"] The keypad blinks red. Locked tight, and the Don is watching.
-    [said "aviary|door|keypad|cage|peacock|peacocks" & peacocks<=0] You punch the smashed keypad. The door swings open and peacocks explode into the palace, screaming like the world is ending. Perfect alibi: PEACOCKS.
+    [said "aviary|door|keypad|cage|peacock|peacocks" & reina.alibi=0] You punch the smashed keypad. The door swings open and peacocks explode into the palace, screaming like the world is ending. Perfect alibi: PEACOCKS.
     [said "aviary|door|keypad|cage|peacock|peacocks"] It's already open. That animal's somebody else's problem now.
   verbs.smell:
     [always] Birdseed and outrage.
@@ -437,19 +437,19 @@ ROOMS
 
 -- rooms.terrace: Zoo Terrace
   desc:
-    [flag escape & giraffe<=0 & not(not(jaguar<=0))] Wind and alarms. The giraffe peers over the [giraffegate]. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe<=0 & not(not(jaguar>=1))] Wind and alarms. The giraffe peers over the [giraffegate]. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe>=1 & not(not(jaguar<=0))] Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe>=1 & not(not(jaguar>=1))] Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe.alibi=0 & not(not(jaguar.alibi=0))] Wind and alarms. The giraffe peers over the [giraffegate]. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe.alibi=0 & not(not(jaguar.alibi>=1))] Wind and alarms. The giraffe peers over the [giraffegate]. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe.alibi>=1 & not(not(jaguar.alibi=0))] Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
+    [flag escape & giraffe.alibi>=1 & not(not(jaguar.alibi>=1))] Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
     [always] A rooftop garden with a view of the whole city, glittering in the rain. Behind the [giraffegate] a giraffe chews thoughtfully; beside it, a black jaguar paces behind the [jaguargate]. The Don spreads his arms. "My family."
 
       Then the alarms start, every speaker in the palace at once. Lemurs pour out of the dark, a roar shakes the glass, and the Don goes pale. "The accountant," he breathes. "He opened the big one."
 
       He's gone south with his guards in three seconds flat. You are alone on a roof, holding a plaque proposal, with something enormous waking up to the east.
   on.open:
-    [said "giraffe" & giraffe<=0] You lift the latch. The giraffe ducks out and ambles off toward the stairs, curious about everything. Perfect alibi: GIRAFFE.
+    [said "giraffe" & giraffe.alibi=0] You lift the latch. The giraffe ducks out and ambles off toward the stairs, curious about everything. Perfect alibi: GIRAFFE.
     [said "giraffe"] (same as rooms.aviary.on.open)
-    [said "jaguar" & jaguar<=0] You swing the gate open and flatten yourself against the wall. The jaguar pours past like smoke and disappears downstairs. Perfect alibi: JAGUAR.
+    [said "jaguar" & jaguar.alibi=0] You swing the gate open and flatten yourself against the wall. The jaguar pours past like smoke and disappears downstairs. Perfect alibi: JAGUAR.
     [said "jaguar"] (same as rooms.aviary.on.open)
   verbs.smell:
     [always] Wet roses, hay, and a big, musky animal smell drifting over from the east.
@@ -581,7 +581,7 @@ ITEMS AND THINGS
 
 -- items.aviary: [object Object],AVIARY
   desc:
-    [peacocks>=1] The AVIARY door hangs open, the keypad smashed.
+    [OUT_PEACOCKS] The AVIARY door hangs open, the keypad smashed.
     [flag escape] The AVIARY keypad is smashed, its door rattling.
     [always] The AVIARY door has a keypad lock, glowing red.
 
@@ -603,12 +603,12 @@ ITEMS AND THINGS
 
 -- items.giraffegate: [object Object],GIRAFFE GATE
   desc:
-    [giraffe>=1] The GIRAFFE GATE hangs open. The giraffe is somebody else's problem now.
+    [OUT_GIRAFFE] The GIRAFFE GATE hangs open. The giraffe is somebody else's problem now.
     [always] A tall iron gate. The giraffe leans over it, chewing, curious about you.
 
 -- items.jaguargate: [object Object],JAGUAR GATE
   desc:
-    [jaguar>=1] The JAGUAR GATE hangs open. You're very glad you're not the one chasing it.
+    [OUT_JAGUAR] The JAGUAR GATE hangs open. You're very glad you're not the one chasing it.
     [always] A steel-barred gate. Behind it, the jaguar paces and watches you with yellow eyes.
 
 ==============================================================================
@@ -834,12 +834,12 @@ GAME-WIDE REPLIES
 -- on.tell
     [flag checkpoint & only nando|guard|about|him] (same as npcs.nando.topics.*)
     [flag checkpoint & said ""] (same as npcs.nando.topics.*)
-    [flag checkpoint & said "peacock|peacocks" & peacocks>=1 & peacocks<=1 & in foyer] "Peacocks! All nine, upstairs!" A scream rings down from the balcony right on cue. Nando takes the stairs three at a time.
-    [flag checkpoint & said "peacock|peacocks" & peacocks>=1 & peacocks<=1] "The peacocks are out! The Don wants them rounded up!" As if on cue, a scream echoes down the hall. Nando sprints toward it.
-    [flag checkpoint & said "giraffe|giraffes" & giraffe>=1 & giraffe<=1 & in foyer] You just point up. The giraffe's head hangs over the banister, chewing a lily. Nando looks at it, then at you, then sprints up the stairs shouting into his radio.
-    [flag checkpoint & said "giraffe|giraffes" & giraffe>=1 & giraffe<=1] "The giraffe is loose, and she's heading for the stairs!" Nando swears and runs past you toward the balcony, already yelling into his radio.
-    [flag checkpoint & said "jaguar|jaguars" & jaguar>=1 & jaguar<=1 & in foyer] "The jaguar! It went into the dining hall!" Nando goes very pale and very fast.
-    [flag checkpoint & said "jaguar|jaguars" & jaguar>=1 & jaguar<=1] "The jaguar is out. It came through the atrium." Nando's flashlight beam starts to shake. He backs away from you, then runs the other way.
+    [flag checkpoint & said "peacock|peacocks" & reina.alibi=1 & in foyer] "Peacocks! All nine, upstairs!" A scream rings down from the balcony right on cue. Nando takes the stairs three at a time.
+    [flag checkpoint & said "peacock|peacocks" & reina.alibi=1] "The peacocks are out! The Don wants them rounded up!" As if on cue, a scream echoes down the hall. Nando sprints toward it.
+    [flag checkpoint & said "giraffe|giraffes" & giraffe.alibi=1 & in foyer] You just point up. The giraffe's head hangs over the banister, chewing a lily. Nando looks at it, then at you, then sprints up the stairs shouting into his radio.
+    [flag checkpoint & said "giraffe|giraffes" & giraffe.alibi=1] "The giraffe is loose, and she's heading for the stairs!" Nando swears and runs past you toward the balcony, already yelling into his radio.
+    [flag checkpoint & said "jaguar|jaguars" & jaguar.alibi=1 & in foyer] "The jaguar! It went into the dining hall!" Nando goes very pale and very fast.
+    [flag checkpoint & said "jaguar|jaguars" & jaguar.alibi=1] "The jaguar is out. It came through the atrium." Nando's flashlight beam starts to shake. He backs away from you, then runs the other way.
     [don here & said "love|like|beautiful|amazing|great|nice" & key STRIKES=2] "Stop."
     [don here & said "love|like|beautiful|amazing|great|nice" & key STRIKES=1] "Flattery. Now? Interesting."
     [don here & said "love|like|beautiful|amazing|great|nice"] "Tell me something I don't know." He's delighted.
@@ -879,12 +879,12 @@ GAME-WIDE REPLIES
 
 -- on.say
     [flag checkpoint & said ""] (same as npcs.nando.topics.*)
-    [flag checkpoint & said "peacock|peacocks" & peacocks>=1 & peacocks<=1 & in foyer] (same as on.tell)
-    [flag checkpoint & said "peacock|peacocks" & peacocks>=1 & peacocks<=1] (same as on.tell)
-    [flag checkpoint & said "giraffe|giraffes" & giraffe>=1 & giraffe<=1 & in foyer] (same as on.tell)
-    [flag checkpoint & said "giraffe|giraffes" & giraffe>=1 & giraffe<=1] (same as on.tell)
-    [flag checkpoint & said "jaguar|jaguars" & jaguar>=1 & jaguar<=1 & in foyer] (same as on.tell)
-    [flag checkpoint & said "jaguar|jaguars" & jaguar>=1 & jaguar<=1] (same as on.tell)
+    [flag checkpoint & said "peacock|peacocks" & reina.alibi=1 & in foyer] (same as on.tell)
+    [flag checkpoint & said "peacock|peacocks" & reina.alibi=1] (same as on.tell)
+    [flag checkpoint & said "giraffe|giraffes" & giraffe.alibi=1 & in foyer] (same as on.tell)
+    [flag checkpoint & said "giraffe|giraffes" & giraffe.alibi=1] (same as on.tell)
+    [flag checkpoint & said "jaguar|jaguars" & jaguar.alibi=1 & in foyer] (same as on.tell)
+    [flag checkpoint & said "jaguar|jaguars" & jaguar.alibi=1] (same as on.tell)
     [don here & said "thank|thanks"] (same as on.thank)
     [don here & said "love|like|beautiful|amazing|great|nice" & key STRIKES=2] (same as on.tell)
     [don here & said "love|like|beautiful|amazing|great|nice" & key STRIKES=1] (same as on.tell)
@@ -973,13 +973,13 @@ GAME-WIDE REPLIES
       The screaming [aviary] again. Night air one way, chlorine the other.
     [in aviary] Aviary
       The peacocks, the screaming, the red keypad on the [aviary] door. South to the atrium, north to the terrace.
-    [flag escape & giraffe<=0 & not(not(jaguar<=0)) & in terrace] Zoo Terrace
+    [flag escape & giraffe.alibi=0 & not(not(jaguar.alibi=0)) & in terrace] Zoo Terrace
       Wind and alarms. The giraffe peers over the [giraffegate]. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe<=0 & not(not(jaguar>=1)) & in terrace] Zoo Terrace
+    [flag escape & giraffe.alibi=0 & not(not(jaguar.alibi>=1)) & in terrace] Zoo Terrace
       Wind and alarms. The giraffe peers over the [giraffegate]. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe>=1 & not(not(jaguar<=0)) & in terrace] Zoo Terrace
+    [flag escape & giraffe.alibi>=1 & not(not(jaguar.alibi=0)) & in terrace] Zoo Terrace
       Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe>=1 & not(not(jaguar>=1)) & in terrace] Zoo Terrace
+    [flag escape & giraffe.alibi>=1 & not(not(jaguar.alibi>=1)) & in terrace] Zoo Terrace
       Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
     [key ESCAPE & in enclosure] Broken Enclosure
       The broken enclosure again, a tire swing creaking on its chain. The terrace is the only way out.
@@ -1025,13 +1025,13 @@ GAME-WIDE REPLIES
       The [aviary] again, feathers still falling. Night air one way, chlorine the other.
     [key ESCAPE&!OUT_PEACOCKS & in aviary] No signs, no arrows. Just landmarks.
       The screaming [aviary] again. Night air one way, chlorine the other.
-    [flag escape & giraffe<=0 & not(not(jaguar<=0)) & in terrace] No signs, no arrows. Just landmarks.
+    [flag escape & giraffe.alibi=0 & not(not(jaguar.alibi=0)) & in terrace] No signs, no arrows. Just landmarks.
       Wind and alarms. The giraffe peers over the [giraffegate]. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe<=0 & not(not(jaguar>=1)) & in terrace] No signs, no arrows. Just landmarks.
+    [flag escape & giraffe.alibi=0 & not(not(jaguar.alibi>=1)) & in terrace] No signs, no arrows. Just landmarks.
       Wind and alarms. The giraffe peers over the [giraffegate]. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe>=1 & not(not(jaguar<=0)) & in terrace] No signs, no arrows. Just landmarks.
+    [flag escape & giraffe.alibi>=1 & not(not(jaguar.alibi=0)) & in terrace] No signs, no arrows. Just landmarks.
       Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The jaguar paces behind the [jaguargate]. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
-    [flag escape & giraffe>=1 & not(not(jaguar>=1)) & in terrace] No signs, no arrows. Just landmarks.
+    [flag escape & giraffe.alibi>=1 & not(not(jaguar.alibi>=1)) & in terrace] No signs, no arrows. Just landmarks.
       Wind and alarms. The [giraffegate] creaks on its hinges, the yard empty. The [jaguargate] swings in the wind. The broken enclosure gapes past the gates. The screaming aviary leads back inside.
     [key ESCAPE & in enclosure] No signs, no arrows. Just landmarks.
       The broken enclosure again, a tire swing creaking on its chain. The terrace is the only way out.
@@ -1090,10 +1090,10 @@ GAME-WIDE REPLIES
     [key ESCAPE & in office] (same as on.exits)
     [key ESCAPE&OUT_PEACOCKS & in aviary] (same as on.exits)
     [key ESCAPE&!OUT_PEACOCKS & in aviary] (same as on.exits)
-    [flag escape & giraffe<=0 & not(not(jaguar<=0)) & in terrace] (same as on.exits)
-    [flag escape & giraffe<=0 & not(not(jaguar>=1)) & in terrace] (same as on.exits)
-    [flag escape & giraffe>=1 & not(not(jaguar<=0)) & in terrace] (same as on.exits)
-    [flag escape & giraffe>=1 & not(not(jaguar>=1)) & in terrace] (same as on.exits)
+    [flag escape & giraffe.alibi=0 & not(not(jaguar.alibi=0)) & in terrace] (same as on.exits)
+    [flag escape & giraffe.alibi=0 & not(not(jaguar.alibi>=1)) & in terrace] (same as on.exits)
+    [flag escape & giraffe.alibi>=1 & not(not(jaguar.alibi=0)) & in terrace] (same as on.exits)
+    [flag escape & giraffe.alibi>=1 & not(not(jaguar.alibi>=1)) & in terrace] (same as on.exits)
     [key ESCAPE & in enclosure] (same as on.exits)
 
 ==============================================================================
@@ -1179,48 +1179,48 @@ EVENTS AND ENDINGS
       THE END. Secrets recovered: 2/3.
 
 -- events.4
-    [in foyer & leg>=0 & leg<=0] "Mr. Pryce! Welcome. Salvatore Bellandi-Reyes, but friends call me Chava, and you're a friend until you're not." He grips your hand like he's weighing it.
+    [in foyer & leg=0] "Mr. Pryce! Welcome. Salvatore Bellandi-Reyes, but friends call me Chava, and you're a friend until you're not." He grips your hand like he's weighing it.
 
       "Two staircases, two families. My mother's people came from the mountains of the west coast, my father's from Palermo. In this house we never choose between family." He taps the left banister. "Left stairs, twelve steps, for family. Right stairs, thirteen, for business. Never trust the thirteenth step, amigo." He winks. "Come, the trophy room. West." He's already strolling west, toward the glitter.
 
 -- events.5
-    [in trophy & leg>=1 & leg<=1] "My collection. Every piece has a story, and I tell none of them." He nods at the [rifle]. "Admire. Don't touch. Back east, then the salon." He's already back through the door, into the foyer.
+    [in trophy & leg=1] "My collection. Every piece has a story, and I tell none of them." He nods at the [rifle]. "Admire. Don't touch. Back east, then the salon." He's already back through the door, into the foyer.
 
 -- events.6
-    [in foyer & leg>=2 & leg<=2 & key STRIKES=2] The Don doesn't slow down or look back. "Keep up."
-    [in foyer & leg>=2 & leg<=2] He taps the marble with a heel. "Carrara. Same quarry as the old cathedrals. God and I use the same contractor." He holds out an arm toward the salon. East.
+    [in foyer & leg=2 & key STRIKES=2] The Don doesn't slow down or look back. "Keep up."
+    [in foyer & leg=2] He taps the marble with a heel. "Carrara. Same quarry as the old cathedrals. God and I use the same contractor." He holds out an arm toward the salon. East.
 
 -- events.7
-    [in salon & leg>=3 & leg<=3] "My mother's piano. Only one song is ever played on her: my mother's song. Anything else is disrespect." He watches your hands. "Now, dinner. Back west, then north." He holds the door for you and heads west, back toward the foyer.
+    [in salon & leg=3] "My mother's piano. Only one song is ever played on her: my mother's song. Anything else is disrespect." He watches your hands. "Now, dinner. Back west, then north." He holds the door for you and heads west, back toward the foyer.
 
 -- events.8
-    [in foyer & leg>=4 & leg<=4 & key STRIKES=2] (same as events.6)
-    [in foyer & leg>=4 & leg<=4] He glances at the right-hand staircase and smiles at some private joke. "My business stairs. Nobody climbs them but me." Then he's walking north, toward the smell of dinner.
+    [in foyer & leg=4 & key STRIKES=2] (same as events.6)
+    [in foyer & leg=4] He glances at the right-hand staircase and smiles at some private joke. "My business stairs. Nobody climbs them but me." Then he's walking north, toward the smell of dinner.
 
 -- events.9
-    [in dining & leg>=5 & leg<=5] "Mama Rosa sang 'Cielito Lindo' every Sunday at this table. Every Sunday. My nonna banged her spoon on the table to keep time." Then he leans in. "So tell me, Walter. Sunday dinner: my mother's pozole or my nonna's Sunday gravy?"
+    [in dining & leg=5] "Mama Rosa sang 'Cielito Lindo' every Sunday at this table. Every Sunday. My nonna banged her spoon on the table to keep time." Then he leans in. "So tell me, Walter. Sunday dinner: my mother's pozole or my nonna's Sunday gravy?"
 
 -- events.10
-    [in foyer & leg>=6 & leg<=6 & key STRIKES=2] (same as events.6)
-    [in foyer & leg>=6 & leg<=6] He takes the left staircase, the family side, two steps at a time. "Up. My office is east."
+    [in foyer & leg=6 & key STRIKES=2] (same as events.6)
+    [in foyer & leg=6] He takes the left staircase, the family side, two steps at a time. "Up. My office is east."
 
 -- events.11
-    [in landing & leg>=7 & leg<=7] He's waiting at the top, not even out of breath. "East, Walter. Follow the cigar smoke."
+    [in landing & leg=7] He's waiting at the top, not even out of breath. "East, Walter. Follow the cigar smoke."
 
 -- events.12
-    [in office & leg>=8 & leg<=8] He drops into a leather chair. "A reading room. With my name on it. You know what that does for a man's reputation?" He smiles. "Remind me, what's your bookstore called?"
+    [in office & leg=8] He drops into a leather chair. "A reading room. With my name on it. You know what that does for a man's reputation?" He smiles. "Remind me, what's your bookstore called?"
 
 -- events.13
-    [in landing & leg>=9 & leg<=9] He's halfway across the balcony already. "West. Don't look down, Walter. Nobody trusts a man who looks down."
+    [in landing & leg=9] He's halfway across the balcony already. "West. Don't look down, Walter. Nobody trusts a man who looks down."
 
 -- events.14
-    [in gallery & leg>=10 & leg<=10] "Me, by the finest painters money can scare." A guard hurries past. "My boys know the rule: the animals come first. Anything gets loose, they drop everything and chase it. North, to my girl." He strolls north, toward the sound of running water.
+    [in gallery & leg=10] "Me, by the finest painters money can scare." A guard hurries past. "My boys know the rule: the animals come first. Anything gets loose, they drop everything and chase it. North, to my girl." He strolls north, toward the sound of running water.
 
 -- events.15
-    [in atrium & leg>=11 & leg<=11] "Pepita." He flicks a gold coin into the [hippo]'s mouth, and the bronze jaw swings open, then snaps shut. "She only opens up for gold. Like my accountants. North, the birds." He heads north, toward the screaming.
+    [in atrium & leg=11] "Pepita." He flicks a gold coin into the [hippo]'s mouth, and the bronze jaw swings open, then snaps shut. "She only opens up for gold. Like my accountants. North, the birds." He heads north, toward the screaming.
 
 -- events.16
-    [in aviary & leg>=12 & leg<=12] "My peacocks. Loud, beautiful, and they don't know how to lie. North. Time you met the family." He steps north, out into the night air.
+    [in aviary & leg=12] "My peacocks. Loud, beautiful, and they don't know how to lie. North. Time you met the family." He steps north, out into the night air.
 
 -- events.20
     [flag checkpoint & since(stop 1) & key CAUGHT_BY=UNRELEASED] CAUGHT

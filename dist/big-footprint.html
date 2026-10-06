@@ -89,7 +89,7 @@ const T = {
       escape: "Papers everywhere, a chair knocked over, the humidor open and empty. Whatever mattered in here, the Don took it. The only way out is back to the balcony." },
     R10: { first: "A glass room full of peacocks that scream like car alarms with feelings. The [aviary] door has a keypad lock, glowing red. The atrium is south, and fresh night air blows in from the terrace north.",
       revisit: "The peacocks, the screaming, the red keypad on the [aviary] door. South to the atrium, north to the terrace.",
-      escape: [{ if: { min: { peacocks: 1 } }, text: "The door of the [aviary] hangs open, the keypad smashed. Feathers everywhere, and the peacocks are screaming their way through the palace. One doorway breathes fresh night air; the other smells of chlorine." },
+      escape: [{ if: "OUT_PEACOCKS", text: "The door of the [aviary] hangs open, the keypad smashed. Feathers everywhere, and the peacocks are screaming their way through the palace. One doorway breathes fresh night air; the other smells of chlorine." },
         "The [aviary] keypad is smashed, its door rattling. The peacocks are screaming louder than ever. One doorway breathes fresh night air; the other smells of chlorine."] },
     R11: { first: "A rooftop garden with a view of the whole city, glittering in the rain. Behind the [giraffegate] a giraffe chews thoughtfully; beside it, a black jaguar paces behind the [jaguargate]. The Don spreads his arms. \"My family.\"\n\nThen the alarms start, every speaker in the palace at once. Lemurs pour out of the dark, a roar shakes the glass, and the Don goes pale. \"The accountant,\" he breathes. \"He opened the big one.\"\n\nHe's gone south with his guards in three seconds flat. You are alone on a roof, holding a plaque proposal, with something enormous waking up to the east.",   // [ROOM.R11.first]
       revisit: { opening: "Wind and alarms.",   // ED-02: built from parts by animal state
@@ -127,11 +127,11 @@ const T = {
       "The left staircase is wide and carpeted, twelve steps up. The right is narrower and polished to a shine, thirteen steps. The Don is watching your eyes."],
     hippo: [{ if: { flag: "p2" }, text: "Pepita's jaw hangs open. Whatever she was guarding, you've got it." },
       "A bronze HIPPO fountain spouting water from its nostrils with great dignity. Its mouth is closed tight."],
-    aviary: [{ if: { min: { peacocks: 1 } }, text: "The AVIARY door hangs open, the keypad smashed." },
+    aviary: [{ if: "OUT_PEACOCKS", text: "The AVIARY door hangs open, the keypad smashed." },
       { if: { flag: "escape" }, text: "The AVIARY keypad is smashed, its door rattling." }, "The AVIARY door has a keypad lock, glowing red."],
-    giraffegate: [{ if: { min: { giraffe: 1 } }, text: "The GIRAFFE GATE hangs open. The giraffe is somebody else's problem now." },
+    giraffegate: [{ if: "OUT_GIRAFFE", text: "The GIRAFFE GATE hangs open. The giraffe is somebody else's problem now." },
       "A tall iron gate. The giraffe leans over it, chewing, curious about you."],
-    jaguargate: [{ if: { min: { jaguar: 1 } }, text: "The JAGUAR GATE hangs open. You're very glad you're not the one chasing it." },
+    jaguargate: [{ if: "OUT_JAGUAR", text: "The JAGUAR GATE hangs open. You're very glad you're not the one chasing it." },
       "A steel-barred gate. Behind it, the jaguar paces and watches you with yellow eyes."]
   },
   don: {
@@ -336,11 +336,13 @@ const LEGS = [["elevator", "north", "foyer"], ["foyer", "west", "trophy"], ["tro
   ["landing", "east", "office"], ["office", "west", "landing"], ["landing", "west", "gallery"], ["gallery", "north", "atrium"],
   ["atrium", "north", "aviary"], ["aviary", "north", "terrace"]];
 const ESC = { flag: "escape" }, TOUR = { not: ESC };
+// [REV8] each alibi animal's own state, a prop: 0 penned, 1 loose (an alibi to use), 2 used on Nando. Reina stands for the peacocks.
+const ALIBI = { peacocks: "reina.alibi", giraffe: "giraffe.alibi", jaguar: "jaguar.alibi" };
 const QUIZ = { dining: ["q1", T.q1.prompt], office: ["q2", T.q2.prompt] };   // the Don won't move on until you answer
 const exit = (from, dir, to) => {
   const k = LEGS.findIndex(([f, d]) => f === from && d === dir), q = QUIZ[from];
   if (k < 0) return { to, if: ESC, fail: T.tourBlock };
-  return { to, if: { any: [ESC, { min: { leg: k }, max: { leg: k }, ...(q && { flag: q[0] }) }] },
+  return { to, if: { any: [ESC, { eq: { leg: k }, ...(q && { flag: q[0] }) }] },
     fail: q ? [{ if: { not: { flag: q[0] } }, text: q[1] }, T.tourBlock] : T.tourBlock };
 };
 const exits = (from, o) => Object.fromEntries(Object.entries(o).map(([d, to]) => [d, exit(from, d, to)]));
@@ -363,8 +365,8 @@ const AGAIN = {   // Script B [ROOM.Rn.escrevisit]
 const again = id => [...(AGAIN[id] || [])].reverse().map(([k, t]) => ({ if: { flag: `escbeen_${id}`, key: k ? "ESCAPE&" + k : "ESCAPE" }, text: t }));
 const desc = id => { const t = T.room[ROOM[id]];
   return [...again(id), ...[].concat(t.escape).map(v => typeof v === "string" ? { if: ESC, text: v } : { if: { ...ESC, not: { not: v.if } }, text: v.text }),
-    { if: { flag: `been_${id}` }, text: t.revisit }, t.first]; };
-const R11 = T.room.R11.revisit, penned = (a, n) => n ? { min: { [a]: 1 } } : { max: { [a]: 0 } };
+    { if: { visited: id }, text: t.revisit }, t.first]; };   // [REV8] core visited, not a been_ flag
+const R11 = T.room.R11.revisit, penned = (a, n) => n ? { min: { [ALIBI[a]]: 1 } } : { eq: { [ALIBI[a]]: 0 } };
 const terrace = [0, 1].flatMap(g => [0, 1].map(j => ({ if: { ...ESC, ...penned("giraffe", g), not: { not: penned("jaguar", j) } },
   text: [R11.opening, R11.giraffe[g], R11.jaguar[j], R11.closing].join(" ") })));
 
@@ -383,7 +385,7 @@ const secret = (flag, item, text) => ({ set: flag, add: { secrets: 1 }, give: it
 
 // ---- Guard checkpoints (GDD 7): the next turn-costing command must be "run" or "say <released animal>"
 const CLEAR = { unset: "checkpoint", add: { cleared: 1 }, move: { nando: null } };
-const alibi = (a, words = a) => ({ if: { flag: "checkpoint", said: words, min: { [a]: 1 }, max: { [a]: 1 } }, ...CLEAR, add: { [a]: 1, cleared: 1 }, say: [{ if: { in: "foyer" }, text: T.foyerGuard[a] }, T.guard[a]] });
+const alibi = (a, words = a) => ({ if: { flag: "checkpoint", said: words, eq: { [ALIBI[a]]: 1 } }, ...CLEAR, add: { [ALIBI[a]]: 1, cleared: 1 }, say: [{ if: { in: "foyer" }, text: T.foyerGuard[a] }, T.guard[a]] });
 // [REV4] a released animal is a thing that roams two rooms; the core says when it comes and goes
 // [REV5] flies: up (S.level) when released, back down (its data level) when it first moves
 // [REV7] each animal is an actor (items.X.acts, below): offstage until released, so it starts roaming only then
@@ -391,10 +393,10 @@ const LOOSE = { peacocks: { id: "reina", route: ["atrium", "gallery"], every: 5,
   jaguar: { id: "jaguar", route: ["dining", "foyer"], every: 4 } };
 // an animal's rules as an actor: every nth turn, step along its route ("me" is the animal); no say, so the core narrates it
 const roam = a => [{ every: LOOSE[a].every, move: { me: LOOSE[a].route }, ...(LOOSE[a].flies && { level: { me: null } }) }];
-const release = (a, words) => [{ if: { said: words, max: { [a]: 0 } }, add: { [a]: 1 }, move: { [LOOSE[a].id]: LOOSE[a].route[0] },
+const release = (a, words) => [{ if: { said: words, eq: { [ALIBI[a]]: 0 } }, add: { [ALIBI[a]]: 1 }, move: { [LOOSE[a].id]: LOOSE[a].route[0] },
   ...(LOOSE[a].flies && { level: { [LOOSE[a].id]: "up" } }), say: T.alibi[a] },
   { if: { said: words }, say: T.alibi.already }];
-const unused = (a, name) => [{ if: { min: { [a]: 1 }, max: { [a]: 1 } }, text: name }];
+const unused = (a, name) => [{ if: { eq: { [ALIBI[a]]: 1 } }, text: name }];
 
 const STEP = "step|steps|stair|stairs|staircase|staircases";
 const ORD = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"], HIGH = ["fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth", "twentieth"];
@@ -704,8 +706,8 @@ const CHECKPOINT_SAY = [
   { if: { flag: "checkpoint", said: "" }, free: true, say: { rotate: T.nando.repeat } },   // NB-01: a bare "say" is free, like talking to him (D3)
   alibi("peacocks", "peacock|peacocks"), alibi("giraffe", "giraffe|giraffes"), alibi("jaguar", "jaguar|jaguars"),   // QA-01: singular works too
   ...["peacocks", "giraffe", "jaguar"].flatMap(a => [   // D4: why the answer failed
-    { if: { flag: "checkpoint", said: `${a.replace(/s$/, "")}|${a}|${a.replace(/s$/, "")}s`, max: { [a]: 0 } }, note: { CAUGHT_BY: "UNRELEASED" } },
-    { if: { flag: "checkpoint", said: `${a.replace(/s$/, "")}|${a}|${a.replace(/s$/, "")}s`, min: { [a]: 2 } }, note: { CAUGHT_BY: "USED" } }]),
+    { if: { flag: "checkpoint", said: `${a.replace(/s$/, "")}|${a}|${a.replace(/s$/, "")}s`, eq: { [ALIBI[a]]: 0 } }, note: { CAUGHT_BY: "UNRELEASED" } },
+    { if: { flag: "checkpoint", said: `${a.replace(/s$/, "")}|${a}|${a.replace(/s$/, "")}s`, min: { [ALIBI[a]]: 2 } }, note: { CAUGHT_BY: "USED" } }]),
   { if: { flag: "checkpoint", said: "lemur|lemurs" }, note: { CAUGHT_BY: "LEMURS" } },   // BG-04: not alibis, but honest
   { if: { flag: "checkpoint", said: "tony|big tony|bigfoot|sasquatch" }, note: { CAUGHT_BY: "TONY" } },
   { if: { flag: "checkpoint", said: "hippo|pepita" }, note: { CAUGHT_BY: "HIPPO" } },
@@ -849,9 +851,9 @@ const G = {
     aviary: { name: [{ if: "OUT_PEACOCKS", text: "EMPTY AVIARY" }, "AVIARY"],   // [REV4] names follow the state
       cat: "FIXTURE", at: "aviary", fixed: true, aliases: ["door", "keypad"], desc: T.item.aviary },
     // [REV4] the loose animals: offstage until released, then roaming (kind "animal": take, eat, ride, pet)
-    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", acts: roam("giraffe"), fixed: true, aliases: ["mariposa", "neck"], level: "up", desc: T.animal.giraffe },   // [REV5] six meters: look up
-    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", acts: roam("jaguar"), fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], level: "down", desc: T.animal.jaguar },
-    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", acts: roam("peacocks"), fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], level: "down", desc: T.animal.reina },   // up while S.level says so
+    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", acts: roam("giraffe"), fixed: true, aliases: ["mariposa", "neck"], props: { alibi: 0 }, level: "up", desc: T.animal.giraffe },   // [REV5] six meters: look up
+    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", acts: roam("jaguar"), fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], props: { alibi: 0 }, level: "down", desc: T.animal.jaguar },
+    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", acts: roam("peacocks"), fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], props: { alibi: 0 }, level: "down", desc: T.animal.reina },   // up while S.level says so
     giraffegate: { name: [{ if: "OUT_GIRAFFE", text: "OPEN GIRAFFE GATE" }, "GIRAFFE GATE"], aliases: ["giraffe gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.giraffegate },
     jaguargate: { name: [{ if: "OUT_JAGUAR", text: "OPEN JAGUAR GATE" }, "JAGUAR GATE"], aliases: ["jaguar gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.jaguargate }
   },
@@ -930,7 +932,7 @@ const G = {
     { if: { flag: "won" }, note: { ENDING: "W1" }, finish: ENDINGS.W1 },
     // tour: arriving at each stop moves the Don along and plays his line
     // (every move has a say, so the core never narrates his comings and goings; R11's text has him spread his arms)
-    ...LEGS.map(([, , to], k) => ({ if: { in: to, min: { leg: k }, max: { leg: k } }, add: { leg: 1 }, move: { don: to },
+    ...LEGS.map(([, , to], k) => ({ if: { in: to, eq: { leg: k } }, add: { leg: 1 }, move: { don: to },
       say: to === "foyer" && k > 0 ? [{ if: { key: "STRIKES=2" }, text: T.don.pass.cold }, T.don.pass[k / 2 + 1]]   // PASS(2)-PASS(4)
         : T.don.stop[ROOM[to]] && LEGS.findIndex(l => l[2] === to) === k ? T.don.stop[ROOM[to]] + (QUIZ[to] ? " " + QUIZ[to][1] : "")
         : T.don.leg[k] || "" })),
@@ -949,10 +951,8 @@ const G = {
     { if: { min: { cleared: 1 } }, set: "cp7_done" },
     { if: { min: { cleared: 2 } }, set: "cp2_done" },
     // [REV7] the loose animals roam as actors (items.X.acts), after these events
-    // ESC_REVISIT: this room already seen during ESCAPE
-    ...Object.keys(ROOM).map(r => ({ if: { in: r, ...ESC }, set: `escbeen_${r}` })),
-    // REVISIT text after the first look at each room
-    ...Object.keys(ROOM).map(r => ({ if: { in: r }, set: `been_${r}` }))
+    // ESC_REVISIT: this room already seen during ESCAPE (the first look at any room is the core's visited:)
+    ...Object.keys(ROOM).map(r => ({ if: { in: r, ...ESC }, set: `escbeen_${r}` }))
   ]
 };
 
@@ -960,20 +960,20 @@ const G = {
 G.nouns = NOUNS;
 G.conds = {   // GDD 12.4: the only states Script lines may name
   TOUR: TOUR, ESCAPE: ESC,
-  "STRIKES=0": { max: { strikes: 0 } }, "STRIKES=1": { min: { strikes: 1 }, max: { strikes: 1 } }, "STRIKES=2": { min: { strikes: 2 } },
+  "STRIKES=0": { max: { strikes: 0 } }, "STRIKES=1": { eq: { strikes: 1 } }, "STRIKES=2": { min: { strikes: 2 } },
   Q1: { flag: "q1" }, Q2: { flag: "q2" },
   COIN_HELD: { has: "coin" }, COIN_SPENT: { flag: "p2" }, COIN_DROPPED: { flag: "q2", not: { any: [{ has: "coin" }, { flag: "p2" }] } },
   P1: { flag: "p1" }, P2: { flag: "p2" }, P3: { flag: "p3" },
   GIRAFFE_HERE: { here: "giraffe" }, JAGUAR_HERE: { here: "jaguar" }, REINA_HERE: { here: "reina" },   // [REV4] the roaming animals
-  OUT_GIRAFFE: { min: { giraffe: 1 } }, OUT_JAGUAR: { min: { jaguar: 1 } }, OUT_PEACOCKS: { min: { peacocks: 1 } },
-  USED_GIRAFFE: { min: { giraffe: 2 } }, USED_JAGUAR: { min: { jaguar: 2 } }, USED_PEACOCKS: { min: { peacocks: 2 } },
+  OUT_GIRAFFE: { min: { "giraffe.alibi": 1 } }, OUT_JAGUAR: { min: { "jaguar.alibi": 1 } }, OUT_PEACOCKS: { min: { "reina.alibi": 1 } },
+  USED_GIRAFFE: { min: { "giraffe.alibi": 2 } }, USED_JAGUAR: { min: { "jaguar.alibi": 2 } }, USED_PEACOCKS: { min: { "reina.alibi": 2 } },
   RAN: { min: { ran: 1 } },
   CP7_PENDING: { flag: "checkpoint", in: "gallery" }, CP2_PENDING: { flag: "checkpoint", in: "foyer" },
   CP7_DONE: { flag: "cp7_done" }, CP2_DONE: { flag: "cp2_done" },
   BAND_A: { ...ESC, min: { clock: 7 } }, BAND_B: { ...ESC, min: { clock: 4 }, max: { clock: 6 } },
   BAND_C: { ...ESC, min: { clock: 2 }, max: { clock: 3 } }, BAND_D: { ...ESC, max: { clock: 1 } },
-  "SECRETS=0": { max: { secrets: 0 } }, "SECRETS=1": { min: { secrets: 1 }, max: { secrets: 1 } },
-  "SECRETS=2": { min: { secrets: 2 }, max: { secrets: 2 } }, "SECRETS=3": { min: { secrets: 3 } },
+  "SECRETS=0": { max: { secrets: 0 } }, "SECRETS=1": { eq: { secrets: 1 } },
+  "SECRETS=2": { eq: { secrets: 2 } }, "SECRETS=3": { min: { secrets: 3 } },
   "SECRETS>=1": { min: { secrets: 1 } }   // Script's R12 footprints and L3 tail: SECRETS=1, 2 or 3
 };
 G.groups = { touch: ["handle"], push: ["handle"], pull: ["handle"], use: ["feed"], burn: ["break"] };   // + F-03: burn falls back to break   // C1: HANDLE = touch, push, pull, kick, move
@@ -1342,7 +1342,7 @@ G.throughDoor = r => {
   const t = T.room[ROOM[r]];
   if (r === "elevator" && !test(ESC)) return "The gold elevator, doors open, mirrors gleaming.";   // you can't see your reflection from out here
   const s = test(ESC) ? (r === "terrace" ? txt(terrace) : txt(t.escape || ""))
-    : S.flags["been_" + r] && typeof t.revisit === "string" ? t.revisit : (t.first || "").split(/(?<=[.!?])\s+/)[0];
+    : S.been[r] && typeof t.revisit === "string" ? t.revisit : (t.first || "").split(/(?<=[.!?])\s+/)[0];
   const [first, ...rest] = s.split(/(?<=[.!?]["”]?)\s+/);
   return [first, ...rest.filter(x => !DIRECTIONS.test(x))].join(" ").replace(/ again(?=[,.:;])/g, "");
 };

@@ -99,3 +99,12 @@ The full Script is now generated from `game.js`: `node games/big-footprint/desig
 
 The engine's actors (`items.X.acts`, run after each turn's events) replace the three roaming events. Each animal carries its own rules, built by `roam(animal)` from the `LOOSE` table: every n turns, `move: { me: route }`, and Reina's `level: { me: null }` landing. The `min: { giraffe: 1 }` gates are gone: an offstage animal doesn't act, so releasing it is what starts it. Compared with the rev 6 build over 15,000 seeded commands, the output is identical except for the order of two arrivals on one turn (now data order). The feature test checks the rules and that nothing roams before it's released.
 
+## Rev 8: engine audit
+
+Every engine feature checked against the game (GDD section 15 has the full table). Three hand-made pieces now use the engine:
+- **Props:** the `giraffe`, `jaguar` and `peacocks` counters became each animal's own prop (`giraffe.alibi`, `jaguar.alibi`, `reina.alibi`), declared in the animals' `props` and mapped by `ALIBI`.
+- **`eq:`** replaces nine `min`+`max` pairs that meant "exactly".
+- **`visited:`** replaces the twelve `been_<room>` flags and their events; `throughDoor` reads `S.been`.
+
+Compared with the rev 7 build over 15,000 seeded commands, the output is identical, and the generated Script's text is unchanged (only its condition labels: `visited foyer`, `OUT_PEACOCKS`, `secrets=1`). `make-script.js` now prints `eq` as `a=n`.
+
