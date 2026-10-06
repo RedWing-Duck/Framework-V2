@@ -227,3 +227,11 @@ Step 2 of the systems groundwork.
 
 big-footprint is unchanged on purpose: its `nouns.js` keeps its `before` hook and its tie and defer rules.
 
+## Ninth pass: the reach hook
+
+Step 3 of the systems groundwork.
+
+| Item | Change | Test |
+|---|---|---|
+| The light add-on blocked only `look`, `take` and `examine` in the dark, so you could eat, smell, push or give what you couldn't see | Hook `reach(ids)`: add-ons filter `reach()`, which every command reads; `take all`, `talk`, `ask`, `look up/down` and the arrive/leave lines read it too (`around()`). light keeps only what you carry in the dark, and its `before` now just says so: for `look`, or a line naming something here that's out of reach | reach: the light add-on's reach hook makes darkness cover every verb, not only look, take and examine |
+

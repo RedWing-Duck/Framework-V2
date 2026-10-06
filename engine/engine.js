@@ -37,7 +37,7 @@ const NOOBJ = ["inventory", "wait", "help", "again", "undo", "restart", "menu", 
 // a word that opens the second slot: "give the bread TO the guard", "open the gate WITH the key" (LINE.what / LINE.with)
 const ROLES = ["to", "with", "on", "onto", "in", "into", "inside", "at", "about", "from", "for", "under", "behind"];
 const BREAK = ["and", "then", "except", "but", ...ROLES];   // words that end a noun phrase (see named())
-const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [], changed: [], unhandled: [] };
+const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [], changed: [], unhandled: [], reach: [] };
 // validator tables: REFS = add-on checks per data key; META = keys allowed next to effects;
 // MAPS = keys whose own keys are names ("def": each value is a definition, "data": each value is data, "map": a map of maps)
 const REFS = tbl({}), META = ["if", "repeat", "every", "text", "next"], MAPS = tbl({ rooms: "def", items: "def", npcs: "def", kinds: "map",
@@ -136,7 +136,10 @@ const holder = id => own(G.items, id)?.holds;                               // "
 const inside = id => holder(id) && !S.shut[id] ? at(G.items, id) : [];      // what can be seen in or on it
 const nested = ids => ids.flatMap(id => [id, ...nested(inside(id))]);       // these, and everything visible in or on them
 const where = id => { let p = S.loc[id]; for (let n = 0; holder(p) && n < 50; n++) p = S.loc[p]; return p; };   // the room (or "player") around it
-const reach = () => [...nested([...inv(), ...at(G.items)]), ...at(G.npcs), ...(G.self ? ["self"] : [])];
+// everything the player can touch or name now: carried, here (through open holders), people here, and self.
+// Add-ons' reach hooks filter it (darkness, distance, perception), and every command reads it, so one filter covers every verb.
+const reach = () => HOOKS.reach.reduce((r, h) => h(r) || r, [...nested([...inv(), ...at(G.items)]), ...at(G.npcs), ...(G.self ? ["self"] : [])]);
+const around = () => { const r = reach(); return [...nested(at(G.items)), ...at(G.npcs)].filter(id => r.includes(id)); };   // in reach and not carried
 // "In the [box]: ..." / "On the [table]: ..." for each holder among ids that has something visible
 const contents = ids => nested(ids).filter(id => inside(id).length)
   .forEach(id => print(msg(holder(id) === "on" ? "onIt" : "inIt", { it: `[${id}]`, list: names(inside(id)) })));
@@ -280,7 +283,7 @@ const LAST_FX = ["say", "do", "goto", "end"];
 
 // ---- replies and events
 // visible in the player's room (listed, not hidden, not in a closed box); the exit from here that leads to room r
-const shown = id => !thing(id)?.hidden && (own(G.npcs, id) ? S.loc[id] === S.room : nested(at(G.items)).includes(id));
+const shown = id => !thing(id)?.hidden && around().includes(id);
 const exitTo = r => Object.keys(G.rooms[S.room].exits || {}).find(k => dest(G.rooms[S.room].exits[k]) === r) || "";
 let TELL = false;   // true while an event that says nothing runs: its moves are narrated
 // run one effect object (a string is { say }); stops early once the game has ended
@@ -323,7 +326,7 @@ const LEVELS = tbl({ up: "up", u: "up", above: "up", upward: "up", upwards: "up"
   down: "down", d: "down", below: "down", downward: "down", downwards: "down" });
 const levelOf = id => own(S.level, id) ?? (pick(thing(id)?.level) || null);
 function lookAt(l) {
-  const t = txt(own(G.rooms[S.room], l)), ids = [...nested(at(G.items)), ...at(G.npcs)].filter(id => levelOf(id) === l);
+  const t = txt(own(G.rooms[S.room], l)), ids = around().filter(id => levelOf(id) === l);
   if (t) print(t);
   for (const id of ids) { print(msg("levelSee", { it: `[${id}]`, text: txt(thing(id).desc) || msg("plain") })); S.seen[id] = true; point(id); }   // "The rat: Fat, grey..."
   if (!t && !ids.length) print(msg("levelNone", { dir: l }));
@@ -365,7 +368,7 @@ function choose(k) {
 // the first key of npcs.X.topics whose phrases ("gate|door") the words contain, else its "*", else noTopic
 function topic(a) {
   const w = words(a), i = w.indexOf("about"), who = i < 0 ? a : w.slice(0, i).join(" "), what = ` ${(i < 0 ? w : w.slice(i + 1)).join(" ")} `;
-  const n = named(who, at(G.npcs))[0] || at(G.npcs).find(id => G.npcs[id].topics) || at(G.npcs)[0];   // unnamed: someone with topics
+  const P = around().filter(id => own(G.npcs, id)), n = named(who, P)[0] || P.find(id => G.npcs[id].topics) || P[0];   // unnamed: someone with topics
   if (!n) return notHere("noOne");
   const T = G.npcs[n].topics || {}, k = Object.keys(T).find(k => k !== "*" && k.split("|").some(p => what.includes(` ${words(p).join(" ")} `)));
   LINE.it = n;
@@ -425,7 +428,7 @@ const CMDS = tbl({
   },
   use() { LINE.it ? print(msg("nothing")) : notHere(); },
   talk(a, ids) {
-    const n = a ? ids.find(id => own(G.npcs, id)) : at(G.npcs)[0];   // people only: "talk to the coin" finds no one
+    const n = a ? ids.find(id => own(G.npcs, id)) : around().find(id => own(G.npcs, id));   // people only: "talk to the coin" finds no one
     if (!n) return notHere("noOne");
     own(G.npcs, n)?.dialogue ? node(n, "start") : print(msg("silent", { it: `[${n}]` }));
   },
@@ -614,7 +617,7 @@ function many(v, a) {
   const all = words(a), x = all.findIndex(t => t === "except" || t === "but"), w = x < 0 ? all : all.slice(0, x);
   const not = x < 0 ? [] : named(all.slice(x + 1).join(" "), reach());
   if (w.includes("all") || w.includes("everything"))
-    return (v === "take" ? nested(at(G.items)).filter(id => !G.items[id].fixed && !G.items[id].hidden) : inv()).filter(id => !not.includes(id));
+    return (v === "take" ? around().filter(id => own(G.items, id) && !G.items[id].fixed && !G.items[id].hidden) : inv()).filter(id => !not.includes(id));
   if (w.includes("both")) {   // "take both mugs", or "both" for the last "Which do you mean?"
     const n = named(w.join(" "), reach()), ids = n.amb ? n.amb.ids : n.length > 1 ? n : (S.pick?.ids || []).filter(id => reach().includes(id));
     return ids.length > 1 ? ids : null;

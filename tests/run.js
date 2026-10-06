@@ -228,6 +228,24 @@ test("game-local add-ons (\"./name\") build, and the input, text and start hooks
   assert.equal(g.lines()[0], "My Game");
 });
 
+test("reach: the light add-on's reach hook makes darkness cover every verb, not only look, take and examine", () => {
+  const cell = CELL.replace('aliases: ["loaf", "heel"], desc: "Hard as a rock, but food is food." },',
+    'aliases: ["loaf", "heel"], desc: "Hard as a rock, but food is food.", on: { eat: "Crunchy.", smell: "Mold." } },');
+  const g = newGame(cell);
+  g.type("d");
+  for (const c of ["eat bread", "smell the bread", "give bread to rat", "look up", "x bread", "take the loaf"]) {
+    g.type(c); assert.equal(g.last(), "It's pitch dark. You can't see a thing.", c); }
+  assert.equal(g.get("reach()").includes("bread"), false, "out of reach in the dark");
+  g.type("take all");
+  assert.equal(g.get("S.loc.bread"), "cellar", "take all finds nothing it can reach");
+  g.type("u", "e", "take lantern", "w", "d", "smell bread", "eat bread");
+  assert.deepEqual(g.lines().slice(-3), ["Mold.", "> eat bread", "Crunchy."], "with a light, every verb reaches it again");
+  g.type("drop lantern", "x lantern");
+  assert.equal(g.last(), "An oil lantern, burning steadily.", "a light on the floor still lights the room");
+  g.type("u", "inventory");
+  assert.equal(g.last(), "You carry nothing.");
+});
+
 test("light: Continue and undo don't reveal a dark room", () => {
   let g = newGame();
   g.type("d", "menu");

@@ -3,7 +3,8 @@
           items.X.light: true, or a COND (gives light only while it passes)
                          e.g. light:{ flag:"lamp_lit" } with a "use" that sets it
    In the dark (dark room, no light source carried or in the room) the player
-   can't look, take, or examine anything they aren't carrying.
+   can only reach what they carry (the reach hook), so no verb finds anything
+   else; looking, or naming something here, says it's dark.
    Condition: dark:true / dark:false - is the player in darkness right now?
    Messages (reword in G.messages): dark, darkFalls.
    ------------------------------------------------------------------------- */
@@ -15,8 +16,9 @@
     state: { room: null, dark: false },
     messages: { dark: "It's pitch dark. You can't see a thing.", darkFalls: "Everything goes dark." },
     conditions: { dark: v => inDark() === v },
-    before(v, a) {
-      if (inDark() && (v === "look" || v === "take" || (v === "examine" && !find(a, inv()))))
+    reach: ids => inDark() ? ids.filter(id => id === "self" || where(id) === "player") : ids,   // only what you carry
+    before(v, a, ids) {   // look, or a line that names something here you can't reach now
+      if (inDark() && (v === "look" || (a && !ids.length && named(a, [...nested(at(G.items)), ...at(G.npcs)]).length)))
         return print(msg("dark")), true;
     },
     afterTurn() {   // light appears or vanishes while you stand still: reveal or hide the room

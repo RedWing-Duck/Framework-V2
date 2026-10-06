@@ -52,6 +52,9 @@ addon({
   before(verb, arg, ids)  before every command, including the engine's own (look on entering); true stops it.
                         Runs before the core asks "Which do you mean?", so an add-on can resolve names itself.
                         It also runs before the game's own replies: use it to block (darkness), not to add
+  reach(ids)            filter what the player can touch or name now (darkness, distance, perception): return the ids
+                        to keep. Every command, "take all", talk, ask, look up/down and "arrives"/"leaves" lines use it.
+                        Don't call reach() inside it
   unhandled(verb, ids, arg)  the game's replies didn't answer (things, kinds, room, self, G.on): return true to answer
                         instead of the built-in command and the verb's fail line. The place for a system that adds
                         meaning to verbs (recipes, weight, combat, magic) without taking them from the game's data
@@ -72,7 +75,8 @@ addon({
 
 Engine helpers add-ons may use: `G`, `S`, `print(text, cls)`, `msg(id, vars)`, `txt(TEXT, vars)`, `test(COND)`,
 `run(EFFECT)`, `reply(REPLY)`, `exec(verb, arg)`, `named(text, ids)`, `find(text, ids)`, `thing(id)`, `at(table, place)`,
-`inv()`, `reach()` (everything the player can touch, through open holders), `nested(ids)` (those and what's visible in them),
+`inv()`, `reach()` (everything the player can touch, through open holders, after the reach hooks), `around()` (the part of
+that in the room, not carried), `nested(ids)` (those and what's visible in them),
 `where(id)` (the room, or "player", around a thing), `holder(id)` ("in", "on" or undefined), `contents(ids)` (prints what's in them),
 `names(ids)`, `list(v)`, `own(obj, key)`, `notHere(msgId)` (prints it, costs no turn), `MULTI` (verbs that take "all"),
 `isFree(verb)`, `isDir(word)`, `words(text)`, `LINE` (the command being answered: `LINE.verb`, `LINE.said` (the words as
@@ -103,9 +107,13 @@ Rules:
 3. **State.** `state: { room: null, dark: false }` records what the player last saw, saved in `S.light`.
 4. **Messages.** `messages: { dark: "It's pitch dark...", darkFalls: "Everything goes dark." }` — a game rewords them in `G.messages`.
 5. **Condition.** `conditions: { dark: v => inDark() === v }` lets any game write `if: { dark: true }`.
-6. **Blocking commands.** `before(v, a)` stops `look`, `take` and `examine` of anything not carried. Entering a room runs `look` through `exec`, so walking into the dark is covered.
-7. **Reacting to changes.** `afterTurn()` handles light changing while the player stands still.
-8. **Checking data.** `validate(need)` reports a dark room when no item gives light.
+6. **Out of reach.** `reach(ids)` keeps only what the player carries while it's dark. Every command finds things through
+   `reach()`, so no verb (eat, push, give, take all, talk...) can touch what's in the dark room, without listing verbs.
+7. **Saying so.** `before(v, a, ids)` prints the dark message for `look`, and for a line that names something here that
+   is out of reach now (`ids` is empty, but the name fits a thing in the room). Entering a room runs `look` through `exec`,
+   so walking into the dark is covered.
+8. **Reacting to changes.** `afterTurn()` handles light changing while the player stands still.
+9. **Checking data.** `validate(need)` reports a dark room when no item gives light.
 
 ## Writing a new add-on
 
@@ -128,7 +136,7 @@ clock with sound bands, a run report) live in two game-local add-ons, `verbs.js`
 
 | File | Adds | Data it reads |
 |---|---|---|
-| `light.js` | dark rooms; a `dark` condition | `rooms.X.dark`, `items.X.light` |
+| `light.js` | dark rooms (only what you carry is in reach); a `dark` condition | `rooms.X.dark`, `items.X.light` |
 | `craft.js` | `combine a and b` / `use a on b` (recipes answer when the game's replies don't) | `G.recipes` |
 | `journal.js` | `log`/`recap` effects, a `logged` condition, a free `journal` command | `G.journal` |
 | `endings.js` | remembers found endings between plays; "Endings found: N of M" on the start menu | `G.endings` |
