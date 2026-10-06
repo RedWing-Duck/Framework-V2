@@ -216,3 +216,14 @@ Step 1 of the systems groundwork (props, then `unhandled`, `reach`, `roll`, acto
 | Numbers lived only in game-wide counters, so a guard's health was a counter named `guard_hp` | **Props**: `items.X.props`, `npcs.X.props`, `self.props` (numbers and words). `"guard.hp"` works in `min`/`max`/`eq`/`add` and `{guard.hp}`; condition and effect `prop`. Only changes are saved (`S.props`). damp-cell's `annoyed` counter is now the guard's own prop | props: numbers and words on things (and the player)... |
 | Add-ons had to poll every turn to react to a change | Hook `changed(id, key, from, to)`: props, counters changed by `add`, and every move (key `"loc"`), through `setProp` / `setLoc`. A nesting limit stops loops | same test, with `tests/words/watch.js` |
 
+## Eighth pass: the unhandled hook
+
+Step 2 of the systems groundwork.
+
+| Item | Change | Test |
+|---|---|---|
+| An add-on's only way into a command was `before`, which runs ahead of the game's own replies, so a system had to steal verbs from the data (big-footprint's `nouns.js` needed tie and defer rules to step back) | Hook `unhandled(verb, ids, arg)`: after replies (things, kinds, room, self, `G.on`), before the built-in command and the fail line; `true` answers | unhandled: add-ons answer only after the game's replies, before the built-in command (`tests/words/watch.js`: a weight limit on `take`, a `zap` verb) |
+| `craft` ran its recipes in `before`, so a recipe beat the game's own reply on the same thing | `craft` answers in `unhandled`. A game whose reply on `use` passes now gets its reply; with no passing reply, recipes behave as before | same test (sundown with a plywood reply) |
+
+big-footprint is unchanged on purpose: its `nouns.js` keeps its `before` hook and its tie and defer rules.
+

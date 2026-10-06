@@ -244,8 +244,9 @@ When the player types a verb, the engine tries, in order, and stops at the first
 2. the room's `on[verb]`;
 3. when nothing was named: `self.on[verb]` (so "think" or "dance" alone can answer);
 4. the game's `on[verb]`;
-5. the built-in command, if there is one (`take`, `use`, `examine`...);
-6. `verbs[verb].fail`, or "You can't {verb} that." / "{Verb} what?".
+5. add-ons' `unhandled` hooks (recipes, weight limits...: see `docs/ADDONS.md`);
+6. the built-in command, if there is one (`take`, `use`, `examine`...);
+7. `verbs[verb].fail`, or "You can't {verb} that." / "{Verb} what?".
 
 So "use key on door" asks the door first, then the key, and "give the bread to the guard", "give the guard the bread" and
 "give him the bread" all ask the guard first: a reply on the bread only answers when the guard's doesn't. A reply on a built-in verb (like `on.take` or `on.go`) only replaces the built-in when one of its entries passes. A room's `on.go` with `if: { said: "down" }` can guard one direction.

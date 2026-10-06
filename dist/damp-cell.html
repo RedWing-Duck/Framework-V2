@@ -117,8 +117,8 @@ return G;
      act(words)   dialogue numbers, phrasal verbs, aliases, directions,
                   the two slots ("give X to Y"); count the turn (and keep an undo snapshot)
      exec(v, a)   pronouns, the two slots, "before" hooks, "Which do you mean?",
-                  "(first taking...)" -> replies (respond) -> the built-in
-                  command (CMDS) -> the verb's fail line
+                  "(first taking...)" -> replies (respond) -> "unhandled" hooks
+                  -> the built-in command (CMDS) -> the verb's fail line
      then         events, "afterTurn" hooks, the status line, save
 
    Sections, in order: tables and state · messages · storage · things and
@@ -144,7 +144,7 @@ const NOOBJ = ["inventory", "wait", "help", "again", "undo", "restart", "menu", 
 // a word that opens the second slot: "give the bread TO the guard", "open the gate WITH the key" (LINE.what / LINE.with)
 const ROLES = ["to", "with", "on", "onto", "in", "into", "inside", "at", "about", "from", "for", "under", "behind"];
 const BREAK = ["and", "then", "except", "but", ...ROLES];   // words that end a noun phrase (see named())
-const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [], changed: [] };
+const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [], changed: [], unhandled: [] };
 // validator tables: REFS = add-on checks per data key; META = keys allowed next to effects;
 // MAPS = keys whose own keys are names ("def": each value is a definition, "data": each value is data, "map": a map of maps)
 const REFS = tbl({}), META = ["if", "repeat", "every", "text", "next"], MAPS = tbl({ rooms: "def", items: "def", npcs: "def", kinds: "map",
@@ -606,6 +606,7 @@ function exec(v, a = "", said = a) {
     if (!carry(v)) return;
     if (respond(v, ids)) return;
     LINE.it = bySlot(ids).find(id => own(thing(id).on, v)) || ids[0] || null;
+    if (HOOKS.unhandled.some(h => h(v, ids, a))) return;   // nothing in the game answered: add-ons may, before the built-in
     if (own(CMDS, v)) return CMDS[v](a, ids);
     if (a && !ids.length && named(a, Object.keys({ ...G.items, ...G.npcs })).length) return notHere();
     print(a ? txt(own(G.verbs, v)?.fail) || msg("cant") : msg("what"));

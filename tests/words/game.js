@@ -2,7 +2,7 @@
 // Test game for the word layer: two slots, narrowing by a word, "the other one", "both", "all except",
 // pronouns by kind, proper names, names that follow the state, narrated moves, oops, brief, transcript;
 // replies in slot order (the letter's own "show" vs Big Tony's); up and down in the hall (look up / look down, level);
-// props (Big Tony's patience and mood, the player's nerve) and the changed hook (./watch.js).
+// props (Big Tony's patience and mood, the player's nerve) and the changed and unhandled hooks (./watch.js).
 // The study holds a name with a role word in it, articles, and a proper name that shares a word with an item.
 // ./first.js and ./second.js both answer "ring" in a before hook: the one listed first in build.json wins.
 const G = {
@@ -23,6 +23,8 @@ const G = {
     map: { name: "honest map", article: "an", at: "study", desc: "It admits where it's wrong." },
     sugar: { name: "sugar", article: "some", at: "study", desc: "Sweet.",
       on: { take: "The sugar is caked to the shelf." } },   // a reply that refuses a take, typed or implicit
+    anvil: { name: "anvil", at: "hall", props: { weight: 50 }, desc: "Very heavy.",   // ./watch.js refuses to lift it (unhandled)
+      on: { zap: "The anvil hums." } },
     kite: { name: "kite", at: "hall", level: "up", desc: "Paper, torn, caught on a beam." },   // up: "look up" shows it; dropped, it lands down
     hook: { name: "hook", at: "hall", fixed: true, hidden: true, level: [{ if: { flag: "fallen" }, text: "down" }, "up"], desc: "Rusted iron." },   // the level follows the state
     toy: { name: "toy dog", aliases: ["dog"], at: "study", desc: "Stuffed." },
@@ -30,13 +32,13 @@ const G = {
       on: { light: [{ if: { flag: "lit" }, say: "It's already lit." }, { set: "lit", say: "{The} flickers on." }] } }
   },
   npcs: {
-    tony: { name: "Big Tony", proper: true, pronoun: "him", at: "kitchen", props: { patience: 2, mood: "calm" },
+    tony: { name: "Big Tony", proper: true, pronoun: "him", at: "kitchen", props: { patience: 2, mood: "calm", weight: 300 },
       desc: [{ if: { prop: { "tony.mood": "furious" } }, text: "Big, and red in the face." }, "Big."],
       on: { show: [{ if: { what: "letter" }, say: "{The:with} reads {the:what} and goes pale." }, "{The:with} shrugs at {the:what}."] } },
     ana: { name: "Ana", proper: true, pronoun: "her", at: "hall", desc: "Busy." },
     rex: { name: "Rex", proper: true, aliases: ["dog"], at: "study", desc: "A real dog." }
   },
-  verbs: { show: { carry: true } },
+  verbs: { show: { carry: true }, zap: { fail: "Zap what?" } },
   on: { weigh: "You weigh {a}. {A} is lighter than it looks.",
     whistle: { set: "walking", say: "You whistle. Ana starts pacing." },
     shake: [{ if: { level: { kite: "up" }, in: "hall" }, level: { kite: "down" }, say: "You shake the beam. The kite drops." }, "Nothing falls."],

@@ -445,6 +445,33 @@ test("props: numbers and words on things (and the player), read by conditions an
   assert.ok(bad.some(p => p.startsWith("npcs.tony.props.mood")), bad.join("\n"));
 });
 
+test("unhandled: add-ons answer only after the game's replies, before the built-in command", () => {
+  const g = WORDS();
+  g.type("e", "take anvil");
+  assert.equal(g.last(), "The anvil won't budge.", "a built-in verb: the hook runs before the built-in take");
+  assert.equal(g.get("S.loc.anvil"), "hall");
+  g.type("take kite");
+  assert.equal(g.last(), "Taken: kite", "the hook passes: the built-in runs");
+  g.type("zap anvil");
+  assert.equal(g.last(), "The anvil hums.", "the thing's own reply wins over the add-on");
+  g.type("zap kite");
+  assert.equal(g.last(), "You zap the kite. Nothing much happens.", "no reply: the add-on answers");
+  g.type("zap");
+  assert.equal(g.last(), "Zap what?", "the hook passes: the verb's own line");
+  g.type("w", "take tony");
+  assert.equal(g.last(), "Big Tony won't budge.", "people too, by prop");
+  // craft: a recipe answers only when the game's replies don't
+  const c = newGame(SUN.replace('plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window." },',
+    'plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window.", on: { use: [{ if: { flag: "measured" }, say: "Measure twice." }] } },'));
+  c.type(...TO_BOARD.slice(0, -1), "use plywood on window");
+  assert.equal(c.get("S.flags.boarded"), true, "the reply didn't pass: the recipe ran");
+  const d = newGame(SUN.replace('plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window." },',
+    'plywood: { name: "plywood", at: "shed", desc: "One sheet. Big enough for one window.", on: { use: "Measure twice." } },'));
+  d.type(...TO_BOARD);
+  assert.equal(d.last(), "Measure twice.", "the game's own reply wins over the recipe");
+  assert.equal(d.get("S.flags.boarded || false"), false);
+});
+
 test("pointing: a word narrows a name before asking, 'the other one', 'both', 'all except'", () => {
   const g = WORDS();
   g.type("take chipped cup");

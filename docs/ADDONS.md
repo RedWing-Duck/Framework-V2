@@ -50,7 +50,11 @@ addon({
   // hooks
   input(words, raw)     before a typed line is read: return new words, or true to stop (handled)
   before(verb, arg, ids)  before every command, including the engine's own (look on entering); true stops it.
-                        Runs before the core asks "Which do you mean?", so an add-on can resolve names itself
+                        Runs before the core asks "Which do you mean?", so an add-on can resolve names itself.
+                        It also runs before the game's own replies: use it to block (darkness), not to add
+  unhandled(verb, ids, arg)  the game's replies didn't answer (things, kinds, room, self, G.on): return true to answer
+                        instead of the built-in command and the verb's fail line. The place for a system that adds
+                        meaning to verbs (recipes, weight, combat, magic) without taking them from the game's data
   afterTurn()           after each turn's events, unless the game has ended
   start()               a new game was set up (S is fresh), before the intro prints
   enter(room)           the player just entered a room (after it was shown): encounters, room scripts
@@ -125,10 +129,11 @@ clock with sound bands, a run report) live in two game-local add-ons, `verbs.js`
 | File | Adds | Data it reads |
 |---|---|---|
 | `light.js` | dark rooms; a `dark` condition | `rooms.X.dark`, `items.X.light` |
-| `craft.js` | `combine a and b` / `use a on b` | `G.recipes` |
+| `craft.js` | `combine a and b` / `use a on b` (recipes answer when the game's replies don't) | `G.recipes` |
 | `journal.js` | `log`/`recap` effects, a `logged` condition, a free `journal` command | `G.journal` |
 | `endings.js` | remembers found endings between plays; "Endings found: N of M" on the start menu | `G.endings` |
 | `tags.js` | item colors: key, combinable/tool, usable, scenery; a free `colors` command | `items.X.tag`, recipes, `has:` in replies, `on` |
 | `hints.js` | `hints:TEXT` effect: "Ideas:" for what changes something right here; `secret`, `hint` | `G.recipes`, `on` |
 
-Order: `light` first (darkness should block sight before anything else answers), then `craft` before anything that handles `use`.
+Order: `light` first (darkness should block sight before anything else answers). `craft` answers in `unhandled`, after the
+game's own replies, so a reply on a thing (`window.on.use`) wins over a recipe for it.

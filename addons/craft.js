@@ -5,6 +5,8 @@
             must be carried or here. If the pair has recipes but none passes, the
             first one's fail is shown. Parts aren't used up on their own: say so
             with move:{ a:null } and give:"result".
+          The game's own replies come first: a recipe answers only when no reply did
+          (the unhandled hook), so a window.on.use can still answer for itself.
           A pair with no recipe gets the usual replies: either thing's on.combine,
           its kind's (kinds.X.combine), the room's, the game's; then "Those don't go together."
    To need tools, use the engine's has:["hammer", "nails"].
@@ -17,7 +19,7 @@
     aliases: { attach: "combine", join: "combine", craft: "combine", mix: "combine" },
     messages: { combineWhat: "Combine what with what? Name two things you have or can see.", combineNo: "Those don't go together.", combineFail: "Something's missing." },
     meta: ["with", "fail", "hint", "secret"],
-    before(v, a, ids) {   // a recipe answers before any reply, for combine and for "use a on b"
+    unhandled(v, ids) {   // no reply answered "combine" or "use a on b": a recipe for the pair does
       if (v !== "combine" && v !== "use") return;
       const two = [LINE.what, LINE.with].every(id => own(G.items, id)) ? [LINE.what, LINE.with] : ids.filter(id => own(G.items, id)).slice(0, 2);   // the two slots first
       const rs = recipes(two), r = rs.find(r => test(r.if));
