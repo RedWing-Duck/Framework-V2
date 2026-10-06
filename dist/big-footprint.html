@@ -2274,7 +2274,15 @@ document.addEventListener("DOMContentLoaded", () => {
    tables, and its whole penthouse runs on two phases: TOUR (the Don shows you
    around; touching things earns strikes) and ESCAPE (Big Tony's clock, guard
    checkpoints, turn feedback). Those are this game's rules, so they live here,
-   built only from the add-on hooks.
+   built only from the add-on hooks, in the engine's order (rev 9):
+     before      only what must stop a command ahead of everything: a guard checkpoint
+                 (CAUGHT), a tour strike, and naming (when the core would ask "Which do you
+                 mean?" about its things but the Script's words name something better)
+     unhandled   every answer: scenery, categories, anywhere and alone lines, close looks,
+                 views through a doorway, "say" routed to a topic. It runs after the engine's
+                 own pipeline ("Which do you mean?", carrying, the things' and kinds' replies,
+                 the room's and the game's), so the Script answers only what the engine didn't
+     text, afterTurn   what was read (for close looks), tails, bands and turn feedback
    Data:  conds: { NAME: COND }   the core's named conditions. A key string here is NAME,
             !NAME, or several joined by "&" ("ESCAPE&!P1"); null always passes. Condition key:"...".
           LINES = [[key, text, obj?, "free"?], ...]   the LAST line whose key passes wins.
@@ -2320,8 +2328,10 @@ document.addEventListener("DOMContentLoaded", () => {
             finish:TEXT   ends the game like end:, with the run report inside the ending's block.
    Matching reads the words as typed (LINE.said: the core's filler words dropped, particles kept).
    The longest phrase typed wins. A room noun beats an "any" noun and an item of the
-   same length; an NPC in the room beats a noun of the same length. When nothing matches, the
-   core answers its own commands; this add-on's verbs say the core's notHere (free).
+   same length; an NPC in the room beats a noun of the same length. When the best match is one
+   of the core's things with its own reply (or two of them tie), the core's built-in answers.
+   When nothing matches, the core answers its own commands; this add-on's verbs say the core's
+   notHere (free).
    ------------------------------------------------------------------------- */
 {
   const lc = o => Object.fromEntries(Object.entries(o || {}).map(([k, v]) => [k.toLowerCase(), v]));
@@ -2431,8 +2441,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // someone here who answers "ask/tell X about Y" with the core's npcs.X.topics
   const asked = () => at(G.npcs).find(id => G.npcs[id].topics);
   const commands = {};
-  for (const v of MINE) if (!own(CMDS, v)) commands[v] = () => print(msg("huh"));   // the before hook answers first
+  for (const v of MINE) if (!own(CMDS, v)) commands[v] = () => print(msg("huh"));   // so the verbs exist; unhandled answers first
   const mine = v => MINE.has(v) || ["examine", "go", "wait", "say", "talk"].includes(v);
+  // strikes: a strike verb on a strike thing while the Don is watching. A block, like a checkpoint: it stops the command
+  // before anything answers it. Two of the core's things that fit equally ("push the stairs") are asked about first.
+  function strike(v, a) {
+    if (!key("TOUR") || !G.strike || !((G.strikeVerbs || []).includes(v) || (G.strikeWith || []).includes(v)) || !a) return;
+    const hits0 = scan(a), found = best([...hits0]), hits = hits0.filter(x => x.kind !== "away"), h = found?.kind === "away" ? null : found;
+    if (!h || (h.kind !== "noun" && hits.some(x => x.kind !== "noun" && x.id !== h.id && x.len === h.len && x.rank === h.rank))) return;
+    const target = (G.strikeWith || []).includes(v) ? hits.find(x => thingOf(x).strike) : thingOf(h).strike && h;
+    if (!target) return;
+    verb = v;
+    S.nouns.notes.STRIKE3_BY = thingOf(target).strike;   // what caused it (for the L1 opener)
+    S.nouns.notes.STRUCK = target.id;                    // and the thing itself
+    run(G.strike); if (tourFree()) refund(); return true;
+  }
   function answer(v, a) {
     noun = null; verb = v;
     if ((v === "ask" || v === "tell") && asked()) return;   // the core's topics answer
@@ -2459,16 +2482,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return print(msg("notHere")), refund(), true;
     }
     const t = thingOf(h);
-    // two of the core's things fit the words equally ("gate" on the roof): the core asks "Which do you mean?"
+    // two of the core's things fit the words equally: the core chose (or asked); its built-in answers
     if (h.kind !== "noun" && hits.some(x => x.kind !== "noun" && x.id !== h.id && x.len === h.len && x.rank === h.rank)) return;
-    // strikes: a strike verb on a strike thing while the Don is watching
-    if (key("TOUR") && G.strike) {
-      const target = (G.strikeWith || []).includes(v) ? hits.find(x => thingOf(x).strike) : t.strike && h;
-      if (target && ((G.strikeVerbs || []).includes(v) || (G.strikeWith || []).includes(v))) {
-        S.nouns.notes.STRIKE3_BY = thingOf(target).strike;   // what caused it (for the L1 opener)
-        S.nouns.notes.STRUCK = target.id;                    // and the thing itself
-        run(G.strike); if (tourFree()) refund(); return true; }
-    }
     if (v === "talk") return h.kind === "noun" ? say(lines(t, "talk", a) || lines(CAT[t.cat], "talk", a) || [null, "Nobody by that name around.", null, "free"]) : undefined;
     if (h.kind !== "noun" && v === "examine") {   // items and NPCs: the core's own lines (or a first-look close-up)
       const close = G.firstLook?.[h.id] && !S.nouns.seen.includes(h.id);
@@ -2493,13 +2508,19 @@ document.addEventListener("DOMContentLoaded", () => {
     meta: ["key"],
     conditions: { key: v => key(v), noted: o => Object.entries(o).every(([k, v]) => S.nouns.notes[k] === v) },
     effects: { note: o => Object.assign(S.nouns.notes, o), feedback: () => feedback(true), finish },
-    // the room's look: in ESCAPE, its tails and band line wait for the end of the turn
-    before(v, a) {
-      if (v === "look" && (!a || ["around", "room", "here"].includes(a))) tails();
+    // before: only what must stop a command ahead of everything (the engine's own pipeline included)
+    before(v, a, ids) {
+      if (v === "look" && (!a || ["around", "room", "here"].includes(a))) tails();   // the room's look: its tails wait for the turn's end
       // a checkpoint: anything that costs a turn and reached here fails it. Note why, and let CAUGHT say it
       if (G.caught && test(G.caught.if) && !isFree(v) && !((v === "ask" || v === "tell") && asked())) return (S.nouns.notes.CAUGHT_BY ??= G.caught.by(v, a)), true;
-      if (mine(v)) return answer(v, LINE.said);   // the words as typed: particles stay ("examine down there")
+      if (mine(v) && strike(v, LINE.said)) return true;   // its own verbs only: use-on strikes are the rooms' data
+      // naming: the core is about to ask "Which do you mean?" about its things, but the Script names something better
+      // (a longer phrase, or scenery that outranks them: "mirrored gold" is the elevator's, not the coin or the rifle)
+      if (ids.amb && mine(v)) { const f = best(scan(LINE.said)); if (f && (f.kind === "noun" || f.kind === "away")) return answer(v, LINE.said); }
     },
+    // the Script's answers come after the engine's: "Which do you mean?", carrying, things' and kinds' replies, the room's
+    // and the game's. Scenery, categories, anywhere and alone lines answer what none of those did, before the built-in
+    unhandled(v) { if (mine(v)) return answer(v, LINE.said); },   // the words as typed: particles stay ("examine down there")
     // what was read in this room (for lookCloser), and the lines that shape the end of the turn
     text(t, c) {
       if (t === G.nowhere) {   // walking into a wall costs a turn (the core makes it free), and in ESCAPE earns feedback

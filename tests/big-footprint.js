@@ -973,3 +973,19 @@ test("feature props, eq and visited (rev 8): each alibi animal's state is its ow
   const conds = g.get("JSON.stringify(G.conds)");
   assert.ok(!/"min":\{"(\w+)":(\d+)\},"max":\{"\1":\2\}/.test(conds), "equality is eq:, not a min/max pair");
 });
+test("feature unhandled (rev 9): the Script answers after the engine; before only blocks and names", () => {
+  const g = bigfoot();
+  assert.equal(g.get("HOOKS.unhandled.length"), 1, "nouns.js answers in unhandled");
+  g.type("n", "x left staircase");
+  assert.match(g.last(), /^Wide, carpeted in deep red/, "a core thing: the engine's own examine");
+  g.type("x compass rose");
+  assert.match(g.last(), /^White marble/, "scenery: the Script answers what the engine didn't");
+  g.type("kick carpet");
+  assert.equal(g.get("S.count.strikes"), 1, "a tour strike still blocks first (before)");
+  const t = play("n", "w"); t.run('S.loc.coin = "player"');   // the trophy room, with the coin: "gold" fits the coin and the rifle
+  t.type("examine gold");
+  assert.equal(t.last(), "Which do you mean: the GOLD COIN or the GOLD RIFLE?", "the core's question, when only its things fit");
+  t.type("examine mirrored gold");
+  assert.equal(t.last(), "Nothing like that around here.", "naming: the elevator's \"mirrored gold\" beats the core's question");
+});
+

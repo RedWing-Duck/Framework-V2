@@ -239,7 +239,7 @@ Two engine changes (for every game) after rev 4, and how this game uses them:
 ## 14. [REV7] The loose animals are actors
 The engine gained actors: things and people with their own rules (`acts`), run after each turn's events. The giraffe, the jaguar and Reina now roam through `acts` on themselves instead of three events. Nothing a player sees changed (15,000 seeded commands compared), except that two animals arriving on the same turn are announced in the order the game defines them (giraffe, jaguar, Reina). The Don's tour and Nando's checkpoints stay events: they're the plot, not behavior. What the conversion taught is written up for every game in `docs/AUTHORING.md`, "Actors".
 
-## 15. [REV8] Engine audit: every feature, and where this game uses it
+## 15. [REV8, REV9] Engine audit: every feature, and where this game uses it
 A once-over after the engine's systems groundwork (props, `changed`, `unhandled`, `reach`, dice, actors). Three things the game still did by hand now use the engine; play is unchanged (15,000 seeded commands compared, and the Script's text is identical).
 
 | Feature | In this game | Notes |
@@ -262,7 +262,8 @@ A once-over after the engine's systems groundwork (props, `changed`, `unhandled`
 | `seen:` | Yes | |
 | Dice, `check:`, `chance:` | No, on purpose | The design is "plan your route" (GDD 3, 7): outcomes are fixed, and only flavor text is random. Dice are shown off in sundown |
 | `reach` hook / light add-on | No, on purpose | No dark rooms in this game; nothing is out of reach that's in the room |
-| `unhandled`, `changed`, `agents` hooks | Not yet | They're for add-ons. `./nouns.js` still answers through `before`, with its tie and defer rules, and was left as it is by request; moving it onto `unhandled` would be its natural next step |
+| `unhandled` hook | **Yes (rev 9)** | `./nouns.js` answers every scenery command in `unhandled`, after the engine's own pipeline; `before` only blocks (checkpoint, strikes) and names |
+| `changed`, `agents` hooks | No | Nothing in this game reacts to a change mid-turn, and every actor acts every turn |
 | `move: "here"`, `goto` | No | Nobody follows the player; nobody teleports |
 | Core `put` / contents lists, `take all` | No, on purpose | `put` means `use` here (the hippo's mouth takes a coin, not a container action), and "take all" is refused by design (BG-12) |
 | `pronoun` on items | Engine gap | Things are always "it", so "pet her" doesn't find Reina |

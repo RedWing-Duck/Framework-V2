@@ -108,3 +108,12 @@ Every engine feature checked against the game (GDD section 15 has the full table
 
 Compared with the rev 7 build over 15,000 seeded commands, the output is identical, and the generated Script's text is unchanged (only its condition labels: `visited foyer`, `OUT_PEACOCKS`, `secrets=1`). `make-script.js` now prints `eq` as `a=n`.
 
+## Rev 9: nouns.js answers in the engine's order
+
+`./nouns.js` used to answer every scenery command in `before`, ahead of the engine, and stepped aside for the engine's things with tie and defer rules. Now:
+- `before` keeps only what must stop a command first: the checkpoint (CAUGHT), tour strikes (for its own verbs; use-on strikes stay in the rooms' data), and naming: when the core is about to ask "Which do you mean?" about its things but the Script's words name something better ("mirrored gold" is the elevator's, not the coin or the rifle).
+- Every answer moved to `unhandled`: it runs after "Which do you mean?", carrying, the things' and kinds' replies, the room's and the game's.
+- Compared with the rev 8 build over about 75,000 seeded commands (the game's whole vocabulary), output and state are identical except one kind of line: a command whose first slot names something that isn't here ("sit photos to nando" with no photos) now gets the core's free "Nothing like that around here." instead of "Nothing happens." and a turn.
+
+`./verbs.js` still puts the room's and the game's replies ahead of the things' in `before`: that is the Script's own reply ladder (room, game, then nouns), not a stand-in for an engine feature. Without it, 21 QA tests change (the walkthrough among them), because the core asks things first. Moving it would mean moving those replies onto the things.
+

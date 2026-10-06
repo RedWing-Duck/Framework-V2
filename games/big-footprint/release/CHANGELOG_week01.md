@@ -2,6 +2,9 @@
 Build: `dist/big-footprint.html` (single file, runs offline). Branch `claude/penthouse-heist-game-o7k6w5`.
 Credits: **Retroment Gaming.** Week 01 was a process check (a dry run), so there are no chat contributors.
 
+## Week 01 rev9: the Script's answers in the engine's order
+`nouns.js` answers in the engine's `unhandled` hook, after the engine's own pipeline, instead of ahead of it in `before`; `before` keeps only the checkpoint, tour strikes and naming. Identical over about 75,000 seeded commands, except that a command naming something that isn't here in its first slot ("sit photos to nando") now gets the free "Nothing like that around here." Details: `PORT.md`, "Rev 9".
+
 ## Week 01 rev8: engine audit
 Every engine feature checked against the game (GDD section 15). The alibi animals keep their state as their own props, "exactly" tests use `eq:`, and revisit text uses the core's `visited:` instead of twelve hand-set flags. Play and text unchanged. Features not used are listed with the reason (dice: the design is deterministic; `nouns.js` stays on `before` by request).
 
