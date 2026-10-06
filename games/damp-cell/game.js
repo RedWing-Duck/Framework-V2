@@ -25,7 +25,9 @@ const G = {
       on: { use: [{ if: { in: "corridor", not: { flag: "gate_open" } }, say: "The key turns with a groan. The gate swings open.", set: "gate_open", mark: "gate" }] } }
   },
   npcs: {
-    rat: { name: "rat", at: "cell", pronoun: "it", level: "down", desc: "Fat, grey, and entirely unbothered by you." },   // "it", not "him"/"her"
+    rat: { name: "rat", at: "cell", pronoun: "it", level: "down",
+      acts: [{ every: 2, move: { me: ["cell", "corridor"] } }],   // an actor: every 2nd turn it runs to the other room; with no say, the arrives / leaves messages narrate it
+      desc: "Fat, grey, and entirely unbothered by you." },   // "it", not "him"/"her"
     guard: { name: "Guard", at: "corridor", pronoun: "him", props: { annoyed: 0 }, desc: [   // props: his own counter, "guard.annoyed"
       { if: { flag: "fed" }, text: "Crumbs on his chin. He looks almost friendly." },
       { if: { has: "bread" }, text: "Bored and clearly hungry. He keeps eyeing your [bread]." },
@@ -47,9 +49,8 @@ const G = {
         no: { text: "Ha! Not a chance." } } }
   },
   verbs: { give: { carry: true } },   // "give" takes the bread first when it's lying here
-  messages: { arrives: "{A} scurries in.", leaves: "{The} scurries out." },   // only the rat moves silently
+  messages: { arrives: "{A} scurries in.", leaves: "{The} scurries out." },   // only the rat moves without a say
   events: [
-    { every: 2, move: { rat: ["cell", "corridor"] } },   // says nothing, so messages.arrives / leaves narrate it
     { if: { flag: "gate_open" }, say: "The [guard] shrugs and wanders off down the corridor.", move: { guard: null } },
     { if: { in: "yard" }, end: "You escaped in {turns} turns! THE END." },
     { if: { since: { gate: 2 } }, say: "Shouts echo from somewhere above. Someone heard the gate." },

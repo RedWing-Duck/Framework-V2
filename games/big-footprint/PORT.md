@@ -94,3 +94,8 @@ A continuity and flow pass over every player-facing line. No logic changed. 23 l
 - **Rhythm.** Smoother wording for the Don's exits from the salon and the aviary, the help text's `brief` line, a hint-ladder line, the balcony, and the office revisit.
 
 The full Script is now generated from `game.js`: `node games/big-footprint/design/make-script.js` writes [`design/SCRIPT_week01_rev6.txt`](design/SCRIPT_week01_rev6.txt). A test fails if the file and the game disagree, so the Script can't drift again. Scripts rev 1-3 stay in `design/` as history.
+
+## Rev 7: actors
+
+The engine's actors (`items.X.acts`, run after each turn's events) replace the three roaming events. Each animal carries its own rules, built by `roam(animal)` from the `LOOSE` table: every n turns, `move: { me: route }`, and Reina's `level: { me: null }` landing. The `min: { giraffe: 1 }` gates are gone: an offstage animal doesn't act, so releasing it is what starts it. Compared with the rev 6 build over 15,000 seeded commands, the output is identical except for the order of two arrivals on one turn (now data order). The feature test checks the rules and that nothing roams before it's released.
+

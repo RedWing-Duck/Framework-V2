@@ -206,6 +206,20 @@ yard: { ..., on: { climb: [{ if: { flag: "lookout" }, free: true, say: "Once was
 From sundown: a d20 plus the player's nerve against 14. Each try costs a turn, the coffee makes it likelier, and the fail line
 says what would help. Show the roll with `{rolled}` if the game is that kind of game; damage is `add: { "guard.hp": "-1d6" }`.
 
+## Wandering creatures and followers
+
+```js
+const roam = (route, every) => [{ every, move: { me: route } }];   // big-footprint builds its animals' rules like this
+giraffe: { name: "giraffe", kind: "animal", fixed: true, acts: roam(["landing", "gallery"], 3) },   // offstage until released
+rex: { name: "Rex", ..., acts: [{ if: { prop: { "me.mood": "follow" }, not: { here: "me" } }, move: { me: "here" },
+  say: "{The} trots in and sits at your feet." }] }
+```
+
+Leave the creature offstage (no `at`) until something releases it with `move`; it only acts once it's somewhere. Give
+creatures different `every` values so they don't move in lockstep, and keep each route between neighboring rooms. A rule
+without `say` is narrated by `arrives` / `leaves` only when the player sees it; a rule with `say` always prints, so the
+follower above only speaks when it moves to the player. More in AUTHORING.md, "Actors".
+
 ## Gotchas
 
 - Break-test every game before it ships: paste a few thousand words, type `[some_id]`, `constructor` and `__proto__`, reload mid-game, and tamper with localStorage. The engine handles all of these; the test suite checks them for the samples.

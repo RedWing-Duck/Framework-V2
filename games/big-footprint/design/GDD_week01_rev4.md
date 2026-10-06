@@ -216,7 +216,7 @@ Offstage only: the escaped prisoner (the Don's former accountant, who freed the 
 | Proper names and pronouns | "Don Chava takes...", "give him the card", "ask him about...". Reina is a peacock with a name. | `proper`, `pronoun: "him"` on don, nando, tony; `items.reina.proper` |
 | Topics (ask/tell, with `"*"`) | Any tour stop: "ask the Don about the piano / Mama / Sunday dinner / the hippo / the stairs / the plaque / the animals". Checkpoints: "ask Nando about Tony". | `npcs.don.topics`, `npcs.nando.topics` |
 | Names that follow state | R11: OPEN GIRAFFE GATE, OPEN JAGUAR GATE. R10: EMPTY AVIARY. | `name: [{ if, text }, ...]` |
-| Events with `every`, core arrive/leave lines | ESCAPE, after releasing an animal: "A giraffe comes in from the east." / "Reina slips away to the south." | `G.events` (move along a route, no `say`), `messages.arrives`/`leaves` |
+| Actors (`acts`, `every`), core arrive/leave lines ([REV7]; were events) | ESCAPE, after releasing an animal: "A giraffe comes in from the east." / "Reina slips away to the south." | `items.giraffe/jaguar/reina.acts` (move `me` along a route, no `say`), `messages.arrives`/`leaves` |
 | Holders (`holds: "in"`, `closed`, `open:`) | R8: the hippo's mouth opens with P2. R4: the hidden tray slides out open with P1. | `items.mouth`, `items.tray`, effect `open`, condition `open` |
 | `kinds` | Any loose animal: take, eat, ride, pet, talk. | `kinds.animal` |
 | `random` / `rotate` | ESCAPE: `wait`; looking at a loose animal; riding one. Nando's repeat lines and the Don's cold lines rotate. | TEXT `{ random }`, `{ rotate }` |
@@ -235,4 +235,7 @@ Two engine changes (for every game) after rev 4, and how this game uses them:
 | Feature | Where the player meets it | Data |
 |---|---|---|
 | `look up` / `look down`, `level` | Any room; the giraffe on the landing and in the gallery (up); Reina in the atrium palms right after release (up), then down | `rooms.X.up` / `down` (`T.updown`), `items.giraffe/jaguar/reina.level`, `release()` and the roaming event |
+
+## 14. [REV7] The loose animals are actors
+The engine gained actors: things and people with their own rules (`acts`), run after each turn's events. The giraffe, the jaguar and Reina now roam through `acts` on themselves instead of three events. Nothing a player sees changed (15,000 seeded commands compared), except that two animals arriving on the same turn are announced in the order the game defines them (giraffe, jaguar, Reina). The Don's tour and Nando's checkpoints stay events: they're the plot, not behavior. What the conversion taught is written up for every game in `docs/AUTHORING.md`, "Actors".
 

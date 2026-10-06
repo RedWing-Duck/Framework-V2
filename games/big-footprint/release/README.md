@@ -4,7 +4,7 @@ Everything for review, saved together with the build.
 | File | What |
 |---|---|
 | [`../../../dist/big-footprint.html`](../../../dist/big-footprint.html) | The game: one file, runs offline |
-| [`../design/GDD_week01_rev4.md`](../design/GDD_week01_rev4.md) | GDD, revision 4: rev 2 plus the Framework v2 showcase, marked [REV4], with a feature -> where table; section 13 adds rev 5 (look up/down, slot order) |
+| [`../design/GDD_week01_rev4.md`](../design/GDD_week01_rev4.md) | GDD, revision 4: rev 2 plus the Framework v2 showcase, marked [REV4], with a feature -> where table; sections 13 and 14 add rev 5 (look up/down, slot order) and rev 7 (the animals as actors) |
 | [`../design/GDD_week01_rev2.md`](../design/GDD_week01_rev2.md) | GDD, revision 2: rev 1 plus every decision and QA fix, marked [REV2] |
 | [`../design/SCRIPT_week01_rev6.txt`](../design/SCRIPT_week01_rev6.txt) | The full Script, revision 6: every line in the game with the condition that shows it, generated from `game.js` by `make-script.js`; a test fails if it ever disagrees with the game |
 | [`../design/SCRIPT_week01_rev2.txt`](../design/SCRIPT_week01_rev2.txt) | Script, revision 2, generated from the build's text table, so it matches the game word for word; changes tagged [CHANGED]/[NEW] with the bug id |
@@ -17,4 +17,4 @@ Everything for review, saved together with the build.
 | [`../design/rev3/`](../design/rev3/) | The 10/10 polish inputs: GDD rev 3, Script rev 3 additions, build brief, QA focus |
 
 Credits: **Retroment Gaming** (Week 01 was a dry run, so there are no chat contributors).
-The build is the 10/10 polish pass (GDD rev 3) plus the Framework v2 showcase (GDD rev 4), look up/down (rev 5) and a script polish (rev 6). The design documents live in [`../design/`](../design/): `GDD_week01_rev2.md` and `SCRIPT_week01_rev2.txt` describe the rev 2 base, everything the polish added is in `rev3/`, and the changelog here lists what changed.
+The build is the 10/10 polish pass (GDD rev 3) plus the Framework v2 showcase (GDD rev 4), look up/down (rev 5), a script polish (rev 6) and the loose animals as actors (rev 7). The design documents live in [`../design/`](../design/): `GDD_week01_rev2.md` and `SCRIPT_week01_rev2.txt` describe the rev 2 base, everything the polish added is in `rev3/`, and the changelog here lists what changed.

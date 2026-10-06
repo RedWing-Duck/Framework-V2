@@ -189,7 +189,7 @@ test("validator: reports broken references, typos in effects and unknown names",
     'items.key.on.use[0].sey: unknown effect "sey"',
     'conds.A.flog: unknown condition "flog"',
     'messages.nope: no engine message "nope"',
-    'events[2].if.inn: unknown condition "inn"'
+    'events[1].if.inn: unknown condition "inn"'
   ]);
   assert.equal(g.errors.length, 1, "problems are also logged to the console");
 });
@@ -306,8 +306,8 @@ test("validator: aliases and phrasal verbs must lead somewhere; named conditions
     .replace('if: { in: "yard" }', 'if: { in: "yard", not: "NOPE", any: ["NOPE2"] }');
   assert.deepEqual(load(bad).boot().problems(), [
     'aliases.press: no command "pushh"',
-    'events[2].if.not: no condition "NOPE" in conds',
-    'events[2].if.any[0]: no condition "NOPE2" in conds'
+    'events[1].if.not: no condition "NOPE" in conds',
+    'events[1].if.any[0]: no condition "NOPE2" in conds'
   ]);
 });
 
@@ -529,6 +529,30 @@ test("dice: check rolls once per condition, {rolled} shows the total, add takes 
   assert.equal(s.get("!!S.flags.lookout"), true, "a d20 + 4 against 14 succeeds sooner or later");
   s.type("climb tree");
   assert.equal(s.last(), "Once was enough.");
+});
+
+test("actors: things with acts run their first passing rule after each turn's events; me, here, every, agents", () => {
+  const g = WORDS();
+  g.type("call rex");
+  assert.deepEqual(g.lines().slice(-2), ["You whistle for Rex.", "Rex trots in and sits at your feet."], "the act runs after the command, {The} is the actor");
+  assert.equal(g.get("S.loc.rex"), "kitchen", 'move: { me: "here" } is the player\'s room');
+  g.type("e");
+  assert.equal(g.last(), "Rex trots in and sits at your feet.", "it follows, every turn its if passes");
+  const t = g.get("S.count.turns"); g.type("inventory", "look");
+  assert.equal(g.get("S.loc.rex"), "hall");
+  g.type("freeze", "w");
+  assert.equal(g.get("S.loc.rex"), "hall", "an agents hook filtered it out");
+  assert.ok(!g.lines().slice(-4).includes("Rex trots in and sits at your feet."));
+  // damp-cell's rat is an actor too: every 2nd turn, narrated by arrives/leaves
+  const c = newGame(CELL);
+  assert.equal(c.get("G.npcs.rat.acts[0].every"), 2);
+  c.type("z", "z");
+  assert.ok(c.lines().includes("The rat scurries out."));
+  // the validator: "me" only inside acts, every is a whole number, effects are checked
+  const bad = load(build("tests/words").replace('acts: [{ if: { prop:', 'acts: [{ every: 1.5, iff: 1, if: { prop:')
+    .replace('call: [{ if: { said: "rex|dog" }, prop: { "rex.mood"', 'call: [{ if: { said: "rex|dog" }, prop: { "me.mood"')).boot().problems();
+  for (const p of ['npcs.rex.acts[0].every: every takes a whole number of turns', 'npcs.rex.acts[0].iff: unknown effect "iff"', 'on.call[0].prop: "me.mood": no item or NPC "me"'])
+    assert.ok(bad.includes(p), p + "\n" + bad.join("\n"));
 });
 
 test("pointing: a word narrows a name before asking, 'the other one', 'both', 'all except'", () => {

@@ -244,3 +244,12 @@ Step 4 of the systems groundwork.
 | Only `rand(n)` and `chance: n`: every game wrote its own dice | Helpers `roll(sides, mod)` and `dice("2d6+1")`; condition `check: { dice, plus, vs }` (total in `{rolled}`); `add` takes dice ("-1d6"). Checks roll once per condition per command, from the seeded generator, so undo and `G.seed` stay honest. The validator checks dice strings and `check` names | dice: check rolls once per condition, {rolled} shows the total, add takes dice; seeded and undo-proof |
 | sundown had no use for props | The player's nerve (`self.nerve`): the coffee raises it, climbing a pine in the yard is a d20 + nerve check against 14 | same test |
 
+## Eleventh pass: actors
+
+Step 5 of the systems groundwork, and the last planned one.
+
+| Item | Change | Test |
+|---|---|---|
+| Things that act on their own were events about them (big-footprint's three roaming animals, damp-cell's rat) | `items.X.acts` / `npcs.X.acts`: after each turn's events, every actor that is somewhere runs the first of its rules whose `if` passes (`every: n` too). `me` is the actor in its rules; `move` takes `"here"`; hook `agents(ids)` filters who acts. The validator checks the rules and accepts `me` only inside `acts` | actors: things with acts run their first passing rule after each turn's events; me, here, every, agents |
+| damp-cell's rat, big-footprint's animals | Both are actors now. big-footprint plays identically over 15,000 seeded commands, except that two animals arriving on one turn print in data order. AUTHORING.md's "Actors" section lists what the conversion taught | big-footprint: feature actors |
+

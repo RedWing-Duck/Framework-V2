@@ -53,6 +53,8 @@ addon({
                         Runs before the core asks "Which do you mean?", so an add-on can resolve names itself.
                         It also runs before the game's own replies: use it to block (darkness), not to add.
                         When "take all" / "drop all" finds nothing, before hooks get one call with no ids to say why
+  agents(ids)           the actors about to act this turn (things with acts, not offstage), in order: return the ids that
+                        act, in the order they act (sleep, a pause, a stun). See "Actors" in AUTHORING.md
   reach(ids)            filter what the player can touch or name now (darkness, distance, perception): return the ids
                         to keep. Every command, "take all", talk, ask, look up/down and "arrives"/"leaves" lines use it.
                         Don't call reach() inside it

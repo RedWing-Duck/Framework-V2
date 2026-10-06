@@ -2,6 +2,9 @@
 Build: `dist/big-footprint.html` (single file, runs offline). Branch `claude/penthouse-heist-game-o7k6w5`.
 Credits: **Retroment Gaming.** Week 01 was a process check (a dry run), so there are no chat contributors.
 
+## Week 01 rev7: the animals are actors
+The loose giraffe, jaguar and Reina roam as actors (their own `acts`) instead of events, the first use of the engine's new actors. Play is unchanged, except that two animals arriving on the same turn are announced in data order. Design: GDD section 14; lessons for other games: `docs/AUTHORING.md`, "Actors".
+
 ## Week 01 rev6: script polish
 23 player-facing lines reworded for continuity, voice and repeats; no logic changed (details in [`../PORT.md`](../PORT.md), "Rev 6"). The full Script is now generated from the game ([`../design/SCRIPT_week01_rev6.txt`](../design/SCRIPT_week01_rev6.txt), by `node games/big-footprint/design/make-script.js`), and a test keeps the two in step. Five test assertions follow the new wording.
 

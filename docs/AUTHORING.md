@@ -15,8 +15,9 @@ rooms:  { id: { name, desc:TEXT, on:REPLIES, exits:{ dir: "roomId" | { to, if:CO
 items:  { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, fixed:true (can't take), hidden:true (not listed), on:REPLIES,
           holds:"in" | "on" (a container or a surface), closed:true | false (can be opened and closed),
           proper:true (no "the"), article:"an" | "some" | "" (instead of "a"), level:"up" | "down" (or TEXT variants),
-          props:{ hp: 10, mood: "calm" } (named numbers and words: see Props) } }
-npcs:   { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, proper, article, level, pronoun:"her" | "him" | "them" | "it",
+          props:{ hp: 10, mood: "calm" } (named numbers and words: see Props),
+          acts:[{ if:COND, every:n, ...EFFECT }] (it acts on its own each turn: see Actors) } }
+npcs:   { id: { name:TEXT, desc:TEXT, at, aliases:[], kind, proper, article, level, props, acts, pronoun:"her" | "him" | "them" | "it",
           on:REPLIES, topics:{ "a|b": REPLY, "*": REPLY },
           dialogue:{ nodeId:{ text:TEXT, options:[{ text, next, if:COND, ...EFFECT }] } } } }
 self:   { name, aliases:[], kind, on:REPLIES, props }   the player as a target: "smell me", "think"; "self.hp" is the player's prop
@@ -263,7 +264,7 @@ So "use key on door" asks the door first, then the key, and "give the bread to t
 
 ```js
 events: [
-  { every: 2, move: { rat: ["cell", "corridor"] } },          // every 2nd turn
+  { every: 3, if: { in: "yard" }, say: "An owl calls." },      // every 3rd turn, while you're in the yard
   { if: { in: "yard" }, end: "You escaped in {turns} turns! THE END." }
 ]
 ```
@@ -274,6 +275,51 @@ events: [
   to `""` to keep moves silent. An event with a `say` tells its own story, so it gets no extra line.
 - Each fires once, unless it has `repeat: true` (every time `if` passes) or `every: n` (on every nth turn, while `if` passes).
 - Earlier events' changes are visible to later events in the same turn. After an `end`, no further events run.
+- Events are the world's and the story's rules: timers, endings, scripted scenes. Something that behaves on its own, turn after
+  turn (a rat, a guard on patrol, a dog that follows you), is an actor (next section).
+
+## Actors
+
+```js
+rat: { name: "rat", at: "cell", pronoun: "it",
+  acts: [{ every: 2, move: { me: ["cell", "corridor"] } }] },                // damp-cell: every 2nd turn, the other room
+rex: { name: "Rex", proper: true, at: "study", props: { mood: "lazy" },
+  acts: [{ if: { prop: { "me.mood": "follow" }, not: { here: "me" } },       // tests/words: once called, it follows you
+           move: { me: "here" }, say: "{The} trots in and sits at your feet." }] }
+```
+
+- Any item or NPC with `acts` is an actor. After each turn's events, each actor that is somewhere (not offstage) runs the
+  **first** of its rules whose `if` passes, the way a reply picks its entry. A rule with `every: n` only counts on turns
+  divisible by n. Free commands (look, inventory...) don't give actors a turn, as they don't advance `every`.
+- In its rules, `me` is the actor: `move: { me: "here" }`, `here: "me"`, `"me.hp"` in `min`/`add`/`prop`, `level: { me: "up" }`.
+  `{The}`, `{the}`, `{A}` in a rule's `say` name it. The validator accepts `me` only inside `acts`.
+- `move` takes `"here"`, the player's room, so a follower or a hunter needs no map of its own.
+- Like an event, a rule with no `say` that moves the actor into or out of the player's sight prints `arrives` / `leaves`.
+- Add-ons can change who acts this turn with the `agents` hook (sleep, paralysis, a pause): see `docs/ADDONS.md`.
+
+What the big-footprint conversion (its loose giraffe, jaguar and peacock, rev 7) taught:
+- **Story is events, behavior is actors.** The Don's tour stops and Nando's checkpoint arrivals stay events: they happen
+  once, at set points in the plot. The animals' roaming is behavior, so it moved to `acts` on the animals themselves.
+- **Offstage means waiting.** An actor with no place doesn't act. The animals start offstage, and the alibi that releases one
+  `move`s it into the house; from then on it roams. The `if: { min: { giraffe: 1 } }` gate the events needed went away.
+- **Actors act last.** They run after all of the turn's events, so endings and clocks come first: nothing moves after the game
+  ends, and a warning prints before an animal's arrival. `afterTurn` hooks run after them, so a room's extra lines see where
+  everyone ended up.
+- **Data order is acting order.** Actors act in the order they are defined (items first, then NPCs). Two arriving on the same
+  turn print in that order; define them in the order you want to read them.
+- **A `say` always prints.** A rule with no `say` is narrated only when the player can see the move. A rule with a `say` prints
+  wherever the actor is, so guard it with `here: "me"`, or move it `"here"` (as Rex does), or leave the `say` out.
+- **Stagger `every`.** It counts the game's turns, not turns since the actor arrived, so a new actor's first move can come on
+  the very next turn, and actors with the same `every` move together. big-footprint uses 3, 4 and 5.
+- **Routes between neighbors.** Each step of a route should be a room next to the last, on one floor, so the arrive/leave
+  line's `{dir}` reads naturally ("comes in from the east", never "from the up").
+- **Rules can change the actor.** Reina flies up when released (`level: { reina: "up" }` in the release) and her roaming rule
+  lands her (`level: { me: null }`). The same goes for `add: { "me.hp": -1 }` or `prop: { "me.mood": "angry" }`.
+- **Share rule lists in code.** `game.js` is JavaScript: big-footprint builds each animal's rules with one helper,
+  `roam(animal)`, from a table of routes and speeds.
+- **Prove a conversion with seeded runs.** Moving behavior from events to actors should change nothing a player sees. Play the
+  same seeded commands on the old and new builds and compare (big-footprint compared 15,000 commands); only the order of
+  simultaneous arrivals may differ, by the rule above.
 
 ## TEXT
 
@@ -333,7 +379,7 @@ reads the state after everything else changed.
 | `set` / `unset: "flag"` or a list | turns flags on or off |
 | `add: { counter: n }` | adds n (negative subtracts), or dice: `add: { "guard.hp": "-1d6" }`; `"guard.hp"` is a prop |
 | `mark: "name"` | stamps the current turn, for `since` |
-| `move: { id: where }` | where is a room, `"player"`, a holder, `null` (offstage), or a list (a route: the next room in it, looping) |
+| `move: { id: where }` | where is a room, `"player"`, a holder, `null` (offstage), `"here"` (the player's room), or a list (a route: the next room in it, looping) |
 | `take: "item"` or a list | sends it offstage from wherever it is, with a "(Lost: …)" line (message `lost`; reword it to `""` to hide it) |
 | `give: "item"` or a list | puts it in the inventory, with a "(Received: …)" line (message `received`) |
 | `open` / `close: "box"` or a list | opens or closes a holder, silently |

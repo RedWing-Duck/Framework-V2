@@ -3,7 +3,7 @@
 // pronouns by kind, proper names, names that follow the state, narrated moves, oops, brief, transcript;
 // replies in slot order (the letter's own "show" vs Big Tony's); up and down in the hall (look up / look down, level);
 // props (Big Tony's patience and mood, the player's nerve) and the changed and unhandled hooks (./watch.js);
-// dice: a check (wrestle) and a dice add (brawl).
+// dice: a check (wrestle) and a dice add (brawl); an actor (Rex follows you once called) and the agents hook.
 // The study holds a name with a role word in it, articles, and a proper name that shares a word with an item.
 // ./first.js and ./second.js both answer "ring" in a before hook: the one listed first in build.json wins.
 const G = {
@@ -37,7 +37,8 @@ const G = {
       desc: [{ if: { prop: { "tony.mood": "furious" } }, text: "Big, and red in the face." }, "Big."],
       on: { show: [{ if: { what: "letter" }, say: "{The:with} reads {the:what} and goes pale." }, "{The:with} shrugs at {the:what}."] } },
     ana: { name: "Ana", proper: true, pronoun: "her", at: "hall", desc: "Busy." },
-    rex: { name: "Rex", proper: true, aliases: ["dog"], at: "study", desc: "A real dog." }
+    rex: { name: "Rex", proper: true, aliases: ["dog"], at: "study", desc: "A real dog.", props: { mood: "lazy" },
+      acts: [{ if: { prop: { "me.mood": "follow" }, not: { here: "me" } }, move: { me: "here" }, say: "{The} trots in and sits at your feet." }] }   // an actor that follows you once called
   },
   verbs: { show: { carry: true }, zap: { fail: "Zap what?" } },
   on: { weigh: "You weigh {a}. {A} is lighter than it looks.",
@@ -47,6 +48,8 @@ const G = {
     poke: [{ if: { here: "tony", min: { "tony.patience": 1 } }, add: { "tony.patience": -1, "self.nerve": 1 }, say: "You poke {the:what}. Nerve: {self.nerve}." },
       { if: { prop: { "tony.mood": ["furious", "sulking"] } }, say: "Better not." }, "Poke what?"],
     gauge: "Patience: {tony.patience}, mood: {tony.mood}.",
+    call: [{ if: { said: "rex|dog" }, prop: { "rex.mood": "follow" }, say: "You whistle for Rex." }, "Call whom?"],
+    freeze: { set: "frozen", say: "Everyone stops." },
     wrestle: [{ if: { here: "tony", check: { dice: "1d20", plus: ["self.nerve", 2], vs: 12 } }, say: "You pin Big Tony! (Rolled {rolled}.)" },
       { if: { here: "tony" }, say: "Big Tony pins you. (Rolled {rolled}.)" }, "Nobody to wrestle."],
     brawl: { add: { bruises: "1d4+1" }, say: "Bruises: {bruises}." },

@@ -149,7 +149,7 @@ return G;
      exec(v, a)   pronouns, the two slots, "before" hooks, "Which do you mean?",
                   "(first taking...)" -> replies (respond) -> "unhandled" hooks
                   -> the built-in command (CMDS) -> the verb's fail line
-     then         events, "afterTurn" hooks, the status line, save
+     then         events, actors (acts), "afterTurn" hooks, the status line, save
 
    Sections, in order: tables and state · messages · storage · things and
    name matching · print · TEXT · random · COND · EFFECT · replies and
@@ -174,7 +174,7 @@ const NOOBJ = ["inventory", "wait", "help", "again", "undo", "restart", "menu", 
 // a word that opens the second slot: "give the bread TO the guard", "open the gate WITH the key" (LINE.what / LINE.with)
 const ROLES = ["to", "with", "on", "onto", "in", "into", "inside", "at", "about", "from", "for", "under", "behind"];
 const BREAK = ["and", "then", "except", "but", ...ROLES];   // words that end a noun phrase (see named())
-const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [], changed: [], unhandled: [], reach: [] };
+const ADDONS = [], CLASH = [], HOOKS = { input: [], before: [], afterTurn: [], start: [], enter: [], end: [], text: [], tag: [], boot: [], validate: [], changed: [], unhandled: [], reach: [], agents: [] };
 // validator tables: REFS = add-on checks per data key; META = keys allowed next to effects;
 // MAPS = keys whose own keys are names ("def": each value is a definition, "data": each value is data, "map": a map of maps)
 const REFS = tbl({}), META = ["if", "repeat", "every", "text", "next"], MAPS = tbl({ rooms: "def", items: "def", npcs: "def", kinds: "map",
@@ -415,7 +415,7 @@ const EFFECT = tbl({
   add: o => { for (const k in o) setProp(k, propNum(k) + dice(o[k])); },   // a counter, or a prop: add:{ "guard.hp": -3 } or "-1d6"
   mark: v => list(v).forEach(m => S.mark[m] = S.count.turns),
   move: o => { for (const id in o) { const r = o[id], was = shown(id), from = where(id);   // a list is a route: step to the next room
-    setLoc(id, Array.isArray(r) ? r[(r.indexOf(S.loc[id]) + 1) % r.length] : r);
+    setLoc(id, Array.isArray(r) ? r[(r.indexOf(S.loc[id]) + 1) % r.length] : r === "here" ? S.room : r);   // "here": the player's room
     // an event that moves something into or out of sight without saying so gets a line ("The [rat] arrives.")
     if (TELL && was !== shown(id)) print(msg(was ? "leaves" : "arrives", { it: `[${id}]`, dir: exitTo(was ? where(id) : from) })); } },
   take: v => list(v).forEach(id => { setLoc(id, null); print(msg("lost", { it: `[${id}]` }), "cmd"); }),
@@ -457,6 +457,27 @@ function events() {
     const due = e.every ? tick && S.count.turns > 0 && S.count.turns % e.every === 0 : e.repeat || !S.fired[i];
     if (due && test(e.if)) { S.fired[i] = true; TELL = !("say" in e || "end" in e); try { run(e); } finally { TELL = false; } }
   });
+  if (tick && S.count.turns > 0) agents();
+}
+
+// ---- actors: things and people with their own rules (items.X.acts / npcs.X.acts), after each turn's events.
+// Each actor that is somewhere (not offstage) runs the first of its rules whose "if" passes (and whose every:n
+// fits this turn). In a rule, "me" is the actor: move:{ me: "here" }, "me.hp", here:"me"; {The} in its say is it.
+// Like an event, a rule with no say has its moves narrated (arrives / leaves). Add-ons' agents hooks filter who acts.
+const BOUND = new Map();   // actor id -> its rules with "me" filled in
+const bind = (v, id) => typeof v === "string" ? (v === "me" ? id : v.startsWith("me.") ? id + v.slice(2) : v)
+  : Array.isArray(v) ? v.map(x => bind(x, id))
+  : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [bind(k, id), bind(x, id)])) : v;
+function agents() {
+  const all = [...Object.keys(G.items || {}), ...Object.keys(G.npcs || {})].filter(id => thing(id).acts && S.loc[id] != null);
+  for (const id of HOOKS.agents.reduce((r, h) => h(r) || r, all)) {
+    if (S.over) return;
+    if (!BOUND.has(id)) BOUND.set(id, list(thing(id).acts).map(r => bind(r, id)));
+    const e = BOUND.get(id).find(r => (!r.every || S.count.turns % r.every === 0) && test(r.if));
+    if (!e) continue;
+    const it = LINE.it; LINE.it = id; TELL = !("say" in e || "end" in e);
+    try { run(e); } finally { TELL = false; LINE.it = it; }
+  }
 }
 
 // ---- look and movement
@@ -837,7 +858,9 @@ function addon(a) {
 
 // ---- validate: check G against the engine's and add-ons' tables; returns a list of "path: problem" lines
 function validate() {
-  const E = [...CLASH], room = r => !!own(G.rooms, r), isThing = t => !!thing(t);
+  const E = [...CLASH], room = r => !!own(G.rooms, r);
+  let ACTS = false;   // walking an actor's rules: "me" is the actor
+  const isThing = t => !!thing(t) || (ACTS && t === "me");
   const need = (ok, path, m) => ok || E.push(`${path}: ${m}`);
   const used = { flag: {}, mark: {}, counter: {} }, made = { flag: {}, mark: {}, counter: { turns: 1 } };
   // a COND is a name from G.conds, or an object whose keys are all condition keys
@@ -853,7 +876,8 @@ function validate() {
     for (const k in v) {
       const x = v[k], q = Array.isArray(v) ? `${p}[${k}]` : p ? `${p}.${k}` : k;
       if (mode.startsWith("map:")) { walk(x, q, mode.slice(4) === "map" ? "map:data" : mode.slice(4)); continue; }
-      if (mode === "def") { walk(x, q, own(MAPS, k) ? "map:" + MAPS[k] : k === "self" ? "def" : "data"); continue; }
+      if (mode === "def") { const was = ACTS; ACTS = k === "acts";
+        try { walk(x, q, own(MAPS, k) ? "map:" + MAPS[k] : k === "self" ? "def" : "data"); } finally { ACTS = was; } continue; }
       // "data" mode: check what each condition or effect key refers to
       {
         if (k === "if" || k === "not") conds(x, q);
@@ -863,7 +887,7 @@ function validate() {
         if (["in", "goto", "to", "visited"].includes(k)) list(x).forEach(r => need(room(r), q, `no room "${r}"`));
         if (k === "is") list(x).forEach(n => need(own(G.conds, n), q, `no condition "${n}" in conds`));
         if (k === "move") for (const id in x) { need(isThing(id), q, `no item or NPC "${id}"`);
-          list(x[id]).forEach(r => need(r === null || r === "player" || room(r) || holder(r), q, `no room or holder "${r}"`)); }
+          list(x[id]).forEach(r => need(r === null || r === "player" || r === "here" || room(r) || holder(r), q, `no room or holder "${r}"`)); }
         if (k === "level" && x && typeof x === "object") for (const id in x) { need(isThing(id), q, `no item or NPC "${id}"`);
           need(x[id] === null || x[id] === "up" || x[id] === "down", q, `"${x[id]}": a level is "up", "down" (or null, in an effect)`); }
         if (k === "inside") typeof x === "object" && x ? Object.keys(x).forEach(id => need(own(G.items, id) && holder(x[id]), q, `"${id}" in "${x[id]}": needs an item and a holder`))
@@ -916,6 +940,9 @@ function validate() {
   replies(G.on, "on"); replies(G.self?.on, "self.on");
   for (const k in G.kinds || {}) replies(G.kinds[k], `kinds.${k}`);
   (G.events || []).forEach((e, i) => fx(e, `events[${i}]`));
+  for (const T of ["items", "npcs"]) for (const id in G[T]) list(G[T][id].acts ?? []).forEach((e, i) => { const p = `${T}.${id}.acts[${i}]`;
+    need(e && typeof e === "object" && !Array.isArray(e), p, "an act is { if, every, ...EFFECT }"); fx(e, p);
+    need(e?.every == null || (Number.isInteger(e.every) && e.every > 0), `${p}.every`, "every takes a whole number of turns"); });
   for (const c in G.conds || {}) conds(G.conds[c], `conds.${c}`);
   for (const k in G.messages || {}) need(k in MSG, `messages.${k}`, `no engine message "${k}"`);
   for (const v in G.verbs || {}) for (const w of G.verbs[v].aliases || [])   // an alias may not take over a command, a built-in alias or another verb

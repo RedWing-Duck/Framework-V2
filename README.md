@@ -71,7 +71,7 @@ To try them, download any file in `dist/`, open it in a browser, and type `help`
 
 - **Parser:** verb plus things, two-object commands ("give the bread to the guard"), "Which do you mean?", pronouns, `all` / `all except`, "the other one", `oops`, and `again`
 - **World:** rooms, containers and surfaces, things up high or underfoot (`look up` / `look down`), and names that change
-- **People:** branching dialogue, plus ask/tell topics
+- **People:** branching dialogue, ask/tell topics, and actors: people and creatures that act on their own each turn (wander, follow, patrol)
 - **Logic:** flags, counters, props (named numbers and words on any thing or the player: health, gold, mood), dice and skill checks, named conditions, timed and repeating events, random and rotating text
 - **Player tools:** undo, restart, brief mode, and transcripts
 - **Validator:** catches broken references and data mistakes at build time

@@ -879,15 +879,17 @@ test("feature names follow state: the gates and the aviary", () => {
   g.type("giraffe", "s", "open aviary", "look");
   assert.ok(g.lines().some(l => l.startsWith("The EMPTY AVIARY again")));
 });
-test("feature events every n: loose animals roam, the core says when they come and go, and it costs nothing", () => {
+test("feature actors: loose animals roam (acts, every n), the core says when they come and go, and it costs nothing", () => {
   const g = play(...TOUR, "open giraffe gate", "open jaguar gate", "s", "open aviary", "s");
   assert.equal(g.get("[S.loc.giraffe, S.loc.jaguar, S.loc.reina].every(Boolean)"), true, "released animals are in the house");
   const before = g.get("S.count.clock"); let moves = 0;
   for (let i = 0; i < 6; i++) { const k = g.lines().length; g.type("wait"); moves += g.lines().slice(k).filter(l => / (comes in from|slips away to) the (north|south|east|west)\.$/.test(l)).length; }
   assert.ok(moves >= 1, "Reina came or went in the atrium");
   assert.equal(g.get("S.count.clock"), before - 6, "only the waits cost turns");
-  const e = g.get("G.events").filter(x => x.every && x.move);
-  assert.equal(e.length, 3); assert.ok(e.every(x => !("say" in x)), "no say: the core narrates");
+  const e = g.get("['giraffe', 'jaguar', 'reina'].map(id => G.items[id].acts[0])");   // rev 7: actors, not events
+  assert.equal(e.length, 3); assert.ok(e.every(x => x.every && x.move.me && !("say" in x)), "no say: the core narrates");
+  const off = bigfoot(); off.type(...TOUR, ...Array(6).fill("wait"));
+  assert.equal(off.get("S.loc.giraffe"), null, "an actor offstage doesn't act: no animal roams before it's released");
 });
 test("feature holders: the hippo's mouth and the piano's tray open with their puzzles; secrets go straight to the jacket", () => {
   const g = play(...TOUR, "open giraffe gate", "s", "s");

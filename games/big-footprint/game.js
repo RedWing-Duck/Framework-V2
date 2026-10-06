@@ -340,10 +340,13 @@ const secret = (flag, item, text) => ({ set: flag, add: { secrets: 1 }, give: it
 // ---- Guard checkpoints (GDD 7): the next turn-costing command must be "run" or "say <released animal>"
 const CLEAR = { unset: "checkpoint", add: { cleared: 1 }, move: { nando: null } };
 const alibi = (a, words = a) => ({ if: { flag: "checkpoint", said: words, min: { [a]: 1 }, max: { [a]: 1 } }, ...CLEAR, add: { [a]: 1, cleared: 1 }, say: [{ if: { in: "foyer" }, text: T.foyerGuard[a] }, T.guard[a]] });
-// [REV4] a released animal is a thing that roams two rooms (events below; the core says when it comes and goes)
+// [REV4] a released animal is a thing that roams two rooms; the core says when it comes and goes
 // [REV5] flies: up (S.level) when released, back down (its data level) when it first moves
+// [REV7] each animal is an actor (items.X.acts, below): offstage until released, so it starts roaming only then
 const LOOSE = { peacocks: { id: "reina", route: ["atrium", "gallery"], every: 5, flies: true }, giraffe: { id: "giraffe", route: ["landing", "gallery"], every: 3 },
   jaguar: { id: "jaguar", route: ["dining", "foyer"], every: 4 } };
+// an animal's rules as an actor: every nth turn, step along its route ("me" is the animal); no say, so the core narrates it
+const roam = a => [{ every: LOOSE[a].every, move: { me: LOOSE[a].route }, ...(LOOSE[a].flies && { level: { me: null } }) }];
 const release = (a, words) => [{ if: { said: words, max: { [a]: 0 } }, add: { [a]: 1 }, move: { [LOOSE[a].id]: LOOSE[a].route[0] },
   ...(LOOSE[a].flies && { level: { [LOOSE[a].id]: "up" } }), say: T.alibi[a] },
   { if: { said: words }, say: T.alibi.already }];
@@ -802,9 +805,9 @@ const G = {
     aviary: { name: [{ if: "OUT_PEACOCKS", text: "EMPTY AVIARY" }, "AVIARY"],   // [REV4] names follow the state
       cat: "FIXTURE", at: "aviary", fixed: true, aliases: ["door", "keypad"], desc: T.item.aviary },
     // [REV4] the loose animals: offstage until released, then roaming (kind "animal": take, eat, ride, pet)
-    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["mariposa", "neck"], level: "up", desc: T.animal.giraffe },   // [REV5] six meters: look up
-    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], level: "down", desc: T.animal.jaguar },
-    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], level: "down", desc: T.animal.reina },   // up while S.level says so
+    giraffe: { name: "giraffe", cat: "ANIMAL", kind: "animal", acts: roam("giraffe"), fixed: true, aliases: ["mariposa", "neck"], level: "up", desc: T.animal.giraffe },   // [REV5] six meters: look up
+    jaguar: { name: "jaguar", cat: "ANIMAL", kind: "animal", acts: roam("jaguar"), fixed: true, aliases: ["black jaguar", "cat", "big cat", "gato", "panther"], level: "down", desc: T.animal.jaguar },
+    reina: { name: "Reina", proper: true, cat: "ANIMAL", kind: "animal", acts: roam("peacocks"), fixed: true, aliases: ["peacock", "peacocks", "bird", "birds"], level: "down", desc: T.animal.reina },   // up while S.level says so
     giraffegate: { name: [{ if: "OUT_GIRAFFE", text: "OPEN GIRAFFE GATE" }, "GIRAFFE GATE"], aliases: ["giraffe gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.giraffegate },
     jaguargate: { name: [{ if: "OUT_JAGUAR", text: "OPEN JAGUAR GATE" }, "JAGUAR GATE"], aliases: ["jaguar gate"], cat: "FIXTURE", at: "terrace", fixed: true, desc: T.item.jaguargate }
   },
@@ -901,8 +904,7 @@ const G = {
     // checkpoints resolved (R7 always comes first: it's the only way out)
     { if: { min: { cleared: 1 } }, set: "cp7_done" },
     { if: { min: { cleared: 2 } }, set: "cp2_done" },
-    // [REV4] loose animals roam, costing nothing; with no say, the core tells you when one comes or goes
-    ...Object.entries(LOOSE).map(([a, { id, route, every, flies }]) => ({ every, if: { min: { [a]: 1 } }, move: { [id]: route }, ...(flies && { level: { [id]: null } }) })),
+    // [REV7] the loose animals roam as actors (items.X.acts), after these events
     // ESC_REVISIT: this room already seen during ESCAPE
     ...Object.keys(ROOM).map(r => ({ if: { in: r, ...ESC }, set: `escbeen_${r}` })),
     // REVISIT text after the first look at each room
