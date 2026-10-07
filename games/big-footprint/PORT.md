@@ -9,7 +9,7 @@ The original game ran on the v1 engine with four add-ons (`restart`, `verbs`, `n
 | `restart.js` (wrapped `act`) | core `restart` |
 | `messages.js` (wrapped `print`; keyed by exact engine strings) | core `G.messages`, keyed by id (`cantGo`, `notHere`, `huh`...) |
 | `verbs.js`: room and game replies, `said`, `any`, punctuation, phrasal verbs, `look under`, `pick up`, literal echo | core |
-| `verbs.js`: `bare`, `oneAtATime`, `ways`, `drop X in Y`, `only`, `line`, the reply-ladder order | `./verbs.js`, a game-local add-on (hooks: `input`, `before`, `afterTurn`) |
+| `verbs.js`: `bare`, `oneAtATime`, `ways`, `drop X in Y`, `only`, `line` | `./verbs.js`, a game-local add-on (hooks: `input`, `afterTurn`); the reply-ladder order is the engine's since rev 10 |
 | `nouns.js`: named states (`keys`) | core `conds` |
 | `nouns.js`: `rotate`, `ladder` effects | core TEXT `{ rotate }`, `{ ladder }` |
 | `nouns.js`: scenery nouns, categories, tour strikes, checkpoints, tails, bands, feedback, close looks, the run report | `./nouns.js`, a game-local add-on (hooks: `before`, `text`, `afterTurn`; effect `finish` in place of a patched `end`) |
@@ -115,5 +115,16 @@ Compared with the rev 7 build over 15,000 seeded commands, the output is identic
 - Every answer moved to `unhandled`: it runs after "Which do you mean?", carrying, the things' and kinds' replies, the room's and the game's.
 - Compared with the rev 8 build over about 75,000 seeded commands (the game's whole vocabulary), output and state are identical except one kind of line: a command whose first slot names something that isn't here ("sit photos to nando" with no photos) now gets the core's free "Nothing like that around here." instead of "Nothing happens." and a turn.
 
-`./verbs.js` still puts the room's and the game's replies ahead of the things' in `before`: that is the Script's own reply ladder (room, game, then nouns), not a stand-in for an engine feature. Without it, 21 QA tests change (the walkthrough among them), because the core asks things first. Moving it would mean moving those replies onto the things.
+## Rev 10: verbs.js answers in the engine's order too
+
+`./verbs.js` used to answer the room's and the game's replies (`rooms.X.on`, `G.on`) in `before`, ahead of the things': the Script's reply ladder. It has no `before` now. Every reply runs in the engine's order (things, kinds, the room, the game), and the data moved to fit it:
+- **The items' generic lines move to the game's replies.** The card's, the coin's and the three secrets' "use" lines ("Nothing here wants it", "Not here. Not now.") were on the items, so "use coin on hippo" would have found the coin's line before the atrium's P2 solve. They're now the last entries of `G.on.use`, with `what:`/`with:`, so the Don, the room and the checkpoint answer first, as before.
+- **The pozole line** (BG-05) is also the first of the Don's own `use` replies, since the Don, as a thing, now answers before the game.
+- **"drop X in Y", `ways`** are word rewrites in the `input` hook ("drop coin in fountain" becomes "use coin fountain", "go upstairs" becomes "go up"), so the engine runs the command its own way.
+- **`./nouns.js`'s checkpoint and strike blocks** step aside when the room or the game has a reply that would answer now (Nando's lines, "run", "say giraffe"): its doc always said CAUGHT is for commands nothing earlier answered.
+- **Two lines the engine prints before any reply** are now its conditional messages, using a new `verb:` condition in `./verbs.js`:
+  - `messages.which`: "look at the staircase" is both staircases at once (BR-05).
+  - `messages.notHere`: using the coin on Pepita after she's opened answers "Pepita's already open" (BG-06), since the coin is gone.
+
+Compared with the rev 9 build over about 15,000 seeded commands (the game's whole vocabulary), output and state are identical except one kind of line. A verb aimed at "the staircase" (bribe, feed) now gets the core's free "Which do you mean: the left staircase or the right staircase?" first, and the answer then gets the same reply as before. All 114 earlier QA and feature tests pass unchanged; a rev 10 feature test is added. The generated Script lists the two new messages.
 

@@ -136,6 +136,9 @@ Keep it small. Use the engine's helpers and tables instead of copying their logi
 
 `games/big-footprint/` is a full game whose own mechanics (a guided tour, strikes, guard checkpoints, a
 clock with sound bands, a run report) live in two game-local add-ons, `verbs.js` and `nouns.js`, using only hooks.
+`verbs.js` shows the other half: it rewrites words in `input` ("drop the coin in the fountain" becomes "use coin fountain") and
+answers nothing itself, so every reply runs in the engine's order. When a thing's generic line got in the way of a room's
+reply, the line moved to `G.on` (last in that order) instead of the add-on reordering replies.
 `nouns.js` shows the split to copy: `before` only blocks (a guard checkpoint, a tour strike) or names (the Script's words
 beat the core's "Which do you mean?"), and every answer is in `unhandled`, after the engine's own pipeline.
 `games/big-footprint/PORT.md` explains how they map onto the contract.

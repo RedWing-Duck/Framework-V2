@@ -656,6 +656,9 @@ const ENDINGS = {
   })
 };
 
+const POZOLE = { if: { here: "don", said: "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread" }, say: "Throw Mama's pozole? You'd be out of the house before it landed." };   // BG-05 (QA text)
+const SECRETS = ["ledger", "manifest", "photos"];
+const BOTH_STAIRS = { said: "staircase|stairs|staircases|stair", not: { said: "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps" } };
 const PEPITA_DONE = { if: { flag: "p2", said: HIPPO + "|coin" }, free: true, say: "Pepita's already open, and already empty." };   // BG-06 (QA text), free
 const Q1_WORDS = "pozole|gravy|soup|sauce|mother|mama|nonna|grandmother|both|either|neither|one|choose|pick";   // NB-02: an attempt at an answer
 const CHECKPOINT_SAY = [
@@ -702,7 +705,8 @@ const G = {
     help: T.help,
     exits: [{ if: ESC, text: "" }, "Exits: {list}"],   // ESCAPE: exits are named by landmark in the room text
     cantGo: "No way through there, detective.",   // ED-10
-    notHere: "Nothing like that around here.",
+    notHere: [{ if: { in: "atrium", flag: "p2", said: ["coin", HIPPO] }, text: PEPITA_DONE.say }, "Nothing like that around here."],   // BG-06: the coin is in Pepita now
+    which: [{ if: { verb: "examine", ...BOTH_STAIRS }, text: T.item.staircase }, "Which do you mean: {list}?"],   // BR-05: "look at the staircase" is both at once
     fixed: "It's bolted down, or it's worth more than your car. Either way, no.",
     notHave: "You're not carrying that.",
     nothing: "Nothing happens. The penthouse is unimpressed.",
@@ -729,7 +733,7 @@ const G = {
         { if: { ...ESC, said: "thirteenth|13th|13|thirteen", not: { flag: "p3" } }, ...secret("p3", "photos", T.p3.solved) },
         ...GRADED_STEPS,   // E2
         { if: { ...ESC, said: "thirteenth|13th|step|steps|stair" }, say: T.p3.wrong, feedback: true } ],   // "push the stairs": the staircases ask which [REV4]
-        examine: [{ if: { said: "staircase|stairs|staircases|stair", not: { said: "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps" } }, say: T.item.staircase }] }) },   // BR-05: both at once
+        examine: [{ if: BOTH_STAIRS, say: T.item.staircase }] }) },   // BR-05: both at once
     trophy: { name: "Trophy Room", desc: desc("trophy"), exits: exits("trophy", { east: "foyer" }), on: strikes("rifle", "RIFLE") },   // R3
     salon: { name: "Music Salon", desc: desc("salon"), exits: exits("salon", { west: "foyer" }),                // R4
       on: merge(strikes("piano|lid|keys|keyboard|ivory|ivories", "PIANO"), { play: [
@@ -772,11 +776,11 @@ const G = {
 
   items: {
     card: { name: "BRIEFING CARD", cat: "OWN", at: "player", aliases: ["briefing"], desc: [{ if: { flag: "q2" }, text: T.item.card.look.replace(/"Smile\. Don't touch anything\."$/, T.item.card.q2) }, T.item.card.look],
-      on: { take: [{ if: { has: "card" }, say: T.item.card.take }], use: [{ if: { has: "card" }, say: T.item.card.use }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
-    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look], on: { use: [{ if: { has: "coin" }, say: T.item.coin.use }] } },   // PT-10                                                          // I2
-    ledger: { name: "LEDGER", cat: "OWN", at: "tray", desc: T.item.ledger.look, on: { use: T.item.evidence } },                                                         // I3
-    manifest: { name: "SHIPPING MANIFEST", cat: "OWN", at: "mouth", desc: T.item.manifest.look, on: { use: T.item.evidence } },                                         // I4
-    photos: { name: "DEAL PHOTOS", cat: "OWN", aliases: ["photo"], desc: T.item.photos.look, on: { use: T.item.evidence } },                              // I5
+      on: { take: [{ if: { has: "card" }, say: T.item.card.take }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
+    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look] },   // PT-10                                                          // I2
+    ledger: { name: "LEDGER", cat: "OWN", at: "tray", desc: T.item.ledger.look },                                                         // I3
+    manifest: { name: "SHIPPING MANIFEST", cat: "OWN", at: "mouth", desc: T.item.manifest.look },                                         // I4
+    photos: { name: "DEAL PHOTOS", cat: "OWN", aliases: ["photo"], desc: T.item.photos.look },                              // I5
     // scenery (not GDD items): examine is free and safe; the Script rev 3 nouns answer first
     rifle: { name: "GOLD RIFLE", cat: "ART", strike: "RIFLE", at: "trophy", fixed: true, desc: T.item.rifle },
     piano: { name: "PIANO", cat: "PUZZLE", strike: "PIANO", puzzle: "P1", at: "salon", fixed: true, aliases: ["lid"], desc: T.item.piano },
@@ -818,7 +822,7 @@ const G = {
 
   npcs: {
     don: { name: "Don Chava", proper: true, pronoun: "him", cat: "PERSON", at: "foyer", aliases: ["don", "chava", "salvatore"],
-      on: { use: [   // D3: give / show him something. "Show the card to the Don" in his office answers Q2 [REV4]
+      on: { use: [POZOLE,   // D3: give / show him something. "Show the card to the Don" in his office answers Q2 [REV4]
         { if: { in: "office", not: { flag: "q2" }, what: "card" }, set: "q2", give: "coin", say: T.item.card.answer + " " + T.q2.right + " " + T.don.after2 },
         { if: { what: "card" }, say: T.don.social.card }, { if: { what: "coin" }, say: T.don.social.coin },
         { if: { said: "plaque|proposal|mockup" }, say: T.don.social.plaque }, T.item.showDon] },
@@ -835,8 +839,11 @@ const G = {
     use: [
       { if: { flag: "checkpoint", what: ["ledger", "manifest", "photos"] }, free: true, say: T.item.showNando },   // [REV4] "show the photos to Nando": he never gets them
       { if: { flag: "checkpoint" }, note: { CAUGHT_BY: "ITEM" } },   // an item on Nando: CAUGHT (D4)
-      { if: { here: "don", said: "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread" }, say: "Throw Mama's pozole? You'd be out of the house before it landed." } ],   // BG-05 (QA text)
-      // give / show / use an item: the Don's own replies (npcs.don.on.use), then the item's (items.X.on.use)
+      POZOLE,
+      // an item used on nothing that answers it (the things, the Don and the room answer first): its own line
+      { if: { has: "card", any: [{ what: "card" }, { with: "card" }] }, say: T.item.card.use },   // PT-10
+      { if: { has: "coin", any: [{ what: "coin" }, { with: "coin" }] }, say: T.item.coin.use },
+      { if: { any: [{ what: SECRETS }, { with: SECRETS }] }, say: T.item.evidence } ],
     drop: [{ if: { said: "ledger|manifest|photos|photo" }, say: T.item.evidence }],
     take: [
       { if: { said: "coin", here: "coin" }, move: { coin: "player" }, say: T.item.coin.take },

@@ -168,6 +168,7 @@
     if (first) S.nouns.seen.push(id);
     if (first && G.reactions?.[id] && test(G.reactIf)) print(txt(G.reactions[id])); };
   // someone here who answers "ask/tell X about Y" with the core's npcs.X.topics
+  const answers = (on, v) => list(own(on, v) ?? []).some(x => typeof x === "string" || !x?.if || test(x.if));   // a reply that would answer now
   const asked = () => at(G.npcs).find(id => G.npcs[id].topics);
   const commands = {};
   for (const v of MINE) if (!own(CMDS, v)) commands[v] = () => print(msg("huh"));   // so the verbs exist; unhandled answers first
@@ -241,6 +242,7 @@
     before(v, a, ids) {
       if (v === "look" && (!a || ["around", "room", "here"].includes(a))) tails();   // the room's look: its tails wait for the turn's end
       // a checkpoint: anything that costs a turn and reached here fails it. Note why, and let CAUGHT say it
+      if (answers(G.rooms[S.room].on, v) || answers(G.on, v)) return;   // the room's or the game's own reply: the core asks it
       if (G.caught && test(G.caught.if) && !isFree(v) && !((v === "ask" || v === "tell") && asked())) return (S.nouns.notes.CAUGHT_BY ??= G.caught.by(v, a)), true;
       if (mine(v) && strike(v, LINE.said)) return true;   // its own verbs only: use-on strikes are the rooms' data
       // naming: the core is about to ask "Which do you mean?" about its things, but the Script names something better

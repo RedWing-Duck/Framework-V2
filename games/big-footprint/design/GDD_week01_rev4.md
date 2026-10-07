@@ -239,12 +239,14 @@ Two engine changes (for every game) after rev 4, and how this game uses them:
 ## 14. [REV7] The loose animals are actors
 The engine gained actors: things and people with their own rules (`acts`), run after each turn's events. The giraffe, the jaguar and Reina now roam through `acts` on themselves instead of three events. Nothing a player sees changed (15,000 seeded commands compared), except that two animals arriving on the same turn are announced in the order the game defines them (giraffe, jaguar, Reina). The Don's tour and Nando's checkpoints stay events: they're the plot, not behavior. What the conversion taught is written up for every game in `docs/AUTHORING.md`, "Actors".
 
-## 15. [REV8, REV9] Engine audit: every feature, and where this game uses it
+## 15. [REV8, REV9, REV10] Engine audit: every feature, and where this game uses it
 A once-over after the engine's systems groundwork (props, `changed`, `unhandled`, `reach`, dice, actors). Three things the game still did by hand now use the engine; play is unchanged (15,000 seeded commands compared, and the Script's text is identical).
 
 | Feature | In this game | Notes |
 |---|---|---|
-| Replies on things, rooms, the game (`on`), `kinds`, `said`, `conds` | Yes, everywhere | The Script's reply ladder |
+| Replies on things, rooms, the game (`on`), `kinds`, `said`, `conds` | Yes, everywhere | **Rev 10:** in the engine's order (things, kinds, room, game); no add-on reorders them. The items' generic "use" lines are the game's last replies |
+| Conditional `messages` (`which`, `notHere`) | **Yes (rev 10)** | "Look at the staircase" names both (BR-05); the coin on an open Pepita (BG-06) |
+| `input` hook (word rewrites) | Yes | "drop X in Y", `ways` ("go upstairs"), bare words, one at a time |
 | Two slots, slot order, `carry` | Yes | Show the card to the Don (Q2), give the coin to the hippo, show a secret to Nando |
 | "Which do you mean?", "the other one" | Yes | The two staircases, the two gates |
 | Proper names, pronouns | Yes | Don Chava, Nando, Big Tony (him); Reina |

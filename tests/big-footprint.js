@@ -989,3 +989,17 @@ test("feature unhandled (rev 9): the Script answers after the engine; before onl
   assert.equal(t.last(), "Nothing like that around here.", "naming: the elevator's \"mirrored gold\" beats the core's question");
 });
 
+test("feature engine order (rev 10): no add-on answers ahead of the engine; replies run things, kinds, room, game", () => {
+  const g = bigfoot();
+  assert.ok(!g.get("HOOKS.before.some(h => /reply\\(own\\(G\\.rooms/.test(String(h)))"), "verbs.js has no reply ladder");
+  g.type("n", "feed staircase");
+  assert.equal(g.last(), "Which do you mean: the left staircase or the right staircase?", "the core asks before any reply");
+  g.type("left");
+  assert.equal(g.get("S.count.strikes"), 1, "then the room's strike answers");
+  g.type("look at staircase");
+  assert.match(g.last(), /twelve steps up/, "messages.which with verb: examine names both at once (BR-05)");
+  g.type("drop card in fountain");
+  assert.equal(g.last(), g.get("G.on.use.find(e => e.if?.has === \"card\").say"), "\"drop X in Y\" is rewritten to use (input); the card's line is the game's last reply (G.on.use)");
+  g.type("go upstairs");
+  assert.match(g.last(), /Private, amigo/, "\"go upstairs\" is rewritten to go up (input)");
+});

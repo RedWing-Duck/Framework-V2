@@ -2,6 +2,9 @@
 Build: `dist/big-footprint.html` (single file, runs offline). Branch `claude/penthouse-heist-game-o7k6w5`.
 Credits: **Retroment Gaming.** Week 01 was a process check (a dry run), so there are no chat contributors.
 
+## Week 01 rev10: every reply in the engine's order
+`verbs.js` no longer answers the room's and the game's replies ahead of the things'. Replies run in the engine's order, and the data moved to fit: the items' generic "use" lines are the game's last replies, "drop X in Y" and `ways` are input rewrites, and two lines are the engine's conditional messages (`which` for "look at the staircase", `notHere` for the coin on an open Pepita). Identical over about 15,000 seeded commands, except that "bribe the staircase" and the like now ask which staircase first (free). Details: `PORT.md`, "Rev 10".
+
 ## Week 01 rev9: the Script's answers in the engine's order
 `nouns.js` answers in the engine's `unhandled` hook, after the engine's own pipeline, instead of ahead of it in `before`; `before` keeps only the checkpoint, tour strikes and naming. Identical over about 75,000 seeded commands, except that a command naming something that isn't here in its first slot ("sit photos to nando") now gets the free "Nothing like that around here." Details: `PORT.md`, "Rev 9".
 

@@ -700,6 +700,9 @@ const ENDINGS = {
   })
 };
 
+const POZOLE = { if: { here: "don", said: "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread" }, say: "Throw Mama's pozole? You'd be out of the house before it landed." };   // BG-05 (QA text)
+const SECRETS = ["ledger", "manifest", "photos"];
+const BOTH_STAIRS = { said: "staircase|stairs|staircases|stair", not: { said: "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps" } };
 const PEPITA_DONE = { if: { flag: "p2", said: HIPPO + "|coin" }, free: true, say: "Pepita's already open, and already empty." };   // BG-06 (QA text), free
 const Q1_WORDS = "pozole|gravy|soup|sauce|mother|mama|nonna|grandmother|both|either|neither|one|choose|pick";   // NB-02: an attempt at an answer
 const CHECKPOINT_SAY = [
@@ -746,7 +749,8 @@ const G = {
     help: T.help,
     exits: [{ if: ESC, text: "" }, "Exits: {list}"],   // ESCAPE: exits are named by landmark in the room text
     cantGo: "No way through there, detective.",   // ED-10
-    notHere: "Nothing like that around here.",
+    notHere: [{ if: { in: "atrium", flag: "p2", said: ["coin", HIPPO] }, text: PEPITA_DONE.say }, "Nothing like that around here."],   // BG-06: the coin is in Pepita now
+    which: [{ if: { verb: "examine", ...BOTH_STAIRS }, text: T.item.staircase }, "Which do you mean: {list}?"],   // BR-05: "look at the staircase" is both at once
     fixed: "It's bolted down, or it's worth more than your car. Either way, no.",
     notHave: "You're not carrying that.",
     nothing: "Nothing happens. The penthouse is unimpressed.",
@@ -773,7 +777,7 @@ const G = {
         { if: { ...ESC, said: "thirteenth|13th|13|thirteen", not: { flag: "p3" } }, ...secret("p3", "photos", T.p3.solved) },
         ...GRADED_STEPS,   // E2
         { if: { ...ESC, said: "thirteenth|13th|step|steps|stair" }, say: T.p3.wrong, feedback: true } ],   // "push the stairs": the staircases ask which [REV4]
-        examine: [{ if: { said: "staircase|stairs|staircases|stair", not: { said: "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps" } }, say: T.item.staircase }] }) },   // BR-05: both at once
+        examine: [{ if: BOTH_STAIRS, say: T.item.staircase }] }) },   // BR-05: both at once
     trophy: { name: "Trophy Room", desc: desc("trophy"), exits: exits("trophy", { east: "foyer" }), on: strikes("rifle", "RIFLE") },   // R3
     salon: { name: "Music Salon", desc: desc("salon"), exits: exits("salon", { west: "foyer" }),                // R4
       on: merge(strikes("piano|lid|keys|keyboard|ivory|ivories", "PIANO"), { play: [
@@ -816,11 +820,11 @@ const G = {
 
   items: {
     card: { name: "BRIEFING CARD", cat: "OWN", at: "player", aliases: ["briefing"], desc: [{ if: { flag: "q2" }, text: T.item.card.look.replace(/"Smile\. Don't touch anything\."$/, T.item.card.q2) }, T.item.card.look],
-      on: { take: [{ if: { has: "card" }, say: T.item.card.take }], use: [{ if: { has: "card" }, say: T.item.card.use }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
-    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look], on: { use: [{ if: { has: "coin" }, say: T.item.coin.use }] } },   // PT-10                                                          // I2
-    ledger: { name: "LEDGER", cat: "OWN", at: "tray", desc: T.item.ledger.look, on: { use: T.item.evidence } },                                                         // I3
-    manifest: { name: "SHIPPING MANIFEST", cat: "OWN", at: "mouth", desc: T.item.manifest.look, on: { use: T.item.evidence } },                                         // I4
-    photos: { name: "DEAL PHOTOS", cat: "OWN", aliases: ["photo"], desc: T.item.photos.look, on: { use: T.item.evidence } },                              // I5
+      on: { take: [{ if: { has: "card" }, say: T.item.card.take }] } },   // PT-10: the card's last line and the Script's IF Q2 line share their quote                  // I1
+    coin: { name: "GOLD COIN", cat: "OWN", desc: [{ if: { key: "ESCAPE&COIN_HELD" }, text: T.item.coin.held }, T.item.coin.look] },   // PT-10                                                          // I2
+    ledger: { name: "LEDGER", cat: "OWN", at: "tray", desc: T.item.ledger.look },                                                         // I3
+    manifest: { name: "SHIPPING MANIFEST", cat: "OWN", at: "mouth", desc: T.item.manifest.look },                                         // I4
+    photos: { name: "DEAL PHOTOS", cat: "OWN", aliases: ["photo"], desc: T.item.photos.look },                              // I5
     // scenery (not GDD items): examine is free and safe; the Script rev 3 nouns answer first
     rifle: { name: "GOLD RIFLE", cat: "ART", strike: "RIFLE", at: "trophy", fixed: true, desc: T.item.rifle },
     piano: { name: "PIANO", cat: "PUZZLE", strike: "PIANO", puzzle: "P1", at: "salon", fixed: true, aliases: ["lid"], desc: T.item.piano },
@@ -862,7 +866,7 @@ const G = {
 
   npcs: {
     don: { name: "Don Chava", proper: true, pronoun: "him", cat: "PERSON", at: "foyer", aliases: ["don", "chava", "salvatore"],
-      on: { use: [   // D3: give / show him something. "Show the card to the Don" in his office answers Q2 [REV4]
+      on: { use: [POZOLE,   // D3: give / show him something. "Show the card to the Don" in his office answers Q2 [REV4]
         { if: { in: "office", not: { flag: "q2" }, what: "card" }, set: "q2", give: "coin", say: T.item.card.answer + " " + T.q2.right + " " + T.don.after2 },
         { if: { what: "card" }, say: T.don.social.card }, { if: { what: "coin" }, say: T.don.social.coin },
         { if: { said: "plaque|proposal|mockup" }, say: T.don.social.plaque }, T.item.showDon] },
@@ -879,8 +883,11 @@ const G = {
     use: [
       { if: { flag: "checkpoint", what: ["ledger", "manifest", "photos"] }, free: true, say: T.item.showNando },   // [REV4] "show the photos to Nando": he never gets them
       { if: { flag: "checkpoint" }, note: { CAUGHT_BY: "ITEM" } },   // an item on Nando: CAUGHT (D4)
-      { if: { here: "don", said: "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread" }, say: "Throw Mama's pozole? You'd be out of the house before it landed." } ],   // BG-05 (QA text)
-      // give / show / use an item: the Don's own replies (npcs.don.on.use), then the item's (items.X.on.use)
+      POZOLE,
+      // an item used on nothing that answers it (the things, the Don and the room answer first): its own line
+      { if: { has: "card", any: [{ what: "card" }, { with: "card" }] }, say: T.item.card.use },   // PT-10
+      { if: { has: "coin", any: [{ what: "coin" }, { with: "coin" }] }, say: T.item.coin.use },
+      { if: { any: [{ what: SECRETS }, { with: SECRETS }] }, say: T.item.evidence } ],
     drop: [{ if: { said: "ledger|manifest|photos|photo" }, say: T.item.evidence }],
     take: [
       { if: { said: "coin", here: "coin" }, move: { coin: "player" }, say: T.item.coin.take },
@@ -2232,11 +2239,13 @@ document.addEventListener("DOMContentLoaded", () => {
             and "drop all" only print it (free). Spoken verbs keep their "and" ("say pozole and gravy").
           rooms.X.ways: { word: "direction" }   "go <word>" / "climb <word>" here means that
             direction ("stairs": "up"). Aliases that name a direction work after go too ("go upstairs").
-   Condition: only:"a|b c"   every word typed after the verb is one of these words (or nothing was typed)
+          "drop X in Y" is "use X Y" (the coin in the fountain).
+          All of these are word rewrites in the input hook: the command then runs the engine's own way.
+   Conditions: only:"a|b c"   every word typed after the verb is one of these words (or nothing was typed)
+               verb:"a|b"     the command's verb is one of these (messages.which and notHere can read it)
    Effect:    line:[part, ...]   prints the parts joined. A part is TEXT, or
               { list:[TEXT, ...], none:TEXT }: the non-empty ones joined with ", ", or none.
-   Order: the room's and the game's replies (rooms.X.on, G.on) answer before ./nouns.js,
-   which is the Script's reply ladder (the core would ask them after every before hook).
+   Order: none of its own. Replies answer in the engine's order: things, kinds, the room, the game.
    ------------------------------------------------------------------------- */
 {
   const BARE = Object.fromEntries(Object.entries(G.bare || {}).map(([w, t]) => [w.toLowerCase(), t]));
@@ -2245,20 +2254,18 @@ document.addEventListener("DOMContentLoaded", () => {
   addon({
     name: "verbs",
     maps: { bare: "data" },
-    conditions: { only: p => LINE.said.split(" ").every(w => !w || p.split("|").some(x => words(x).includes(w))) },
+    conditions: { verb: p => p.split("|").includes(LINE.verb),
+      only: p => LINE.said.split(" ").every(w => !w || p.split("|").some(x => words(x).includes(w))) },
     effects: { line: v => print(v.map(part).join("")) },
     input(w) {
       if (w.length === 1 && own(BARE, w[0])) return print(txt(BARE[w[0]])), true;   // no command runs, so no turn
       const f = w.filter(x => !FILLER.includes(x)), v = own(ALIAS, f[0]) || f[0], and = f.indexOf("and");
       if ((v === "take" || v === "drop") && f.some(x => x === "all" || x === "everything")) return print(txt(G.oneAtATime)), true;
       if (G.oneAtATime && and > 1 && and < f.length - 1 && !(G.spoken || []).includes(v)) { one = true; return f.slice(0, and); }
-    },
-    before(v, a) {
-      const at = a.split(" ").findIndex(w => w === "in" || w === "into");
-      if (v === "drop" && at > 0) return exec("use", a.split(" ").filter((w, i) => i !== at).join(" ")), true;   // "drop coin in fountain" = use it on
-      const way = (v === "go" || v === "climb") && (own(G.rooms[S.room].ways, a) || own(ALIAS, a) || (v === "climb" && isDir(a) && a));
-      if (way && (way !== a || v === "climb") && isDir(way)) return exec("go", way), true;   // "go upstairs", "climb stairs"
-      return reply(own(G.rooms[S.room].on, v)) || reply(own(G.on, v)) || undefined;   // the room's and the game's replies first
+      const rest = f.slice(1).join(" "), at = f.findIndex(x => x === "in" || x === "into");
+      if (v === "drop" && at > 1) return ["use", ...f.slice(1).filter((x, i) => i !== at - 1)];   // "drop coin in fountain" = use it on
+      const way = (v === "go" || v === "climb") && (own(G.rooms[S.room].ways, rest) || own(ALIAS, rest) || (v === "climb" && isDir(rest) && rest));
+      if (way && (way !== rest || v === "climb") && isDir(way)) return ["go", way];   // "go upstairs", "climb stairs"
     },
     afterTurn() { if (one) { one = false; print(txt(G.oneAtATime)); } },
     validate(need) {
@@ -2439,6 +2446,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (first) S.nouns.seen.push(id);
     if (first && G.reactions?.[id] && test(G.reactIf)) print(txt(G.reactions[id])); };
   // someone here who answers "ask/tell X about Y" with the core's npcs.X.topics
+  const answers = (on, v) => list(own(on, v) ?? []).some(x => typeof x === "string" || !x?.if || test(x.if));   // a reply that would answer now
   const asked = () => at(G.npcs).find(id => G.npcs[id].topics);
   const commands = {};
   for (const v of MINE) if (!own(CMDS, v)) commands[v] = () => print(msg("huh"));   // so the verbs exist; unhandled answers first
@@ -2512,6 +2520,7 @@ document.addEventListener("DOMContentLoaded", () => {
     before(v, a, ids) {
       if (v === "look" && (!a || ["around", "room", "here"].includes(a))) tails();   // the room's look: its tails wait for the turn's end
       // a checkpoint: anything that costs a turn and reached here fails it. Note why, and let CAUGHT say it
+      if (answers(G.rooms[S.room].on, v) || answers(G.on, v)) return;   // the room's or the game's own reply: the core asks it
       if (G.caught && test(G.caught.if) && !isFree(v) && !((v === "ask" || v === "tell") && asked())) return (S.nouns.notes.CAUGHT_BY ??= G.caught.by(v, a)), true;
       if (mine(v) && strike(v, LINE.said)) return true;   // its own verbs only: use-on strikes are the rooms' data
       // naming: the core is about to ask "Which do you mean?" about its things, but the Script names something better

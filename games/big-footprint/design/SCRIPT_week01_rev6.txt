@@ -71,7 +71,14 @@ SYSTEM MESSAGES (help, errors, movement)
     [always] No way through there, detective.
 
 -- messages.notHere
+    [in atrium & flag p2 & said "coin,hippo|pepita|fountain|jaw|mouth"] Pepita's already open, and already empty.
     [always] Nothing like that around here.
+
+-- messages.which
+    [verb examine & said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps") & flag p3] The two staircases rise into the dark; a panel in the right one stands open at the thirteenth step, breathing cold air.
+    [verb examine & said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps") & flag escape] The two staircases rise into the dark; the right one gleams, and its thirteenth step sits a hair higher than the rest, like it's waiting to be pressed.
+    [verb examine & said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps")] The left staircase is wide and carpeted, twelve steps up. The right is narrower and polished to a shine, thirteen steps. The Don is watching your eyes.
+    [always] Which do you mean: {list}?
 
 -- messages.fixed
     [always] It's bolted down, or it's worth more than your car. Either way, no.
@@ -163,9 +170,9 @@ ROOMS
     [flag escape & only step|steps] Which one? The Don was very specific about one of them.
     [flag escape & said "thirteenth|13th|step|steps|stair"] You press a step. It's just a step. The Don said which one you can't trust.
   on.examine:
-    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps") & flag p3] The two staircases rise into the dark; a panel in the right one stands open at the thirteenth step, breathing cold air.
-    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps") & flag escape] The two staircases rise into the dark; the right one gleams, and its thirteenth step sits a hair higher than the rest, like it's waiting to be pressed.
-    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps")] The left staircase is wide and carpeted, twelve steps up. The right is narrower and polished to a shine, thirteen steps. The Don is watching your eyes.
+    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps") & flag p3] (same as messages.which)
+    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps") & flag escape] (same as messages.which)
+    [said "staircase|stairs|staircases|stair" & not(said "left|right|family|business|carpet|carpeted|narrow|twelve|thirteen|thirteenth|13th|step|steps")] (same as messages.which)
   verbs.listen:
     [TOUR] Your footsteps echo. The Don's don't. He's had practice.
     [ESCAPE] Glass breaking upstairs, alarms everywhere, and under all of it, heavy footsteps that aren't in any hurry.
@@ -344,7 +351,7 @@ ROOMS
     [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth" & noted(STRIKE3_BY STEP)] (same as rooms.foyer.on.use)
     [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth" & noted(STRIKE3_BY PIANO)] (same as rooms.foyer.on.use)
     [not(flag escape) & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.foyer.on.use)
-    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] Pepita's already open, and already empty.
+    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as messages.notHere)
     [flag escape & said "coin" & any(carrying coin | coin here)] You flick the coin into Pepita's mouth. The bronze jaw swings open, and a waterproof tube tumbles out into the water. You fish out the SHIPPING MANIFEST. Secrets: {secrets} of 3.
     [flag escape & said "coin" & key COIN_DROPPED] Your pocket's empty. The coin is wherever you left it.
     [flag escape & said "card|briefing,hippo|pepita|fountain|jaw|mouth"] Pepita doesn't read.
@@ -353,13 +360,13 @@ ROOMS
   on.touch:
     [flag escape & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.atrium.on.use)
   on.open:
-    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as rooms.atrium.on.use)
+    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as messages.notHere)
     [flag escape & said "hippo|pepita|fountain|jaw|mouth"] Pepita keeps her mouth shut. She only opens up for one thing.
   on.push:
-    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as rooms.atrium.on.use)
+    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as messages.notHere)
     [flag escape & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.atrium.on.open)
   on.pull:
-    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as rooms.atrium.on.use)
+    [flag p2 & said "hippo|pepita|fountain|jaw|mouth|coin"] (same as messages.notHere)
     [flag escape & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.atrium.on.open)
   verbs.smell:
     [always] Chlorine, wet stone, and tropical flowers.
@@ -496,33 +503,23 @@ ITEMS AND THINGS
   desc:
     [flag q2] Your cover, in your own handwriting. Name: Walter Pryce. Business: The Dog-Eared Page, a bookstore planned for the empty lot next door. Offer: a brass plaque reading "The Bellandi-Reyes Reading Room." At the bottom: "Smile. Don't touch anything." You smiled. He liked the name. So far, so good.
     [always] Your cover, in your own handwriting. Name: Walter Pryce. Business: The Dog-Eared Page, a bookstore planned for the empty lot next door. Offer: a brass plaque reading "The Bellandi-Reyes Reading Room." At the bottom: "Smile. Don't touch anything."
-  on.use:
-    [carrying card] That won't help here. The card is for reading, and for showing to the right person.
 
 -- items.coin: GOLD COIN
   desc:
     [key ESCAPE&COIN_HELD] The eagle, the winged figure, and the weight of it in your palm. In this house, gold opens things.
     [always] A heavy gold coin with an eagle on one side and a winged figure on the other. The Don called it your "first dividend."
-  on.use:
-    [carrying coin] You hold out the coin. Nothing here wants it. You put it back before you lose it.
 
 -- items.ledger: LEDGER
   desc:
     [always] A fat notebook held shut with rubber bands, full of initials, dates, and payments in neat columns. Two pages list nothing but rubber band purchases. Someone had a lot of cash to wrap.
-  on.use:
-    [always] (same as rooms.atrium.on.use)
 
 -- items.manifest: SHIPPING MANIFEST
   desc:
     [always] A waterproof tube holding a shipping schedule: dates, ports, and thousands of cans of "premium chiles" that clearly have never been near a chile.
-  on.use:
-    [always] (same as rooms.atrium.on.use)
 
 -- items.photos: DEAL PHOTOS
   desc:
     [always] A stack of photos: the Don shaking hands on a yacht with men whose faces would end careers. Someone wrote a date on the back of each one.
-  on.use:
-    [always] (same as rooms.atrium.on.use)
 
 -- items.rifle: GOLD RIFLE
   desc:
@@ -535,9 +532,9 @@ ITEMS AND THINGS
 
 -- items.staircases: staircases
   desc:
-    [flag p3] (same as rooms.foyer.on.examine)
-    [flag escape] (same as rooms.foyer.on.examine)
-    [always] (same as rooms.foyer.on.examine)
+    [flag p3] (same as messages.which)
+    [flag escape] (same as messages.which)
+    [always] (same as messages.which)
 
 -- items.leftstairs: left staircase
   desc:
@@ -632,6 +629,7 @@ PEOPLE
 
 -- npcs.don: Don Chava
   on.use:
+    [don here & said "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread"] Throw Mama's pozole? You'd be out of the house before it landed.
     [in office & not(flag q2) & what card] {The:with} takes {the:what}, finds the name in your own handwriting, and laughs. "The Dog-Eared Page. Cute. I like cute." He flips you a GOLD COIN. "Your first dividend, partner. Now let me show you my real investments. West, west, then north." He's already out the door and heading for the portraits.
     [what card] He glances at it and hands it back. "I know who you are, Walter." A pause just long enough for you to sweat. "The bookstore man."
     [what coin] He folds your fingers back over it. "A dividend is not a loan."
@@ -801,7 +799,10 @@ GAME-WIDE REPLIES
 
 -- on.use
     [flag checkpoint & what ledger,manifest,photos] The Don's own guard, and {the:what}? Not in this lifetime. The flashlight stays on your face. "Well?"
-    [don here & said "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread"] Throw Mama's pozole? You'd be out of the house before it landed.
+    [don here & said "pozole|gravy|sauce|soup|food|meatball|meatballs|grapes|grape|bread"] (same as npcs.don.on.use)
+    [carrying card & any(what card | with card)] That won't help here. The card is for reading, and for showing to the right person.
+    [carrying coin & any(what coin | with coin)] You hold out the coin. Nothing here wants it. You put it back before you lose it.
+    [any(what ledger,manifest,photos | with ledger,manifest,photos)] (same as rooms.atrium.on.use)
 
 -- on.drop
     [said "ledger|manifest|photos|photo"] (same as rooms.atrium.on.use)
