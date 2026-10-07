@@ -12,7 +12,7 @@ const SECTIONS = { title: "TITLE", intro: "INTRO", messages: "SYSTEM MESSAGES (h
   bands: "BIGFOOT CLOCK BANDS", feedback: "TURN FEEDBACK", nowhere: "NOT HERE", reactions: "THE DON'S REACTIONS",
   firstLook: "FIRST CLOSE LOOK AT EACH SECRET", oneAtATime: "ONE THING AT A TIME", report: "RUN REPORT", lookCloser: "LOOK CLOSER", throughDoor: "THROUGH A DOOR" };
 const LOGIC = new Set(["if", "said", "aliases", "words", "phrasal", "bare", "conds", "groups", "strikeVerbs", "strikeWith", "tourFree",
-  "reactIf", "start", "at", "move", "route", "level", "kind", "cat", "pronoun", "exits", "key", "flag", "set", "unset", "give", "take",
+  "reactIf", "start", "at", "move", "route", "level", "kind", "cat", "pronoun", "exits", "key", "flag", "set", "unset", "give",
   "note", "next", "counted", "proper", "every", "ending", "by", "name"]);
 
 const cond = c => {
@@ -71,9 +71,11 @@ function script() {
     if (LOGIC.has(k) || k === "aliases") continue;
     const before = out.length;
     out.push("", "=".repeat(78), SECTIONS[k] || k.toUpperCase(), "=".repeat(78));
-    if (typeof G[k] === "string") { if (isText(G[k])) line("always", G[k], k); }
+    if (typeof G[k] === "string") { block = lastWhere = k; if (isText(G[k])) line("always", G[k], k); }
     else for (const [id, v] of Array.isArray(G[k]) ? G[k].map((v, i) => [String(i), v]) : Object.entries(G[k])) {
-      const head = out.length; out.push("", `-- ${k}.${id}${v && v.name ? `: ${v.name}` : ""}`); block = lastWhere = `${k}.${id}`;
+      const names = v ? [].concat(v.name ?? []) : [];   // a name that follows state: the plain one, then [condition] NAME
+      const name = [names.find(n => typeof n === "string"), ...names.filter(n => n?.text).map(n => `[${cond(n.if)}] ${n.text}`)].filter(Boolean).join(", ");
+      const head = out.length; out.push("", `-- ${k}.${id}${name ? `: ${name}` : ""}`); block = lastWhere = `${k}.${id}`;
       walk(v, `${k}.${id}`);
       if (out.length === head + 2) out.splice(head);
     }

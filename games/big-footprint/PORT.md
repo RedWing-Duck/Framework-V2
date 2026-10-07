@@ -128,3 +128,16 @@ Compared with the rev 7 build over 15,000 seeded commands, the output is identic
 
 Compared with the rev 9 build over about 15,000 seeded commands (the game's whole vocabulary), output and state are identical except one kind of line. A verb aimed at "the staircase" (bribe, feed) now gets the core's free "Which do you mean: the left staircase or the right staircase?" first, and the answer then gets the same reply as before. All 114 earlier QA and feature tests pass unchanged; a rev 10 feature test is added. The generated Script lists the two new messages.
 
+
+### Rev 10 wording review
+
+A reviewer read the whole generated Script against the GDD's tone. The review was text only: no logic, conditions or match words changed, and no "(QA text)" line or test string was touched. It made 12 fixes in 13 places:
+- **Lines that contradicted the game.** At the foyer checkpoint, Nando asked "Why are you up here?", but the foyer is downstairs. The Don's bribe line said he laughed "for the first time" and mentioned "my own coin" before he gives you one. Picking the coin back up spoke of the Don's warm hand. During dinner, the Don moved a pot "lid" that the pots' own line says is off. "That animal" was used for the peacocks.
+- **Voice.** The Don's "Questions later, Walter. Keep up." now prints in quotes, like his other speech. The last checkpoint hint starts with "Type", like the others.
+- **Repeats.** Three lines repeated a phrase from the line printed just before them: the elevator button, the piano's tray and the letter opener.
+- **Clarity.** "open card" now says that you read it.
+
+`make-script.js` fixes found in the same review:
+- The INTRO header no longer prints as "ntro:".
+- Names that follow state print as `AVIARY, [OUT_PEACOCKS] EMPTY AVIARY`.
+- `take` replies are now in the Script; they had been skipped as logic.

@@ -8,7 +8,6 @@ Regenerate after any text change: node games/big-footprint/design/make-script.js
 ==============================================================================
 INTRO
 ==============================================================================
-  ntro:
     [always] A Retroment Gaming production.
 
       Your client wants three secrets from Don Chava's penthouse. Your cover: Walter Pryce, bookstore investor, carrying a plaque proposal and a smile. The Don will give you the grand tour himself. Listen to everything. Touch nothing. Get out with at least two.
@@ -357,6 +356,8 @@ ROOMS
     [flag escape & said "card|briefing,hippo|pepita|fountain|jaw|mouth"] Pepita doesn't read.
     [flag escape & said "ledger|manifest|photos|photo,hippo|pepita|fountain|jaw|mouth"] Tempting, but this is evidence, not a tool. Keep it safe.
     [flag escape & said "hippo|pepita|fountain|jaw|mouth"] You pull at the bronze jaw. Pepita's got a grip like a bank vault. She only opens up for one thing.
+  on.take:
+    [flag escape & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.atrium.on.use)
   on.touch:
     [flag escape & said "hippo|pepita|fountain|jaw|mouth"] (same as rooms.atrium.on.use)
   on.open:
@@ -426,7 +427,7 @@ ROOMS
   on.open:
     [not(flag escape) & said "aviary|door|keypad|cage|peacock|peacocks"] The keypad blinks red. Locked tight, and the Don is watching.
     [said "aviary|door|keypad|cage|peacock|peacocks" & reina.alibi=0] You punch the smashed keypad. The door swings open and peacocks explode into the palace, screaming like the world is ending. Perfect alibi: PEACOCKS.
-    [said "aviary|door|keypad|cage|peacock|peacocks"] It's already open. That animal's somebody else's problem now.
+    [said "aviary|door|keypad|cage|peacock|peacocks"] It's already open. Whatever was in there is out now.
   verbs.smell:
     [always] Birdseed and outrage.
   verbs.listen:
@@ -503,6 +504,8 @@ ITEMS AND THINGS
   desc:
     [flag q2] Your cover, in your own handwriting. Name: Walter Pryce. Business: The Dog-Eared Page, a bookstore planned for the empty lot next door. Offer: a brass plaque reading "The Bellandi-Reyes Reading Room." At the bottom: "Smile. Don't touch anything." You smiled. He liked the name. So far, so good.
     [always] Your cover, in your own handwriting. Name: Walter Pryce. Business: The Dog-Eared Page, a bookstore planned for the empty lot next door. Offer: a brass plaque reading "The Bellandi-Reyes Reading Room." At the bottom: "Smile. Don't touch anything."
+  on.take:
+    [carrying card] You already have it. It's the only thing keeping you from being a very short story.
 
 -- items.coin: GOLD COIN
   desc:
@@ -558,7 +561,10 @@ ITEMS AND THINGS
 
 -- items.tray: hidden tray
   desc:
-    [always] Velvet-lined, with a ledger-shaped dent and one stray rubber band. Mama's piano kept that secret for years.
+    [always] Velvet-lined, with a ledger-shaped dent and one stray rubber band. It kept that secret for years.
+  on.take:
+    [said "rubber band|band"] You leave it. Something tells you the Don counts those.
+    [always] You're here for secrets, not souvenirs.
   on.open:
     [always] Already open, and already empty.
   on.close:
@@ -576,7 +582,7 @@ ITEMS AND THINGS
   on.close:
     [open mouth] Pepita keeps her mouth open now. She's earned it.
 
--- items.aviary: [object Object],AVIARY
+-- items.aviary: AVIARY, [OUT_PEACOCKS] EMPTY AVIARY
   desc:
     [OUT_PEACOCKS] The AVIARY door hangs open, the keypad smashed.
     [flag escape] The AVIARY keypad is smashed, its door rattling.
@@ -598,12 +604,12 @@ ITEMS AND THINGS
     [always] The loudest of the Don's peacocks, tail fanned like a stolen chandelier.
     [always] She screams at you personally. Then at a lamp. Then at you again.
 
--- items.giraffegate: [object Object],GIRAFFE GATE
+-- items.giraffegate: GIRAFFE GATE, [OUT_GIRAFFE] OPEN GIRAFFE GATE
   desc:
     [OUT_GIRAFFE] The GIRAFFE GATE hangs open. The giraffe is somebody else's problem now.
     [always] A tall iron gate. The giraffe leans over it, chewing, curious about you.
 
--- items.jaguargate: [object Object],JAGUAR GATE
+-- items.jaguargate: JAGUAR GATE, [OUT_JAGUAR] OPEN JAGUAR GATE
   desc:
     [OUT_JAGUAR] The JAGUAR GATE hangs open. You're very glad you're not the one chasing it.
     [always] A steel-barred gate. Behind it, the jaguar paces and watches you with yellow eyes.
@@ -613,6 +619,8 @@ KINDS (the loose animals)
 ==============================================================================
 
 -- kinds.animal
+  take:
+    [always] Faster than you, angrier than you, and not going in your jacket.
   eat:
     [always] Absolutely not. In this house, the animals are family.
   ride:
@@ -773,9 +781,9 @@ PEOPLE
 
 -- npcs.nando: Nando
   desc:
-    [always] Six and a half feet of black suit, a radio, a flashlight, and a face that has heard every excuse. He's waiting for yours. "Well? Why are you up here?"
+    [always] Six and a half feet of black suit, a radio, a flashlight, and a face that has heard every excuse. He's waiting for yours. "Well? Why are you here?"
   topics.don|boss|chava|salvatore:
-    [always] "The boss is busy. I'm not. Why are you up here?"
+    [always] "The boss is busy. I'm not. Why are you here?"
   topics.animal|animals|giraffe|giraffes|jaguar|jaguars|peacock|peacocks|bird|birds|lemur|lemurs|zoo:
     [always] "Something you want to tell me about the animals? Say it."
   topics.tony|big tony|bigfoot:
@@ -808,7 +816,7 @@ GAME-WIDE REPLIES
     [said "ledger|manifest|photos|photo"] (same as rooms.atrium.on.use)
 
 -- on.take
-    [said "coin" & coin here] You pocket the coin. It's warm from his hand, which somehow makes it worse.
+    [said "coin" & coin here] You pocket the coin again. Gold doesn't stay on the floor long in this house.
     [said "coin" & carrying coin] You already have that.
     [said "ledger" & carrying ledger] (same as on.take)
     [said "manifest" & carrying manifest] (same as on.take)
@@ -819,7 +827,7 @@ GAME-WIDE REPLIES
     [don here & said "myself|me"] He smiles. "I know who you are, Walter. I checked."
     [don here & any(said "" | said "don|chava|salvatore") & in dining & not(flag q1)] (same as rooms.dining.on)
     [don here & any(said "" | said "don|chava|salvatore") & in office & not(flag q2)] (same as rooms.office.on)
-    [don here & any(said "" | said "don|chava|salvatore") & key STRIKES=2] Questions later, Walter. Keep up.
+    [don here & any(said "" | said "don|chava|salvatore") & key STRIKES=2] "Questions later, Walter. Keep up."
     [don here & any(said "" | said "don|chava|salvatore") & key STRIKES=1] "We talk later, Walter." He doesn't say "amigo" anymore.
     [don here & any(said "" | said "don|chava|salvatore") & in foyer] "Look around, Walter. Every stone in this floor, I earned."
     [don here & any(said "" | said "don|chava|salvatore") & in trophy] "Friends give me gifts. I keep all of them. I keep all my friends, too." He lets that sit.
@@ -846,7 +854,7 @@ GAME-WIDE REPLIES
     [don here & said "love|like|beautiful|amazing|great|nice"] "Tell me something I don't know." He's delighted.
 
 -- on.bribe
-    [don here] He laughs, genuinely, for the first time. "With what? My own coin?"
+    [don here] He laughs, genuinely. "With what, Walter? Everything in this house is already mine."
 
 -- on.provoke
     [don here & key STRIKES=2] He says nothing at all. That's worse.
@@ -895,7 +903,7 @@ GAME-WIDE REPLIES
 -- on.hint
     [flag checkpoint] He wants a reason.
     [flag checkpoint] An animal you let loose is a reason. So are fast legs, once.
-    [flag checkpoint] "say" the name of an animal you released, or "run" if you haven't yet.
+    [flag checkpoint] Type "say" and the name of an animal you released, or "run" if you haven't yet.
     [in dining & not(flag q1)] He's asking you something. Answer with "say".
     [in dining & not(flag q1)] In the foyer, he told you how this house treats family.
     [in dining & not(flag q1)] In this house, you never choose.
@@ -1376,7 +1384,7 @@ SCENERY (examine, smell, listen... by room)
     [TOUR] One button, no numbers. This elevator was built to bring people up. Only the Don decides who goes down.
     [ESCAPE] One brass button marked LOBBY, worn smooth by nervous thumbs. One press and you're out.
     [ESCAPE&SECRETS=0] One button marked LOBBY. Not with empty pockets. You didn't come this far for the view.
-    [ESCAPE&SECRETS=1] One button marked LOBBY. One secret isn't a case. It's a rumor. Get another.
+    [ESCAPE&SECRETS=1] One button marked LOBBY. One secret won't hold up in court. Get another.
   push:
     [TOUR] (same as rooms.elevator.on.push)
 
@@ -1434,6 +1442,8 @@ SCENERY (examine, smell, listen... by room)
 -- nouns.R2.shoebox
   examine:
     [P3] An Italian shoe brand you'll never afford, emptied of shoes and packed with trouble. The trouble is in your jacket now.
+  take:
+    [P3] You leave it. An empty box is just an alibi for somebody else.
 
 -- nouns.R2.lights
   examine:
@@ -1642,7 +1652,7 @@ SCENERY (examine, smell, listen... by room)
     [Q1] Two pots, one family. You get it now.
     [ESCAPE] Both pots still simmering, somehow. The lemur has been at the pozole.
   eat:
-    [TOUR] The Don moves the lid back, gently. "After business, Walter. Family eats first."
+    [TOUR] The Don moves your hand away, gently. "After business, Walter. Family eats first."
     [ESCAPE] You grab a meatball on the way past. Best thing that's happened all night.
   taste:
     [TOUR] (same as nouns.R5.pots.eat)
@@ -1658,6 +1668,9 @@ SCENERY (examine, smell, listen... by room)
   examine:
     [TOUR] Linen napkins stitched with the same white birds as Mama Rosa's rebozo. The silverware is heavy enough to count as exercise.
     [ESCAPE] Silver all over the floor. Nobody's counting it tonight.
+  take:
+    [TOUR] The Don doesn't even turn around. "The silver stays, Walter."
+    [ESCAPE] You're here for secrets, not spoons.
 
 -- nouns.R5.chairs
   examine:
@@ -1682,10 +1695,12 @@ SCENERY (examine, smell, listen... by room)
 -- nouns.R5.lemur
   examine:
     [ESCAPE] It meets your eyes and eats another grape, slowly, at you. It has the confidence of an animal that has never been told no.
-  grab:
+  take:
     [ESCAPE] It hisses, keeps the grape, and keeps its dignity. You keep neither.
+  grab:
+    [ESCAPE] (same as nouns.R5.lemur.take)
   chase:
-    [ESCAPE] (same as nouns.R5.lemur.grab)
+    [ESCAPE] (same as nouns.R5.lemur.take)
   talk:
     [always] The lemurs chatter back. It sounds like they're arguing about you.
 
@@ -1773,6 +1788,8 @@ SCENERY (examine, smell, listen... by room)
 -- nouns.R7.cap
   examine:
     [CP7_DONE] Nando's cap, upside down on the carpet. There's a little embroidered lemur on the brim. Someone has a sense of humor about his job.
+  take:
+    [CP7_DONE] You leave it. Wearing a guard's hat doesn't make you a guard. It makes you a guy in a hat.
 
 -- nouns.R8.hippo
   examine:
@@ -1792,6 +1809,9 @@ SCENERY (examine, smell, listen... by room)
   examine:
     [TOUR] The pool is lined with coins, every single one gold, winking up through the water. Nobody has ever dared take one.
     [ESCAPE] Water slops over the rim with every thud. The gold coins on the bottom shimmer.
+  take:
+    [ESCAPE] The coins are set into the bottom of the pool. Pepita's savings are not available for withdrawal.
+    [ESCAPE] They're set into the bottom of the pool. Pepita's savings are not available for withdrawal.
   drink:
     [always] Chlorine and gold. You'll pass.
   smell:
@@ -1809,14 +1829,18 @@ SCENERY (examine, smell, listen... by room)
   examine:
     [TOUR] Rain drums on the glass roof. Every few seconds, lightning turns the whole atrium silver.
     [ESCAPE] The glass roof shivers with every thud. Lightning flashes, and for one second you see a huge shadow cross the glass, then nothing.
-  handle:
+  take:
     [always] It's a glass roof, twenty feet up. You'd need a ladder and a reason.
+  handle:
+    [always] (same as nouns.R8.roof.take)
 
 -- nouns.R8.plants
   examine:
     [TOUR] Imported palms, each with a little brass tag naming the country it came from. None of them came legally, and all of them look happier than you.
     [ESCAPE] The palms are full of lemurs, shaking down fruit like they've been planning it for months.
     [OUT_GIRAFFE] The palms are full of lemurs, shaking down fruit like they've been planning it for months. The top leaves of every palm have been neatly stripped away. Somebody tall had a snack on the way through.
+  take:
+    [always] They're rooted, imported, and probably wanted by customs. You leave them.
   handle:
     [TOUR] Waxy leaves and a little brass tag. The Don watches you touch his palms.
     [ESCAPE] The leaves shake. A lemur shakes back.
@@ -1829,8 +1853,10 @@ SCENERY (examine, smell, listen... by room)
 -- nouns.R8.lemurs
   examine:
     [ESCAPE] A dozen lemurs in the palms. One is wearing a gold chain three sizes too big. It definitely stole it, and it's never been happier.
-  chase:
+  take:
     [ESCAPE] The lemur with the chain looks at you like you're the one who doesn't belong here. It might be right.
+  chase:
+    [ESCAPE] (same as nouns.R8.lemurs.take)
   talk:
     [always] (same as nouns.R5.lemur.talk)
 
@@ -1863,8 +1889,10 @@ SCENERY (examine, smell, listen... by room)
   examine:
     [TOUR] Solid silver, the handle shaped like a tiny hippo. The Don has a type.
     [ESCAPE] Gone. Of all the things to grab on his way out.
+  take:
+    [TOUR] The Don's hand covers it, gently. "Not a souvenir."
   *:
-    [ESCAPE] It's gone. The Don took it with him, of all things.
+    [ESCAPE] It's gone. The Don took it with him.
 
 -- nouns.R9.slip
   examine:
@@ -1882,6 +1910,8 @@ SCENERY (examine, smell, listen... by room)
   examine:
     [TOUR] Cedar-lined and the size of a coffin, holding a few hundred cigars. Every band is printed with a tiny portrait of the Don.
     [ESCAPE] Open and empty. He grabbed the cigars and left the papers. Priorities.
+  take:
+    [TOUR] The Don snaps the lid shut an inch from your fingers, smiling. "After the deal, amigo."
   smell:
     [always] Cedar, tobacco, and a little bit of money.
   open:
@@ -1925,6 +1955,8 @@ SCENERY (examine, smell, listen... by room)
     [TOUR] A few molted feathers on the floor, every one with a perfect iridescent eye.
     [ESCAPE] Feathers everywhere, and every eye is looking at you.
     [OUT_PEACOCKS] A blizzard of feathers, still settling. Every eye on the floor looks like it's laughing.
+  take:
+    [always] You pocket a feather. No, you don't. You put it back. Stay focused.
   handle:
     [always] Soft, and every one has a perfect little eye. You put it down.
   smell:
@@ -2040,6 +2072,8 @@ SCENERY (examine, smell, listen... by room)
 -- nouns.R12.floor
   examine:
     [ESCAPE] Straw, a mountain of banana peels, and a truck tire hanging from a chain, swinging gently. Big Tony has a tire swing. You don't know why that's the part that scares you.
+  take:
+    [always] You're not taking a banana peel. You're not taking anything from in here.
   handle:
     [always] Straw, banana peels, and a tire swing that's still warm. You wipe your hand on your pants.
   search:
@@ -2130,6 +2164,9 @@ CATEGORY REPLIES (anything of that type)
 ==============================================================================
 
 -- categories.ART
+  take:
+    [TOUR] It's worth more than your apartment, and you'd have to explain it to the Don. You leave it.
+    [ESCAPE] You're here for paper, not art.
   handle:
     [TOUR] The Don's eyes follow your hand. You turn the gesture into a thoughtful chin-scratch.
     [ESCAPE] It doesn't budge, and it doesn't help.
@@ -2161,6 +2198,8 @@ CATEGORY REPLIES (anything of that type)
     [always] You say a few words to it. It keeps its opinions to itself.
 
 -- categories.FURNITURE
+  take:
+    [always] Too heavy, too bolted, too obvious.
   handle:
     [TOUR] It shifts an inch. The Don's eyebrow shifts an inch too. You put it back.
     [ESCAPE] It scrapes across the floor, very loudly, which helps nobody.
@@ -2194,6 +2233,8 @@ CATEGORY REPLIES (anything of that type)
     [always] (same as categories.ART.talk)
 
 -- categories.FIXTURE
+  take:
+    [always] It's part of the building. So, in a way, are you, until you get out.
   handle:
     [always] Solid. Built by people who were paid very well not to cut corners.
   open:
@@ -2226,6 +2267,8 @@ CATEGORY REPLIES (anything of that type)
     [always] (same as categories.ART.talk)
 
 -- categories.ANIMAL
+  take:
+    [always] Faster than you, angrier than you, and in the case of the lemurs, smarter than you.
   handle:
     [TOUR] The Don shakes his head. "They bite, amigo. Not all of them. But you won't know which until it's over."
     [ESCAPE] It gives you a look that ends the idea.
@@ -2258,6 +2301,8 @@ CATEGORY REPLIES (anything of that type)
     [always] It's an animal, not a door. The gates are what open.
 
 -- categories.FOOD
+  take:
+    [always] Your pockets are for evidence, not leftovers.
   eat:
     [TOUR] The Don's hand covers yours. "After business."
     [ESCAPE] One bite. It's incredible. It costs you a turn. Worth it? Debatable.
@@ -2280,6 +2325,8 @@ CATEGORY REPLIES (anything of that type)
     [always] A slow, happy simmer.
 
 -- categories.PERSON
+  take:
+    [always] You can't take a person. Not without a much bigger jacket.
   handle:
     [TOUR] Better not. In this house, people notice hands.
     [ESCAPE] Better not. Hands to yourself, even now.
@@ -2311,10 +2358,12 @@ CATEGORY REPLIES (anything of that type)
     [ESCAPE&SOLVED] Silent. It already gave up its secret.
 
 -- categories.OWN
+  take:
+    [always] (same as on.take)
   handle:
     [always] You pat your jacket. Still there. Good.
   open:
-    [always] It opens by reading it. Try "read card."
+    [always] You don't open it. You read it. Try "read card."
     [always] Later. In a car, far from here, with the doors locked.
   smell:
     [always] Printer ink and nerves.
@@ -2325,6 +2374,9 @@ CATEGORY REPLIES (anything of that type)
     [always] It's not that kind of job.
 
 -- categories.OBJECT
+  take:
+    [TOUR] The Don's eyes are on your hands. You leave it where it is.
+    [ESCAPE] (same as items.tray.on.take)
   handle:
     [TOUR] You nudge it straight. The Don notices. The Don notices everything.
     [ESCAPE] You turn it over. It isn't what you came for.
@@ -2356,6 +2408,8 @@ CATEGORY REPLIES (anything of that type)
     [always] (same as categories.ART.talk)
 
 -- categories.OUTDOOR
+  take:
+    [always] It's bolted to a roof forty floors up. You leave it there.
   handle:
     [always] Wet, cold, and no help at all.
   open:
@@ -2581,7 +2635,6 @@ ROOM TAILS (after a move)
 ==============================================================================
 ONE THING AT A TIME
 ==============================================================================
-  :
     [always] One thing at a time, detective.
 
 ==============================================================================
@@ -2671,7 +2724,6 @@ TURN FEEDBACK
 ==============================================================================
 NOT HERE
 ==============================================================================
-  :
     [always] (same as messages.cantGo)
 
 ==============================================================================
