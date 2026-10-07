@@ -318,6 +318,7 @@ ROOMS
 -- rooms.gallery: Gallery Hall
   desc:
     [flag escbeen_gallery & key ESCAPE] The painted Dons again, still glaring. Chlorine at one end, the balcony at the other.
+    [flag escape & not(not(is OUT_JAGUAR))] The painted Dons glare down. One of them has come off the wall: the clawed portrait lies on the floor, its frame chewed. One end of the hall smells of chlorine; the other opens onto the balcony above the stairs.
     [flag escape] The painted Dons glare down, and one portrait is hanging crooked, torn by claws. One end of the hall smells of chlorine; the other opens onto the balcony above the stairs.
     [visited gallery] A hundred painted Don Chavas watch you walk. North to the atrium, east to the landing.
     [always] A long hall of oil portraits, all of them the Don: the Don on a horse, the Don with a lion, the Don as a saint. The wallpaper is peacock feathers. The atrium is north, the landing east.
@@ -881,6 +882,8 @@ GAME-WIDE REPLIES
 -- on.run
     [flag checkpoint & ran<=0 & in foyer] You bolt across the marble, skid on the compass rose, and duck behind the left staircase. Nando thunders past, the wrong way, chasing a shadow he thinks is you.
     [flag checkpoint & ran<=0] You bolt. Nando grabs for you, and a lemur lands on his head. By the time he pulls it off, you're long gone.
+    [is RAN] You already spent your one good sprint. From here on, it's brisk walking and prayer.
+    [is ESCAPE] You're already hurrying. Save the sprint for whoever's standing in your way.
     [always] Nothing to run from yet.
 
 -- on.examine
@@ -1745,6 +1748,7 @@ SCENERY (examine, smell, listen... by room)
   examine:
     [TOUR] A hundred Don Chavas in gold frames, every one painted by someone who was clearly told to make him taller. Three stand out: a horse, a lion, a saint.
     [ESCAPE] A hundred painted Dons, every one of them glaring down at you. One hangs crooked, slashed by claws.
+    [OUT_JAGUAR] A hundred painted Dons, every one of them glaring down at you. One lies on the floor, slashed by claws, its frame chewed.
 
 -- nouns.R7.horse
   examine:

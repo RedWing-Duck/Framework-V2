@@ -79,7 +79,8 @@ const T = {
       escape: "The balcony shakes under a distant thud. Cigar smoke still drifts from the office. The hall of portraits stretches one way; the staircases drop down to the foyer." },
     R7: { first: "A long hall of oil portraits, all of them the Don: the Don on a horse, the Don with a lion, the Don as a saint. The wallpaper is peacock feathers. The atrium is north, the landing east.",
       revisit: "A hundred painted Don Chavas watch you walk. North to the atrium, east to the landing.",
-      escape: "The painted Dons glare down, and one portrait is hanging crooked, torn by claws. One end of the hall smells of chlorine; the other opens onto the balcony above the stairs." },
+      escape: [{ if: { is: "OUT_JAGUAR" }, text: "The painted Dons glare down. One of them has come off the wall: the clawed portrait lies on the floor, its frame chewed. One end of the hall smells of chlorine; the other opens onto the balcony above the stairs." },
+        "The painted Dons glare down, and one portrait is hanging crooked, torn by claws. One end of the hall smells of chlorine; the other opens onto the balcony above the stairs."] },   // the crooked portrait follows R7.crooked
     R8: { first: "A glass roof, tropical plants, and the sharp, clean smell of chlorine. In the center, a bronze [hippo] fountain spouts water from its nostrils with great dignity. Its mouth is closed tight. The gallery is south and a chorus of shrieking birds comes from the north.",   // Script rev 3 [ROOM.R8.first]
       revisit: "The bronze [hippo] spouts water, mouth shut, in its cloud of chlorine. South to the gallery, north to the birds.",   // [ROOM.R8.revisit]
       escape: [{ if: { flag: "p2" }, text: "Water sloshes over the fountain's edge. Lemurs chatter in the palms, pelting the floor with fruit. The bronze [hippo] gapes, jaw hanging open, very pleased with itself. One way, the peacocks scream; the other, the hall of portraits." },
@@ -282,7 +283,8 @@ const T = {
     1: "The floor shakes. You smell wet dog and bad decisions. Move." },
   hint: { tour: "Listen to the Don. Every brag is a clue.", escape: "Walk the tour backward. Grab what you can. The guards chase animals first." },
   nudge: {   // P3 fixes: BR-08, CP-03 (QA wording); CP-02 "open gate" is the core's "Which do you mean?" [REV4]
-    run: "Nothing to run from yet.",
+    run: [{ if: { is: "RAN" }, text: "You already spent your one good sprint. From here on, it's brisk walking and prayer." },
+      { if: { is: "ESCAPE" }, text: "You're already hurrying. Save the sprint for whoever's standing in your way." }, "Nothing to run from yet."],   // BR-08: free; the escape has its own lines
     piano: "You already found what she was hiding." },
   statusTour: "Tour in progress. Strikes: {strikes}/3.",
   fallback: "I don't understand that. Type 'help'.",   // the engine's line; the messages add-on rotates T.huh in its place
@@ -524,7 +526,7 @@ const NOUNS = {
     "R6.vase": { at: "landing", cat: "ART", words: ["vase", "lilies", "flowers", "stand", "pedestal"],
       examine: [["TOUR", "A tall vase of white lilies on a marble pedestal, placed exactly where every guest has to walk around it. Even the flowers here make you wait."], ["ESCAPE", "Still standing. Barely. It rocks on its pedestal every time something heavy hits the floor."], ["OUT_JAGUAR", "Knocked flat, lilies everywhere, water soaking into the carpet. Something fast came through here, low to the ground."]] },
     "R7.portraits": { at: "gallery", cat: "ART", words: ["portraits", "portrait", "paintings", "painting", "dons", "oil portraits", "canvas", "canvases"],   // + F-01
-      examine: [["TOUR", "A hundred Don Chavas in gold frames, every one painted by someone who was clearly told to make him taller. Three stand out: a horse, a lion, a saint."], ["ESCAPE", "A hundred painted Dons, every one of them glaring down at you. One hangs crooked, slashed by claws."]] },
+      examine: [["TOUR", "A hundred Don Chavas in gold frames, every one painted by someone who was clearly told to make him taller. Three stand out: a horse, a lion, a saint."], ["ESCAPE", "A hundred painted Dons, every one of them glaring down at you. One hangs crooked, slashed by claws."], ["OUT_JAGUAR", "A hundred painted Dons, every one of them glaring down at you. One lies on the floor, slashed by claws, its frame chewed."]] },
     "R7.horse": { at: "gallery", cat: "ART", words: ["horse", "horse portrait", "don horse", "rider", "stallion", "sword"],
       examine: [["TOUR", "The Don on a rearing white stallion, sword raised, in a battle that never happened. The horse is real, a plaque says. It lives on a ranch now and does not know it's famous."], ["ESCAPE", "The Don on his stallion, charging nowhere. He doesn't look so brave in red light."]] },
     "R7.lion": { at: "gallery", cat: "ART", words: ["lion", "lion portrait", "don lion", "mane"],

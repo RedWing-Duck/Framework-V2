@@ -141,3 +141,5 @@ A reviewer read the whole generated Script against the GDD's tone. The review wa
 - The INTRO header no longer prints as "ntro:".
 - Names that follow state print as `AVIARY, [OUT_PEACOCKS] EMPTY AVIARY`.
 - `take` replies are now in the Script; they had been skipped as logic.
+- **The crooked portrait follows the jaguar.** Once the jaguar is out, the gallery's escape text and its portraits say the clawed portrait is on the floor, matching what examining it already said.
+- **"run" outside a checkpoint** is still free, but now has escape lines: "You're already hurrying..." before the sprint is used, and "You already spent your one good sprint..." after it. "Nothing to run from yet." is the tour's line only.
