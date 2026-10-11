@@ -6,6 +6,8 @@ It's a small, dependency-free engine for parser-based text games ("take lamp", "
 
 This repository is **not** where games get made. It's the clean foundation that gets copied at the start of each weekly project.
 
+> **Play the showcase game:** [*This Place Has a Big Footprint*](https://RedWing-Duck.github.io/Framework-V2/big-footprint.html), built with this framework. It runs right in your browser, no download needed.
+
 ---
 
 ## How the weekly release works
